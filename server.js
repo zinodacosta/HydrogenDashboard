@@ -4,6 +4,8 @@ import { fileURLToPath } from "url";
 import path from "path";
 import fs from "fs"; //read and write files
 
+const cors = require("cors");
+app.use(cors());
 
 //Correct `__dirname` for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -65,7 +67,6 @@ function initCounter() {
       `Counter updated to ${counterData.counter} for date: ${currentDate}`
     );
   } else {
-    
   }
 
   //Save updated counter data back to `counter.json`
@@ -139,18 +140,21 @@ function getCurrentHourTimestamp() {
   return roundedTimestamp;
 }
 async function fetchCarbonIntensity() {
-  try{
-    const response = await fetch('https://api.electricitymap.org/v3/carbon-intensity/latest?zone=DE', {
-      method: 'GET',
-      headers: {
-          'auth-token': '3s7tbtJMjBVReOKeQXX6'
+  try {
+    const response = await fetch(
+      "https://api.electricitymap.org/v3/carbon-intensity/latest?zone=DE",
+      {
+        method: "GET",
+        headers: {
+          "auth-token": "3s7tbtJMjBVReOKeQXX6",
+        },
       }
-  })
-  const data = await response.json();
-  return data.carbonIntensity;
-  }catch(error){
+    );
+    const data = await response.json();
+    return data.carbonIntensity;
+  } catch (error) {
     console.error("Error fetching carbon intensity:", error);
-}
+  }
 }
 
 app.get("/get-carbon-intensity", async (req, res) => {
@@ -182,7 +186,9 @@ async function fetchWholesalePrice() {
     const data = await response.json();
     if (data && data.series && Array.isArray(data.series)) {
       const validEntries = data.series.filter((entry) => entry[1] !== null);
-      let lastEntry = validEntries.find((entry) => entry[0] === currentTimestamp);
+      let lastEntry = validEntries.find(
+        (entry) => entry[0] === currentTimestamp
+      );
 
       if (!lastEntry) {
         lastEntry = validEntries[validEntries.length - 1];
@@ -192,7 +198,6 @@ async function fetchWholesalePrice() {
         timestamp: lastEntry[0],
         value: lastEntry[1],
       };
-
     } else {
       throw new Error("API response structure invalid.");
     }
@@ -316,7 +321,6 @@ app.get("/getBatteryStatus", async (req, res) => {
 });
  */
 
-
 //get last hydrogen status
 /**
 app.get("/getHydrogenStatus", async (req, res) => {
@@ -333,14 +337,13 @@ app.get("/getHydrogenStatus", async (req, res) => {
 });
  */
 
-
 //Start server
 app.listen(port, async () => {
   console.log(`Server running at http://localhost:${port}`);
 
   //price check on startup and save to db
   try {
-    await fetchWholesalePrice(); 
+    await fetchWholesalePrice();
     await fetchCarbonIntensity();
   } catch (error) {
     console.error("Error saving price on server startup:", error);
