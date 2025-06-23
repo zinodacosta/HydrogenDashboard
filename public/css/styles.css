@@ -2,7 +2,12 @@
 body {
     font-family: 'Roboto', sans-serif;
     font-size: 18px;
-    background-color: #f4f4f9;
+    background-color: #232324;
+    background-image: url("https://protonik-gmbh.com/wp-content/uploads/2024/02/Protonik_Logo_weiss-hoch-web1000.png");
+    background-repeat: no-repeat; 
+    background-position: center;   
+    background-attachment: fixed;
+    background-size: 40%; 
     margin: 0;
     padding: 0;
     overflow-x: hidden;
@@ -14,7 +19,7 @@ body {
   }
 
 
-/* Container for the graphs */
+
 .chart-container {
     display: flex;
     flex-direction: column;
