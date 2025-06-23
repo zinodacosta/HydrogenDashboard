@@ -280,7 +280,7 @@ const fc = new fuelcell();
 async function fetchHydrogenLevel() {
   //database fetch might get discontinued
   try {
-    const response = await fetch("http://localhost:3000/getHydrogenStatus");
+    const response = await fetch("https://hydrogendashboard-api.onrender.com/getHydrogenStatus");
     const data = await response.json();
 
     if (data.level !== undefined && data.level !== null) {
@@ -312,7 +312,7 @@ export class powersource {
 
 async function getLastWholeSalePrice() {
   try {
-    const response = await fetch("http://localhost:3000/get-wholesale-price");
+    const response = await fetch("http://hydrogendashboard-api.onrender.com/get-wholesale-price");
     const data = await response.json();
     return data.value;
   } catch (error) {
@@ -324,7 +324,7 @@ async function getLastWholeSalePrice() {
 //API fetch for carbon intensity
 async function getCarbonIntensity() {
   try {
-    const response = await fetch("http://localhost:3000/get-carbon-intensity");
+    const response = await fetch("https://hydrogendashboard-api.onrender.com/get-carbon-intensity");
     const data = await response.json();
     console.log("intensity", data);
     document.getElementById("carbon-intensity").innerHTML = data + " gCO₂/kWh";
@@ -337,7 +337,7 @@ async function getCarbonIntensity() {
 //db fetch for battery level
 async function fetchBatteryLevel() {
   try {
-    const response = await fetch("http://localhost:3000/getBatteryStatus");
+    const response = await fetch("http://hydrogendashboard-api.onrender.com/getBatteryStatus");
     const data = await response.json();
 
     if (data.level !== undefined) {
