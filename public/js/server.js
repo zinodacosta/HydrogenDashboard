@@ -4,12 +4,6 @@ import { fileURLToPath } from "url";
 import path from "path";
 import fs from "fs"; //read and write files
 
-const cors = require("cors");
-app.use(
-  cors({
-    origin: "https://hydrogendashboard.onrender.com",
-  })
-);
 
 //Correct `__dirname` for ES modules
 const __filename = fileURLToPath(import.meta.url);
