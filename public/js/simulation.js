@@ -64,7 +64,7 @@ export class photovoltaik {
       const cloudiness = data.current.cloud;
       const daytime = data.current.is_day;
       if (daytime) {
-        if (cloudiness < 105) {
+        if (cloudiness < 50) {
           document.getElementById("sun").textContent =
             "Sun is shining. Charge Mode";
           document.getElementById("simulation-state").innerHTML =
@@ -73,6 +73,8 @@ export class photovoltaik {
           document.getElementById("pv-animated-arrow").style.display = "block";
           sun = true;
         } else {
+          document.getElementById("simulation-state").innerHTML =
+            "Stand-By Mode";
           document.getElementById("sun").textContent =
             "It is cloudy. PV not charging";
           document.getElementById("pv-animated-arrow").style.display = "none";
@@ -190,22 +192,37 @@ export class electrolyzer {
 
   produceHydrogen() {
     if (charge.storage > 0.1) {
-      let hydrogenProduced =
+      //max hydrogen possible under current battery level
+      let maxHydrogen = this.capacity - this.storage;
+      let possibleHydrogenProduced =
         (charge.storage *
           55.5 *
           (this.efficiency / 100) *
           (this.power / 1000) *
           speedfactor) /
         10000;
-      //Batterie Speicher * 55.5kWh * Elektrolyzeur Wirkungsgrad * Elektrolyzeur Leistung
-      if (this.storage + hydrogenProduced <= this.capacity) {
-        this.storage += hydrogenProduced;
-        let batteryConsumption =
-          hydrogenProduced * (1 / (this.efficiency / 100));
-        charge.updateBatteryStorage(-batteryConsumption); //Adjust battery consumption based on efficiency
+
+      //only produce whats possible under both constraints
+      let actualHydrogenProduced = Math.min(
+        possibleHydrogenProduced,
+        maxHydrogen
+      );
+
+      let actualBatteryConsumption =
+        actualHydrogenProduced * (1 / (this.efficiency / 100));
+
+      if (
+        charge.storage >= actualBatteryConsumption &&
+        actualHydrogenProduced > 0
+      ) {
+        this.storage += actualHydrogenProduced;
+        charge.updateBatteryStorage(-actualBatteryConsumption);
+
         document.getElementById("hydrogen-level").innerHTML =
           this.storage.toFixed(2) + " g";
+
         let hydrogenPercentage = (this.storage / this.capacity) * 100;
+
         if (
           document.getElementById("simulation-state").innerHTML ===
           "Charge Mode"
@@ -216,13 +233,14 @@ export class electrolyzer {
           document.getElementById("simulation-state").innerHTML =
             "Hydrogen Mode ";
         }
+
         document.getElementById("hydrogen-gauge-percentage").innerHTML =
           hydrogenPercentage.toFixed(1) + " %";
         document.getElementById("hydrogen-gauge-level").style.width =
           hydrogenPercentage + "%";
       } else {
         document.getElementById("hydrogen-level").innerHTML =
-          "Hydrogen Storage is full";
+          "Not enough battery for hydrogen production";
       }
     } else {
       document.getElementById("hydrogen-level").innerHTML =
@@ -260,7 +278,7 @@ const hydro = new electrolyzer();
 const fc = new fuelcell();
 
 async function fetchHydrogenLevel() {
-  //database fetch might get discontinued 
+  //database fetch might get discontinued
   try {
     const response = await fetch("http://localhost:3000/getHydrogenStatus");
     const data = await response.json();
@@ -291,7 +309,7 @@ export class powersource {
       powerconsumption.toFixed(2) + "W";
   }
 }
-//TODO if no last price entry exists in API -> use latest usable one
+
 async function getLastWholeSalePrice() {
   try {
     const response = await fetch("http://localhost:3000/get-wholesale-price");
@@ -316,7 +334,7 @@ async function getCarbonIntensity() {
   }
 }
 
-//db fetch for battery levle
+//db fetch for battery level
 async function fetchBatteryLevel() {
   try {
     const response = await fetch("http://localhost:3000/getBatteryStatus");
@@ -380,23 +398,21 @@ export class tradeElectricity {
   }
 
   async buyElectricity() {
-    if (this.money < 0) {
-      if (this.electricityPrice === null || isNaN(this.electricityPrice)) { //waiting for api to fetch price
+    if (this.money > 0) {
+      if (this.electricityPrice === null || isNaN(this.electricityPrice)) {
+        //waiting for api to fetch price
         await this.priceCheck();
         if (this.electricityPrice === null || isNaN(this.electricityPrice))
           return;
-      }  
-        if (charge.storage + 1 <= charge.capacity) {
-          console.log("Bought 1kWh");
-          showNotification("1kW Electricity bought!", "buy");
-          this.money -= this.electricityPrice * 0.1;
-          charge.updateBatteryStorage(1);
-          document.getElementById("money").innerHTML =
-            " : " + this.money.toFixed(2) + " €";
-        } else {
-          document.getElementById("battery-level").innerHTML =
-            "Can't buy, battery is full";
-        }
+      }
+      if (charge.storage + 1 <= charge.capacity && this.money > 0) {
+        console.log("Bought 1kWh");
+        showNotification("1kW Electricity bought!", "buy");
+        this.money -= this.electricityPrice * 0.1;
+        charge.updateBatteryStorage(1);
+        document.getElementById("money").innerHTML =
+          " : " + this.money.toFixed(2) + " €";
+      }
     }
   }
   async sellElectricity() {
@@ -406,12 +422,14 @@ export class tradeElectricity {
         if (this.electricityPrice === null || isNaN(this.electricityPrice))
           return;
       }
-      console.log("Sold 1kWh");
-      showNotification("1kW Electricity sold!", "sell");
-      this.money += this.electricityPrice * 0.1;
-      charge.updateBatteryStorage(-1);
-      document.getElementById("money").innerHTML =
-        " : " + this.money.toFixed(2) + " €";
+      if (this.electricityPrice > 0) {
+        console.log("Sold 1kWh");
+        showNotification("1kW Electricity sold!", "sell");
+        this.money += this.electricityPrice * 0.1;
+        charge.updateBatteryStorage(-1);
+        document.getElementById("money").innerHTML =
+          " : " + this.money.toFixed(2) + " €";
+      }
     }
   }
 }
@@ -470,12 +488,17 @@ async function updateSimulation() {
   }
    */
 
-
   //Automate trade logic
   if (trade.electricityPrice > 150) {
     console.log("Electricity Price over Threshold: Selling Electricity");
     await fc.produceElectricity();
+    document.getElementById("simulation-state").innerHTML = " Fuel Cell Mode ";
+    document.getElementById("fuelcell-static-arrow").style.display = "none";
+    document.getElementById("fuelcell-animated-arrow").style.display = "block";
     await trade.sellElectricity();
+  } else {
+    document.getElementById("fuelcell-static-arrow").style.display = "block";
+    document.getElementById("fuelcell-animated-arrow").style.display = "none";
   }
   if (trade.electricityPrice < 80) {
     console.log("Electricity Price under Threshold: Buying Electricity");
@@ -484,10 +507,29 @@ async function updateSimulation() {
     if (trade.electricityPrice > 80 && trade.electricityPrice < 150) {
       console.log("Electricity Price in acceptable range");
       await hydro.produceHydrogen();
+
+      document.getElementById("electrolyzer-static-arrow").style.display =
+        "none";
+      document.getElementById("electrolyzer-animated-arrow").style.display =
+        "block";
+    } else {
+      document.getElementById("electrolyzer-static-arrow").style.display =
+        "block";
+      document.getElementById("electrolyzer-animated-arrow").style.display =
+        "none";
     }
   }
   if (charge.storage / charge.capacity > 0.8 && trade.electricityPrice < 150) {
     await hydro.produceHydrogen();
+
+    document.getElementById("electrolyzer-static-arrow").style.display = "none";
+    document.getElementById("electrolyzer-animated-arrow").style.display =
+      "block";
+  } else {
+    document.getElementById("electrolyzer-static-arrow").style.display =
+      "block";
+    document.getElementById("electrolyzer-animated-arrow").style.display =
+      "none";
   }
 
   const waveLoader1before = document.querySelector(".wave-loader1");
@@ -672,7 +714,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const usecase = document.getElementById("use-case");
 
   usecase.addEventListener("change", function () {
-    // Update values when selection changes
+    //Update values when selection changes
     const bulletPointsContainer = document.getElementById(
       "bullet-points-container"
     );
@@ -854,17 +896,17 @@ document.addEventListener("DOMContentLoaded", function () {
       ul.appendChild(li);
     });
 
-    // Append the bullet points to the container
+    //Append the bullet points to the container
     bulletPointsContainer.appendChild(ul);
   });
 
-  // Trigger change event on page load to set initial values
+  //Trigger change event on page load to set initial values
   usecase.dispatchEvent(new Event("change"));
 });
 
 //Buttons für die Simulation
 document.getElementById("convert-to-hydrogen").addEventListener("click", () => {
-  if(hydro.storage > 0){
+  if (hydro.storage > 0) {
     document.getElementById("simulation-state").innerHTML = " Hydrogen Mode ";
     document.getElementById("electrolyzer-static-arrow").style.display = "none";
     document.getElementById("electrolyzer-animated-arrow").style.display =
@@ -882,26 +924,26 @@ document.getElementById("convert-to-hydrogen").addEventListener("click", () => {
 document
   .getElementById("convert-to-electricity")
   .addEventListener("click", () => {
-    if(hydro.storage > 0){
-
-      document.getElementById("simulation-state").innerHTML = " Fuel Cell Mode ";
+    if (hydro.storage > 0) {
+      document.getElementById("simulation-state").innerHTML =
+        " Fuel Cell Mode ";
       document.getElementById("fuelcell-static-arrow").style.display = "none";
-      document.getElementById("fuelcell-animated-arrow").style.display = "block";
+      document.getElementById("fuelcell-animated-arrow").style.display =
+        "block";
+      showNotification("Started Fuel Cell!", "buy");
       //Starte die Umwandlung im Elektrolyseur, wenn noch kein Intervall läuft
       if (fuelCellInterval === null) {
         fuelCellInterval = setInterval(() => {
           fc.produceElectricity(); //Wasserstoffproduktion schrittweise
         }, 1000); //Alle Sekunde
-        console.log("Fuelcell started");
+        console.log("Fuel Cell started");
       }
     }
-
   });
 
 document
   .getElementById("convert-to-hydrogen-stop")
   .addEventListener("click", () => {
-    
     document.getElementById("simulation-state").innerHTML = " ";
     document.getElementById("electrolyzer-static-arrow").style.display =
       "block";
@@ -920,6 +962,7 @@ document
     document.getElementById("simulation-state").innerHTML = " ";
     document.getElementById("fuelcell-static-arrow").style.display = "block";
     document.getElementById("fuelcell-animated-arrow").style.display = "none";
+    showNotification("Stopped Fuel Cell!", "sell");
     if (fuelCellInterval !== null) {
       clearInterval(fuelCellInterval); //Stoppe die Brennstoffzelle
       fuelCellInterval = null;
@@ -934,26 +977,36 @@ let isPriceVisible = true;
 
 function togglePrices() {
   if (isPriceVisible) {
-    // Slide price container out to the left and CO2 container in from the right
+    //Slide price container out to the left and CO2 container in from the right
     priceContainer.style.transform = "translateX(-100%)"; // Price moves out of bounds
     co2Container.style.transform = "translateX(0)"; // CO2 comes into view
   } else {
-    // Slide CO2 container out to the left and price container back in from the right
+    //Slide CO2 container out to the left and price container back in from the right
     co2Container.style.transform = "translateX(100%)"; // CO2 moves out of bounds
     priceContainer.style.transform = "translateX(0)"; // Price comes back in
   }
 
-  // Toggle visibility for the next cycle
+  //Toggle visibility for the next cycle
   isPriceVisible = !isPriceVisible;
 }
 
-// Set interval to swap containers every 5 seconds
-setInterval(togglePrices, 10000); // 5000ms = 5 seconds
+function errorCheck() {
+  if (charge.storage < 0) {
+    resetSimulation();
+  }
+  if (hydro.storage < 0) {
+    resetSimulation();
+  }
+
+}
+
+setInterval(togglePrices, 10000);
 
 //Start-Synchronisation nur einmal beim Laden
 getCarbonIntensity();
 
 //Regelmäßige Updates laufen nur über updateSimulation()
 setInterval(updateSimulation, 1000);
+setInterval(errorCheck, 1000); //Check for errors every second
 
 //TODO- farbschema an website anpassen
