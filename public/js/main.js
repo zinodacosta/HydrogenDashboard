@@ -1,3 +1,5 @@
+const API_BASE_URL = "http://159.69.192.158:3000";
+
 let graphType = "wholesalePrice"; //Default graph type for the first chart
 let graphTypesForSecondChart = ["actualelectricityconsumption"]; //Default second chart graph type
 let myChartInstance;
@@ -7,6 +9,35 @@ let batteryData = [];
 let batteryChartInstance = null;
 let hydrogenData = [];
 let hydrogenChartInstance = null;
+
+// Debounce function for performance
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+// Retry mechanism for failed requests
+async function fetchWithRetry(url, options = {}, maxRetries = 3) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      return response;
+    } catch (error) {
+      if (i === maxRetries - 1) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1))); // Exponential backoff
+    }
+  }
+}
 
 //Define the vertical line plugin for the first chart
 const verticalLinePlugin1 = {
@@ -65,10 +96,7 @@ const verticalLinePlugin2 = {
 //Function to load the graph identifiers from the JSON file
 async function loadGraphIdentifiers() {
   try {
-    const response = await fetch("/graphIdentifiers"); //Fetches from JSON
-    if (!response.ok) {
-      throw new Error("Failed to load graph identifiers");
-    }
+    const response = await fetchWithRetry(`${API_BASE_URL}/graphIdentifiers`);
     const data = await response.json(); //Wait for response
     graphIdentifiers = data; //Store the loaded graph identifiers
     console.log("[INFO] Graph identifiers loaded:", graphIdentifiers);
@@ -78,7 +106,7 @@ async function loadGraphIdentifiers() {
 }
 
 //Function to fetch data dynamically based on the selected graph type and time range
-async function fetchData() {
+const fetchData = debounce(async function () {
   if (!graphIdentifiers) {
     //Ensures loading before proceeding
     console.error("[ERROR] Graph identifiers not loaded yet.");
@@ -103,15 +131,11 @@ async function fetchData() {
     const graphId = graphData ? graphData.id : "1"; //Fallback to ID 1
 
     //Construct dynamic API URL
-    const response = await fetch(
-      `/data?graphType=${graphId}&start=${encodeURIComponent(
+    const response = await fetchWithRetry(
+      `${API_BASE_URL}/data?graphType=${graphId}&start=${encodeURIComponent(
         startISOString
       )}&end=${encodeURIComponent(endISOString)}`
     );
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch data from API");
-    }
 
     const data = await response.json();
     console.log("[INFO] Received data:", data);
@@ -121,17 +145,17 @@ async function fetchData() {
         "Data structure is incorrect. Expected labels and values arrays."
       );
     }
+
     //Filtering out null values
     const filteredLabels = [];
     const filteredValues = [];
-    
+
     data.values.forEach((value, index) => {
       if (value !== null) {
         filteredLabels.push(data.labels[index]);
         filteredValues.push(value);
       }
     });
-
 
     //Destroy existing chart instance to avoid overlapping
     if (myChartInstance) {
@@ -148,7 +172,7 @@ async function fetchData() {
   } catch (error) {
     console.error("[ERROR] Fetching data:", error);
   }
-}
+}, 300); // Debounce for 300ms
 
 //Function to create the first chart
 function createChart(canvasId, labels, values, labelName, borderColor) {
@@ -205,8 +229,8 @@ function createChart(canvasId, labels, values, labelName, borderColor) {
         mode: "index",
         intersect: false,
       },
-      elements:{
-        legend:{
+      elements: {
+        legend: {
           borderRadius: 10,
         },
       },
@@ -226,7 +250,7 @@ function createChart(canvasId, labels, values, labelName, borderColor) {
             },
           },
         },
-        
+
         y: {
           ticks: {
             font: {
@@ -278,7 +302,7 @@ async function fetchDataForSecondGraph() {
         const end = now;
 
         const response = await fetch(
-          `/data?graphType=${graphId}&start=${start.toISOString()}&end=${end.toISOString()}`
+          `${API_BASE_URL}/data?graphType=${graphId}&start=${start.toISOString()}&end=${end.toISOString()}`
         );
         if (!response.ok) {
           throw new Error(`Failed to fetch data for graph type: ${graphType}`);
@@ -289,16 +313,16 @@ async function fetchDataForSecondGraph() {
           throw new Error("Data structure for the second chart is incorrect.");
         }
 
-    //Filtering out null values
-    const filteredLabels = [];
-    const filteredValues = [];
-    
-    data.values.forEach((value, index) => {
-      if (value !== null) {
-        filteredLabels.push(data.labels[index]);
-        filteredValues.push(value);
-      }
-    });
+        //Filtering out null values
+        const filteredLabels = [];
+        const filteredValues = [];
+
+        data.values.forEach((value, index) => {
+          if (value !== null) {
+            filteredLabels.push(data.labels[index]);
+            filteredValues.push(value);
+          }
+        });
         return {
           labels: filteredLabels.map((label) => new Date(label)),
           values: filteredValues,
@@ -349,11 +373,10 @@ function updateSecondChart(graphDataArray) {
           left: 20,
         },
       },
-      elements:{
-        legend:{
+      elements: {
+        legend: {
           borderRadius: 10,
         },
-        
       },
       maintainAspectRatio: false,
       responsive: true,
@@ -409,7 +432,6 @@ function updateSecondChart(graphDataArray) {
   });
 }
 
-
 //Checkbox event listener
 document.querySelectorAll("input[type='checkbox']").forEach((checkbox) => {
   checkbox.addEventListener("change", () => {
@@ -429,10 +451,14 @@ document.querySelectorAll("input[type='checkbox']").forEach((checkbox) => {
 });
 
 document.querySelector("#mobile-dropdown").addEventListener("change", () => {
-  const selectedOptions = document.querySelectorAll("#mobile-dropdown option:checked");
+  const selectedOptions = document.querySelectorAll(
+    "#mobile-dropdown option:checked"
+  );
 
   //get value of select
-  const selectedValues = Array.from(selectedOptions).map(option => option.value);
+  const selectedValues = Array.from(selectedOptions).map(
+    (option) => option.value
+  );
 
   //actual electricity consumption always selected
   if (!selectedValues.includes("actualelectricityconsumption")) {
@@ -443,10 +469,6 @@ document.querySelector("#mobile-dropdown").addEventListener("change", () => {
 
   fetchDataForSecondGraph();
 });
-
-
-
-
 
 //Funktion zum Erstellen des Graphen
 function createBatteryChart() {
@@ -636,7 +658,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const codeMinimized = document.getElementById("code-minimized");
   const content = document.getElementById("corner-content");
   const toggleButton = document.getElementById("toggle-widget");
-  
 
   //standard values
   content.style.height = "300px";

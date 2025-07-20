@@ -2,6 +2,8 @@ let electrolyzerInterval = null;
 let fuelCellInterval = null;
 let speedfactor = 1;
 
+const API_BASE_URL = "http://159.69.192.158:3000";
+
 const apiKey = "e7c7b0c5b06544339dd03539253001";
 let city = "Frankfurt";
 //js for dropdown menu of location
@@ -280,7 +282,7 @@ const fc = new fuelcell();
 async function fetchHydrogenLevel() {
   //database fetch might get discontinued
   try {
-    const response = await fetch("https://hydrogendashboard-api.onrender.com/getHydrogenStatus");
+    const response = await fetch(`${API_BASE_URL}/getHydrogenStatus`);
     const data = await response.json();
 
     if (data.level !== undefined && data.level !== null) {
@@ -312,7 +314,7 @@ export class powersource {
 
 async function getLastWholeSalePrice() {
   try {
-    const response = await fetch("http://hydrogendashboard-api.onrender.com/get-wholesale-price");
+    const response = await fetch("http://159.69.192.158:3000/get-wholesale-price");
     const data = await response.json();
     return data.value;
   } catch (error) {
@@ -324,7 +326,7 @@ async function getLastWholeSalePrice() {
 //API fetch for carbon intensity
 async function getCarbonIntensity() {
   try {
-    const response = await fetch("https://hydrogendashboard-api.onrender.com/get-carbon-intensity");
+    const response = await fetch(`${API_BASE_URL}/get-carbon-intensity`);
     const data = await response.json();
     console.log("intensity", data);
     document.getElementById("carbon-intensity").innerHTML = data + " gCO₂/kWh";
@@ -337,7 +339,7 @@ async function getCarbonIntensity() {
 //db fetch for battery level
 async function fetchBatteryLevel() {
   try {
-    const response = await fetch("http://hydrogendashboard-api.onrender.com/getBatteryStatus");
+    const response = await fetch("http://159.69.192.158:3000/getBatteryStatus");
     const data = await response.json();
 
     if (data.level !== undefined) {
@@ -810,7 +812,7 @@ document.addEventListener("DOMContentLoaded", function () {
       bulletPoints = [
         "A charging station for electric vehicles powered by solar energy, with a battery for quick power delivery and hydrogen for backup.",
 
-        "When there’s surplus solar power, it’s used to generate hydrogen instead of wasting energy.",
+        "When there's surplus solar power, it's used to generate hydrogen instead of wasting energy.",
 
         "The station dynamically adjusts pricing based on energy availability and grid prices.",
       ];
@@ -997,7 +999,6 @@ function errorCheck() {
   if (hydro.storage < 0) {
     resetSimulation();
   }
-
 }
 
 setInterval(togglePrices, 10000);

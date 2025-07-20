@@ -1,27 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Protonik Hydrogen Dashboard</title>
+    
+    <!-- Favicon to prevent 404 errors -->
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+    
+    <!-- Preconnect to external domains for faster loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://api.weatherapi.com" />
+    <link rel="preconnect" href="https://159.69.192.158" />
+    
+    <!-- Load critical CSS first -->
+    <link rel="stylesheet" href="css/styles.css" />
+    
+    <!-- Load fonts with display=swap for better performance -->
     <link
       href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/styles.css" />
 
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Protonik Hydrogen Dashboard</title>
+    <!-- Load Chart.js and dependencies with defer for better performance -->
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.0.0"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/luxon"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.0.0"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.0.0"></script>
-    <script src="https://cdn.jsdelivr.net/npm/luxon"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.0.0"></script>
-
-    <script type="module" src="/js/simulation.js"></script>
-    <script type="module" src="/js/main.js"></script>
+    <!-- Load your modules after Chart.js -->
+    <script type="module" defer src="/js/simulation.js"></script>
+    <script type="module" defer src="/js/main.js"></script>
   </head>
   <body>
     
