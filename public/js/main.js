@@ -97,8 +97,8 @@ const verticalLinePlugin2 = {
 async function loadGraphIdentifiers() {
   try {
     const response = await fetchWithRetry(`${API_BASE_URL}/graphIdentifiers`);
-    const data = await response.json(); //Wait for response
-    graphIdentifiers = data; //Store the loaded graph identifiers
+    const data = await response.json();
+    graphIdentifiers = data;
     console.log("[INFO] Graph identifiers loaded:", graphIdentifiers);
   } catch (error) {
     console.error("[ERROR] Loading graph identifiers:", error.message);
