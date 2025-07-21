@@ -158,6 +158,37 @@
             <div id="bullet-points-container"></div>
             
             <div class="eco-system-container">
+              <div class="eco-item" id="photovoltaik">
+                <h3>Photovoltaik</h3>
+                <label for="PV-efficiency">PV Efficiency:</label>
+                <input
+                  type="range"
+                  id="PV-efficiency"
+                  step="1"
+                  min="1"
+                  max="100"
+                />
+                <span id="PV-efficiency-value">20</span>
+                <label for="PV-power">Photovoltaik Power:</label>
+                <input
+                  type="range"
+                  id="PV-power"
+                  step="1"
+                  min="100"
+                  max="1000000"
+                />
+                <span id="PV-power-value">200</span>
+                <label for="city-select">Select Location:</label>
+                <select id="city-select">
+                  <option value="Frankfurt">Frankfurt</option>
+                  <option value="Sydney">Sydney</option>
+                  <option value="New York">New York</option>
+                  <option value="Madrid">Madrid</option>
+                  <option value="Tokyo">Tokyo</option>
+                </select>
+                <p>Current Location: <span id="location"></span></p>
+                <p>PV Status: <span id="sun"></span></p>
+              </div>
               <div class="eco-item" id="battery">
                 <h3>Battery</h3>
                 <p>Battery Level: <span id="battery-level">0 </span></p>
@@ -180,7 +211,6 @@
                 />
                 <span id="battery-capacity-value">10 kWh</span>
               </div>
-
               <div class="eco-item" id="electrolyzer">
                 <h3>Electrolyzer</h3>
                 <p>Hydrogen Level: <span id="hydrogen-level">0</span></p>
@@ -216,7 +246,6 @@
                 />
                 <span id="electrolyzer-capacity-value">1000</span>
               </div>
-
               <div class="eco-item" id="fuelcell">
                 <h3>Fuel Cell</h3>
                 <label for="fuelcell-efficiency">Fuelcell Efficiency:</label>
@@ -237,40 +266,6 @@
                   max="1000000"
                 />
                 <span id="fuelcell-power-value">200</span>
-              </div>
-
-              <div class="eco-item" id="photovoltaik">
-                <h3>Photovoltaik</h3>
-                <label for="PV-efficiency">PV Efficiency:</label>
-                <input
-                  type="range"
-                  id="PV-efficiency"
-                  step="1"
-                  min="1"
-                  max="100"
-                />
-                <span id="PV-efficiency-value">20</span>
-
-                <label for="PV-power">Photovoltaik Power:</label>
-                <input
-                  type="range"
-                  id="PV-power"
-                  step="1"
-                  min="100"
-                  max="1000000"
-                />
-                <span id="PV-power-value">200</span>
-
-                <label for="city-select">Select Location:</label>
-                <select id="city-select">
-                  <option value="Frankfurt">Frankfurt</option>
-                  <option value="Sydney">Sydney</option>
-                  <option value="New York">New York</option>
-                  <option value="Madrid">Madrid</option>
-                  <option value="Tokyo">Tokyo</option>
-                </select>
-                <p>Current Location: <span id="location"></span></p>
-                <p>PV Status: <span id="sun"></span></p>
               </div>
             </div>
             <div id="button-container">
@@ -379,251 +374,6 @@
     </div>
 
     <script type="module" src="/js/main.js"></script>
-    <style>
-      .trade-row {
-        display: flex;
-        align-items: center;
-        margin-bottom: 10px;
-      }
-      .trade-input {
-        width: 80px;
-        padding: 6px 10px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        margin-left: 8px;
-        font-size: 1em;
-        background: #f9f9f9;
-        transition: border 0.2s;
-      }
-      .trade-input:focus {
-        border: 1.5px solid #007bff;
-        outline: none;
-        background: #fff;
-      }
-      .trade-label {
-        margin-left: 14px;
-        font-size: 0.98em;
-        color: #333;
-        font-weight: 500;
-      }
-      .trade-row button {
-        min-width: 70px;
-        font-size: 1em;
-        padding: 7px 16px;
-        border-radius: 6px;
-        border: none;
-        color: #fff;
-        cursor: pointer;
-        transition: background 0.2s;
-      }
-      .trade-row .sell {
-        background: #e53935;
-      }
-      .trade-row .sell:hover {
-        background: #b71c1c;
-      }
-      .trade-row .buy {
-        background: #43a047;
-      }
-      .trade-row .buy:hover {
-        background: #1b5e20;
-      }
-      .trade-market-price {
-        margin-left: 16px;
-        font-size: 0.97em;
-        color: #444;
-        background: #eef3fa;
-        border-radius: 5px;
-        padding: 3px 10px;
-        font-weight: 500;
-      }
-      .trade-increment {
-        margin-left: 4px;
-        padding: 5px 12px;
-        font-size: 1em;
-        border: none;
-        border-radius: 5px;
-        background: linear-gradient(90deg, #4f8cff 0%, #1e62d0 100%);
-        color: #fff;
-        cursor: pointer;
-        box-shadow: 0 1px 4px rgba(30, 98, 208, 0.08);
-        font-weight: 600;
-        transition: background 0.18s, box-shadow 0.18s, transform 0.12s;
-      }
-      .trade-increment:hover {
-        background: linear-gradient(90deg, #2563eb 0%, #1e40af 100%);
-        box-shadow: 0 2px 8px rgba(30, 98, 208, 0.16);
-        transform: translateY(-2px) scale(1.05);
-      }
-      .start-btn {
-        min-width: 70px;
-        font-size: 1em;
-        padding: 7px 16px;
-        border-radius: 6px;
-        border: none;
-        background: linear-gradient(90deg, #43a047 0%, #388e3c 100%);
-        color: #fff;
-        cursor: pointer;
-        box-shadow: 0 1px 4px rgba(67, 160, 71, 0.08);
-        font-weight: 600;
-        transition: background 0.18s, box-shadow 0.18s, transform 0.12s;
-      }
-      .start-btn:hover {
-        background: linear-gradient(90deg, #2e7d32 0%, #1b5e20 100%);
-        box-shadow: 0 2px 8px rgba(67, 160, 71, 0.16);
-        transform: translateY(-2px) scale(1.05);
-      }
-      .stop-btn {
-        min-width: 70px;
-        font-size: 1em;
-        padding: 7px 16px;
-        border-radius: 6px;
-        border: none;
-        background: linear-gradient(90deg, #e53935 0%, #b71c1c 100%);
-        color: #fff;
-        cursor: pointer;
-        box-shadow: 0 1px 4px rgba(229, 57, 53, 0.08);
-        font-weight: 600;
-        transition: background 0.18s, box-shadow 0.18s, transform 0.12s;
-      }
-      .stop-btn:hover {
-        background: linear-gradient(90deg, #b71c1c 0%, #7f0000 100%);
-        box-shadow: 0 2px 8px rgba(229, 57, 53, 0.16);
-        transform: translateY(-2px) scale(1.05);
-      }
-      .reset-btn {
-        min-width: 70px;
-        font-size: 1em;
-        padding: 7px 16px;
-        border-radius: 6px;
-        border: none;
-        background: linear-gradient(90deg, #ff9800 0%, #f57c00 100%);
-        color: #fff;
-        cursor: pointer;
-        box-shadow: 0 1px 4px rgba(255, 152, 0, 0.08);
-        font-weight: 600;
-        transition: background 0.18s, box-shadow 0.18s, transform 0.12s;
-      }
-      .reset-btn:hover {
-        background: linear-gradient(90deg, #f57c00 0%, #e65100 100%);
-        box-shadow: 0 2px 8px rgba(255, 152, 0, 0.16);
-        transform: translateY(-2px) scale(1.05);
-      }
-      #corner-widget {
-        font-family: 'Roboto', Arial, sans-serif;
-      }
-      #corner-widget:hover {
-        box-shadow: none;
-        transform: none;
-      }
-      #button-container {
-        background: #f4f8fd;
-        border-radius: 14px;
-        box-shadow: 0 1.5px 8px rgba(30, 98, 208, 0.06);
-        padding: 18px 20px 14px 20px;
-        margin-bottom: 18px;
-        margin-top: 18px;
-      }
-      .eco-system-container {
-        background: #f7faff;
-        border-radius: 12px;
-        box-shadow: 0 1.5px 8px rgba(30, 98, 208, 0.05);
-        padding: 18px 20px 10px 20px;
-        margin-bottom: 18px;
-      }
-      #corner-content h2, #corner-content h3 {
-        font-family: 'Roboto', Arial, sans-serif;
-        font-weight: 700;
-        color: #1e40af;
-        margin-top: 0.5em;
-        margin-bottom: 0.5em;
-      }
-      #corner-content p, #corner-content label, #corner-content span, #corner-content li {
-        font-family: 'Roboto', Arial, sans-serif;
-        color: #222;
-        font-size: 1.04em;
-      }
-      #corner-content ul {
-        margin-left: 1.2em;
-        margin-bottom: 1em;
-      }
-      #corner-content {
-        padding-bottom: 10px;
-      }
-      @media (max-width: 700px) {
-        #corner-widget {
-          padding: 6px 1vw 6px 1vw;
-          max-width: 99vw;
-        }
-        #button-container, .eco-system-container {
-          padding: 8px 2vw 8px 2vw;
-        }
-      }
-      #simulation-state {
-        margin-top: 0.2em;
-        margin-bottom: 0.2em;
-        font-size: 1.08em;
-        font-weight: 500;
-        color: #1e40af;
-      }
-      .mode-container {
-        margin-bottom: 0.5em;
-      }
-      .trade-reset {
-        margin-left: 4px;
-        padding: 5px 10px;
-        font-size: 1em;
-        border: 2px solid #444;
-        border-radius: 5px;
-        background: #444;
-        color: #fff;
-        cursor: pointer;
-        font-weight: 700;
-        transition: background 0.18s, box-shadow 0.18s, transform 0.12s, border 0.18s;
-      }
-      .trade-reset:hover {
-        background: #222;
-        border: 2px solid #111;
-        color: #fff;
-        transform: translateY(-2px) scale(1.08);
-      }
-      .button.buy, .buy {
-        min-width: 70px;
-        font-size: 1em;
-        padding: 7px 16px;
-        border-radius: 6px;
-        border: none;
-        background: linear-gradient(90deg, #43a047 0%, #388e3c 100%);
-        color: #fff;
-        cursor: pointer;
-        box-shadow: 0 1px 4px rgba(67, 160, 71, 0.08);
-        font-weight: 600;
-        transition: background 0.18s, box-shadow 0.18s, transform 0.12s;
-      }
-      .button.buy:hover, .buy:hover {
-        background: linear-gradient(90deg, #2e7d32 0%, #1b5e20 100%);
-        box-shadow: 0 2px 8px rgba(67, 160, 71, 0.16);
-        transform: translateY(-2px) scale(1.05);
-      }
-      .button.sell, .sell {
-        min-width: 70px;
-        font-size: 1em;
-        padding: 7px 16px;
-        border-radius: 6px;
-        border: none;
-        background: linear-gradient(90deg, #e53935 0%, #b71c1c 100%);
-        color: #fff;
-        cursor: pointer;
-        box-shadow: 0 1px 4px rgba(229, 57, 53, 0.08);
-        font-weight: 600;
-        transition: background 0.18s, box-shadow 0.18s, transform 0.12s;
-      }
-      .button.sell:hover, .sell:hover {
-        background: linear-gradient(90deg, #b71c1c 0%, #7f0000 100%);
-        box-shadow: 0 2px 8px rgba(229, 57, 53, 0.16);
-        transform: translateY(-2px) scale(1.05);
-      }
-    </style>
   </body>
 </html>
 

@@ -14,13 +14,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
   locationDisplay.innerHTML = city;
 
-  citySelect.addEventListener("change", function () {
-    city = citySelect.value;
-    locationDisplay.innerHTML = city;
-    pv.checkforSun();
-  });
+  if (citySelect) {
+    citySelect.classList.remove("flashing-border");
+    citySelect.classList.remove("flashing-border-green");
+  }
+  pv.checkforSun();
 
-  // Add increment button logic
+  if (citySelect) {
+    citySelect.addEventListener("change", function () {
+      citySelect.classList.remove("flashing-border");
+      citySelect.classList.remove("flashing-border-green");
+      city = citySelect.value;
+      locationDisplay.innerHTML = city;
+      pv.checkforSun();
+    });
+  }
+
   document.querySelectorAll(".trade-increment").forEach((btn) => {
     btn.addEventListener("click", function (e) {
       e.preventDefault();
@@ -38,7 +47,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // Add reset button logic for sell and buy amount
   const resetSellBtn = document.getElementById("reset-sell-amount");
   const sellAmountInput = document.getElementById("sell-amount");
   if (resetSellBtn && sellAmountInput) {
@@ -58,7 +66,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Add unit update on input for sell and buy amount
   if (sellAmountInput) {
     sellAmountInput.addEventListener("input", updateSellUnit);
   }
@@ -66,7 +73,6 @@ document.addEventListener("DOMContentLoaded", function () {
     buyAmountInput.addEventListener("input", updateBuyUnit);
   }
 
-  // Cache frequently used DOM elements
   waveLoader1 = document.querySelector(".wave-loader1");
   waveLoader2 = document.querySelector(".wave-loader2");
   batteryLevelElem = document.getElementById("battery-level");
@@ -79,6 +85,8 @@ document.addEventListener("DOMContentLoaded", function () {
     "hydrogen-gauge-percentage"
   );
   hydrogenGaugeLevelElem = document.getElementById("hydrogen-gauge-level");
+
+  pv.checkforSun();
 });
 
 let isNotificationVisible = false;
@@ -125,6 +133,7 @@ export class photovoltaik {
       const data = await response.json();
       const cloudiness = data.current.cloud;
       const daytime = data.current.is_day;
+      const citySelect = document.getElementById("city-select");
       if (daytime) {
         if (cloudiness < 50) {
           document.getElementById("sun").textContent =
@@ -134,6 +143,10 @@ export class photovoltaik {
           document.getElementById("pv-static-arrow").style.display = "none";
           document.getElementById("pv-animated-arrow").style.display = "block";
           sun = true;
+          if (citySelect) {
+            citySelect.classList.remove("flashing-border");
+            citySelect.classList.add("flashing-border-green");
+          }
         } else {
           document.getElementById("simulation-state").innerHTML =
             "Stand-By Mode";
@@ -142,6 +155,10 @@ export class photovoltaik {
           document.getElementById("pv-animated-arrow").style.display = "none";
           document.getElementById("pv-static-arrow").style.display = "block";
           sun = false;
+          if (citySelect) {
+            citySelect.classList.remove("flashing-border-green");
+            citySelect.classList.add("flashing-border");
+          }
         }
       } else {
         document.getElementById("sun").textContent =
@@ -149,10 +166,19 @@ export class photovoltaik {
         document.getElementById("pv-animated-arrow").style.display = "none";
         document.getElementById("pv-static-arrow").style.display = "block";
         sun = false;
+        if (citySelect) {
+          citySelect.classList.remove("flashing-border-green");
+          citySelect.classList.add("flashing-border");
+        }
       }
       return sun;
     } catch (error) {
       console.error("Error", error);
+      const citySelect = document.getElementById("city-select");
+      if (citySelect) {
+        citySelect.classList.remove("flashing-border-green");
+        citySelect.classList.add("flashing-border");
+      }
     }
   }
 }
@@ -423,7 +449,6 @@ async function fetchBatteryLevel() {
   }
 }
 
-// Helper functions to get user-defined thresholds or defaults
 function getBuyThreshold() {
   const input = document.getElementById("buy-threshold");
   const value = input && input.value ? parseFloat(input.value) : NaN;
@@ -459,13 +484,12 @@ export class tradeElectricity {
     this.electricityPrice = await getLastWholeSalePrice();
     console.log("Preis in der Simulation geladen", this.electricityPrice);
 
-    // Update all current price displays
     const currentPriceElement = document.getElementById("current-price");
     if (currentPriceElement) {
       currentPriceElement.innerHTML = this.electricityPrice + "€/MWh";
     }
     document.getElementById("current-price").innerHTML = this.electricityPrice;
-    // Update market price next to buy/sell buttons
+
     const marketPriceSell = document.getElementById(
       "current-market-price-sell"
     );
@@ -516,12 +540,10 @@ let trade = new tradeElectricity();
 function pollWeather() {
   pv.checkforSun();
 }
-setInterval(pollWeather, 5 * 60 * 1000); // every 5 minutes
-pollWeather(); // initial call
+setInterval(pollWeather, 5 * 60 * 1000);
+pollWeather();
 
-// --- Optimized updateSimulation ---
 async function updateSimulation() {
-  //Check for sun and charge battery if possible
   let sun = await pv.checkforSun();
   if (sun && charge.storage < charge.capacity) {
     let powergenerated =
@@ -556,7 +578,7 @@ async function updateSimulation() {
       (hydro.storage / hydro.capacity) * 100 * -1 - 15 + "%"
     );
   }
-  // Auto-convert electricity to hydrogen when battery >= 80%
+
   if (
     charge.storage / charge.capacity >= 0.8 &&
     charge.storage > 0 &&
@@ -715,7 +737,7 @@ document.addEventListener("DOMContentLoaded", function () {
   if (sellButton) {
     sellButton.addEventListener("click", function (e) {
       e.preventDefault();
-      isNotificationVisible = false; // allow new notification
+      isNotificationVisible = false;
       trade.sellElectricity();
     });
   }
@@ -726,7 +748,7 @@ document.addEventListener("DOMContentLoaded", function () {
   if (buyButton) {
     buyButton.addEventListener("click", function (e) {
       e.preventDefault();
-      isNotificationVisible = false; // allow new notification
+      isNotificationVisible = false;
       trade.buyElectricity();
     });
   }
@@ -998,12 +1020,12 @@ let isPriceVisible = true;
 function togglePrices() {
   if (isPriceVisible) {
     //Slide price container out to the left and CO2 container in from the right
-    priceContainer.style.transform = "translateX(-100%)"; // Price moves out of bounds
-    co2Container.style.transform = "translateX(0)"; // CO2 comes into view
+    priceContainer.style.transform = "translateX(-100%)";
+    co2Container.style.transform = "translateX(0)";
   } else {
     //Slide CO2 container out to the left and price container back in from the right
-    co2Container.style.transform = "translateX(100%)"; // CO2 moves out of bounds
-    priceContainer.style.transform = "translateX(0)"; // Price comes back in
+    co2Container.style.transform = "translateX(100%)";
+    priceContainer.style.transform = "translateX(0)";
   }
 
   //Toggle visibility for the next cycle
@@ -1045,7 +1067,6 @@ function updateBuyUnit() {
   }
 }
 
-// Call errorCheck() after battery/hydrogen changes
 function errorCheck() {
   if (charge.storage < 0) {
     resetSimulation();

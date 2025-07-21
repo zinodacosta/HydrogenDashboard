@@ -10,7 +10,7 @@ let batteryChartInstance = null;
 let hydrogenData = [];
 let hydrogenChartInstance = null;
 
-// Debounce function for performance
+
 function debounce(func, wait) {
   let timeout;
   return function executedFunction(...args) {
@@ -23,7 +23,7 @@ function debounce(func, wait) {
   };
 }
 
-// Retry mechanism for failed requests
+
 async function fetchWithRetry(url, options = {}, maxRetries = 3) {
   for (let i = 0; i < maxRetries; i++) {
     try {
@@ -34,7 +34,7 @@ async function fetchWithRetry(url, options = {}, maxRetries = 3) {
       return response;
     } catch (error) {
       if (i === maxRetries - 1) throw error;
-      await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1))); // Exponential backoff
+      await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1))); 
     }
   }
 }
@@ -172,7 +172,7 @@ const fetchData = debounce(async function () {
   } catch (error) {
     console.error("[ERROR] Fetching data:", error);
   }
-}, 300); // Debounce for 300ms
+}, 300); 
 
 //Function to create the first chart
 function createChart(canvasId, labels, values, labelName, borderColor) {
