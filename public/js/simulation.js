@@ -2,7 +2,7 @@ let electrolyzerInterval = null;
 let fuelCellInterval = null;
 let speedfactor = 1;
 
-const API_BASE_URL = "http://159.69.192.158:3000";
+const API_BASE_URL = "https://api.kitechnik.com";
 
 const apiKey = "e7c7b0c5b06544339dd03539253001";
 let city = "Frankfurt";
@@ -314,7 +314,9 @@ export class powersource {
 
 async function getLastWholeSalePrice() {
   try {
-    const response = await fetch("http://159.69.192.158:3000/get-wholesale-price");
+    const response = await fetch(
+      "http://159.69.192.158:3000/get-wholesale-price"
+    );
     const data = await response.json();
     return data.value;
   } catch (error) {

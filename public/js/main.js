@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://159.69.192.158:3000";
+const API_BASE_URL = "https://api.kitechnik.com";
 
 let graphType = "wholesalePrice"; //Default graph type for the first chart
 let graphTypesForSecondChart = ["actualelectricityconsumption"]; //Default second chart graph type
