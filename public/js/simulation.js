@@ -315,7 +315,7 @@ export class powersource {
 async function getLastWholeSalePrice() {
   try {
     const response = await fetch(
-      "http://159.69.192.158:3000/get-wholesale-price"
+      "https://api.kitechnik.com/get-wholesale-price"
     );
     const data = await response.json();
     return data.value;
@@ -341,7 +341,7 @@ async function getCarbonIntensity() {
 //db fetch for battery level
 async function fetchBatteryLevel() {
   try {
-    const response = await fetch("http://159.69.192.158:3000/getBatteryStatus");
+    const response = await fetch("https://api.kitechnik.com/getBatteryStatus");
     const data = await response.json();
 
     if (data.level !== undefined) {
