@@ -92,22 +92,28 @@ document.addEventListener("DOMContentLoaded", function () {
 let isNotificationVisible = false;
 //fade in notification signalizing trade of electricity
 function showNotification(message, type) {
-  if (isNotificationVisible) return;
-
-  isNotificationVisible = true;
   const notification = document.getElementById("notification");
+  if (!notification) return;
+
+  // Remove both classes first
+  notification.classList.remove("notification-buy", "notification-sell");
+  if (type === "buy") {
+    notification.classList.add("notification-buy");
+  } else {
+    notification.classList.add("notification-sell");
+  }
 
   notification.textContent = message;
-  notification.style.backgroundColor = type === "buy" ? "green" : "red"; //green if buy else red
   notification.style.display = "block";
-  notification.style.opacity = "1";
+  // Restart animation
+  notification.style.animation = "none";
+  // Force reflow
+  void notification.offsetWidth;
+  notification.style.animation = "";
 
   setTimeout(() => {
-    notification.style.opacity = "0";
-    setTimeout(() => {
-      notification.style.display = "none";
-      isNotificationVisible = false;
-    }, 500);
+    notification.style.display = "none";
+    notification.classList.remove("notification-buy", "notification-sell");
   }, 3000);
 }
 
@@ -502,14 +508,17 @@ export class tradeElectricity {
     await this.priceCheck();
     const amount = getBuyAmount();
     if (this.money > 0 && charge.storage + amount <= charge.capacity) {
-      this.money -= this.electricityPrice * 0.1 * amount;
+      const pricePerKWh = this.electricityPrice / 1000;
+      this.money -= pricePerKWh * amount;
       charge.updateBatteryStorage(amount);
       showNotification(
-        `${amount} kWh Electricity bought at ${this.electricityPrice} €/MWh!`,
+        `${amount} kWh Electricity bought at ${pricePerKWh.toFixed(3)} €/kWh!`,
         "buy"
       );
-      document.getElementById("money").innerHTML =
-        " : " + this.money.toFixed(2) + " €";
+      const moneyElem = document.getElementById("money");
+      if (moneyElem) {
+        moneyElem.innerHTML = this.money.toFixed(2) + " €";
+      }
     } else {
       showNotification(
         `Cannot buy: not enough money or battery capacity.`,
@@ -521,14 +530,20 @@ export class tradeElectricity {
     await this.priceCheck();
     const amount = getSellAmount();
     if (charge.storage >= amount) {
-      this.money += this.electricityPrice * 0.1 * amount;
+      // electricityPrice is in €/MWh, so per kWh is electricityPrice / 1000
+      const pricePerKWh = this.electricityPrice / 1000;
+      this.money += pricePerKWh * amount;
       charge.updateBatteryStorage(-amount);
       showNotification(
-        `${amount} kWh Electricity sold at ${this.electricityPrice} €/MWh!`,
+        `${amount} kWh Electricity sold at ${pricePerKWh.toFixed(3)} €/kWh!`,
         "sell"
       );
-      document.getElementById("money").innerHTML =
-        " : " + this.money.toFixed(2) + " €";
+      const moneyElem = document.getElementById("money");
+      if (moneyElem) {
+        moneyElem.innerHTML = this.money.toFixed(2) + " €";
+        moneyElem.classList.add("money-pop");
+        setTimeout(() => moneyElem.classList.remove("money-pop"), 700);
+      }
     } else {
       showNotification(`Cannot sell: not enough storage.`, "buy");
     }
@@ -612,7 +627,7 @@ function resetSimulation() {
 
   document.getElementById("hydrogen-gauge-percentage").innerText = " 0 %";
   document.getElementById("hydrogen-gauge-level").style.width = 0;
-  document.getElementById("money").innerText = " : 0 €";
+  document.getElementById("money").innerText = "  0 €";
 }
 
 //Slider für Simulation

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Protonik Hydrogen Dashboard</title>
     
-    <!-- Favicon to prevent 404 errors -->
+
     <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
     
     <!-- Preconnect to external domains for faster loading -->
@@ -37,7 +37,7 @@
   </head>
   <body>
     
-    <div id="corner-widget">
+    <div id="corner-widget" class="widget-card">
       <button id="toggle-widget">▲</button>
       <div id="code-minimized">
         <div id="corner-content">
@@ -142,7 +142,7 @@
 
 
             <!-- Hydrogen Eco System Section -->
-            <h2>Hydrogen Eco Simulation</h2>
+            <h2 class="widget-title">Hydrogen Eco Simulation</h2>
 
             <h3>Select Use Case: </h3>
 
@@ -269,6 +269,10 @@
               </div>
             </div>
             <div id="button-container">
+              <div class="money-row" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                <span>Money in Account:</span>
+                <span id="money" class="money-highlight"></span>
+              </div>
               <div class="trade-row">
                 <button id="sell-button" class="button sell">Sell</button>
                 <input type="number" id="sell-amount" min="0.1" step="0.1" placeholder="kWh" class="trade-input">
@@ -293,10 +297,11 @@
               <button id="convert-to-hydrogen-stop" class="stop-btn">Stop Electrolyzer</button>
               <button id="convert-to-electricity" class="start-btn">Start Fuelcell</button>
               <button id="convert-to-electricity-stop" class="stop-btn">Stop Fuelcell</button>
-              <p>Money in Account: <span id="money"></span></p>
-              <label for="speed-factor">Speed Factor:</label>
-              <input type="range" id="speed-factor" step="1" min="1" max="10" />
-              <span id="speed-factor-value">1x</span>
+              <div class="speed-row" style="margin-top: 18px;">
+                <label for="speed-factor">Speed Factor:</label>
+                <input type="range" id="speed-factor" step="1" min="1" max="10" />
+                <span id="speed-factor-value">1x</span>
+              </div>
               <button id="reset" class="reset-btn">Reset Simulation</button>
             </div>
             <div class="flowchart">
