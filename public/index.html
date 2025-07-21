@@ -294,15 +294,15 @@
                 <button id="reset-buy-amount" class="trade-reset" title="Reset to 0">⟲</button>
                 <span class="trade-market-price">Current Market Price: <span id="current-market-price-buy"></span> €/MWh</span>
               </div>
-              <button id="convert-to-hydrogen" class="modern-btn start">Start Electrolyzer</button>
-              <button id="convert-to-hydrogen-stop" class="modern-btn button">Stop Electrolyzer</button>
-              <button id="convert-to-electricity" class="modern-btn start">Start Fuelcell</button>
-              <button id="convert-to-electricity-stop" class="modern-btn button">Stop Fuelcell</button>
+              <button id="convert-to-hydrogen" class="start-btn">Start Electrolyzer</button>
+              <button id="convert-to-hydrogen-stop" class="stop-btn">Stop Electrolyzer</button>
+              <button id="convert-to-electricity" class="start-btn">Start Fuelcell</button>
+              <button id="convert-to-electricity-stop" class="stop-btn">Stop Fuelcell</button>
               <p>Money in Account: <span id="money"></span></p>
               <label for="speed-factor">Speed Factor:</label>
               <input type="range" id="speed-factor" step="1" min="1" max="10" />
               <span id="speed-factor-value">1x</span>
-              <button id="reset" class="modern-btn button regular">Reset Simulation</button>
+              <button id="reset" class="reset-btn">Reset Simulation</button>
             </div>
             <div class="flowchart">
               <div class="flow-item">
@@ -455,22 +455,58 @@
         box-shadow: 0 2px 8px rgba(30, 98, 208, 0.16);
         transform: translateY(-2px) scale(1.05);
       }
-      .modern-btn {
+      .start-btn {
         min-width: 70px;
         font-size: 1em;
         padding: 7px 16px;
         border-radius: 6px;
         border: none;
-        background: linear-gradient(90deg, #4f8cff 0%, #1e62d0 100%);
+        background: linear-gradient(90deg, #43a047 0%, #388e3c 100%);
         color: #fff;
         cursor: pointer;
-        box-shadow: 0 1px 4px rgba(30, 98, 208, 0.08);
+        box-shadow: 0 1px 4px rgba(67, 160, 71, 0.08);
         font-weight: 600;
         transition: background 0.18s, box-shadow 0.18s, transform 0.12s;
       }
-      .modern-btn:hover {
-        background: linear-gradient(90deg, #2563eb 0%, #1e40af 100%);
-        box-shadow: 0 2px 8px rgba(30, 98, 208, 0.16);
+      .start-btn:hover {
+        background: linear-gradient(90deg, #2e7d32 0%, #1b5e20 100%);
+        box-shadow: 0 2px 8px rgba(67, 160, 71, 0.16);
+        transform: translateY(-2px) scale(1.05);
+      }
+      .stop-btn {
+        min-width: 70px;
+        font-size: 1em;
+        padding: 7px 16px;
+        border-radius: 6px;
+        border: none;
+        background: linear-gradient(90deg, #e53935 0%, #b71c1c 100%);
+        color: #fff;
+        cursor: pointer;
+        box-shadow: 0 1px 4px rgba(229, 57, 53, 0.08);
+        font-weight: 600;
+        transition: background 0.18s, box-shadow 0.18s, transform 0.12s;
+      }
+      .stop-btn:hover {
+        background: linear-gradient(90deg, #b71c1c 0%, #7f0000 100%);
+        box-shadow: 0 2px 8px rgba(229, 57, 53, 0.16);
+        transform: translateY(-2px) scale(1.05);
+      }
+      .reset-btn {
+        min-width: 70px;
+        font-size: 1em;
+        padding: 7px 16px;
+        border-radius: 6px;
+        border: none;
+        background: linear-gradient(90deg, #ff9800 0%, #f57c00 100%);
+        color: #fff;
+        cursor: pointer;
+        box-shadow: 0 1px 4px rgba(255, 152, 0, 0.08);
+        font-weight: 600;
+        transition: background 0.18s, box-shadow 0.18s, transform 0.12s;
+      }
+      .reset-btn:hover {
+        background: linear-gradient(90deg, #f57c00 0%, #e65100 100%);
+        box-shadow: 0 2px 8px rgba(255, 152, 0, 0.16);
         transform: translateY(-2px) scale(1.05);
       }
       #corner-widget {
@@ -550,6 +586,42 @@
         border: 2px solid #111;
         color: #fff;
         transform: translateY(-2px) scale(1.08);
+      }
+      .button.buy, .buy {
+        min-width: 70px;
+        font-size: 1em;
+        padding: 7px 16px;
+        border-radius: 6px;
+        border: none;
+        background: linear-gradient(90deg, #43a047 0%, #388e3c 100%);
+        color: #fff;
+        cursor: pointer;
+        box-shadow: 0 1px 4px rgba(67, 160, 71, 0.08);
+        font-weight: 600;
+        transition: background 0.18s, box-shadow 0.18s, transform 0.12s;
+      }
+      .button.buy:hover, .buy:hover {
+        background: linear-gradient(90deg, #2e7d32 0%, #1b5e20 100%);
+        box-shadow: 0 2px 8px rgba(67, 160, 71, 0.16);
+        transform: translateY(-2px) scale(1.05);
+      }
+      .button.sell, .sell {
+        min-width: 70px;
+        font-size: 1em;
+        padding: 7px 16px;
+        border-radius: 6px;
+        border: none;
+        background: linear-gradient(90deg, #e53935 0%, #b71c1c 100%);
+        color: #fff;
+        cursor: pointer;
+        box-shadow: 0 1px 4px rgba(229, 57, 53, 0.08);
+        font-weight: 600;
+        transition: background 0.18s, box-shadow 0.18s, transform 0.12s;
+      }
+      .button.sell:hover, .sell:hover {
+        background: linear-gradient(90deg, #b71c1c 0%, #7f0000 100%);
+        box-shadow: 0 2px 8px rgba(229, 57, 53, 0.16);
+        transform: translateY(-2px) scale(1.05);
       }
     </style>
   </body>
