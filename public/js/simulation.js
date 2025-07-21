@@ -19,6 +19,66 @@ document.addEventListener("DOMContentLoaded", function () {
     locationDisplay.innerHTML = city;
     pv.checkforSun();
   });
+
+  // Add increment button logic
+  document.querySelectorAll(".trade-increment").forEach((btn) => {
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      const targetId = btn.getAttribute("data-target");
+      const inc = parseFloat(btn.getAttribute("data-inc"));
+      const input = document.getElementById(targetId);
+      if (input) {
+        let val = parseFloat(input.value) || 0;
+        val += inc;
+        if (val < 0.1) val = 0.1;
+        input.value = val;
+        if (targetId === "sell-amount") updateSellUnit();
+        if (targetId === "buy-amount") updateBuyUnit();
+      }
+    });
+  });
+
+  // Add reset button logic for sell and buy amount
+  const resetSellBtn = document.getElementById("reset-sell-amount");
+  const sellAmountInput = document.getElementById("sell-amount");
+  if (resetSellBtn && sellAmountInput) {
+    resetSellBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      sellAmountInput.value = 0;
+      if (typeof updateSellUnit === "function") updateSellUnit();
+    });
+  }
+  const resetBuyBtn = document.getElementById("reset-buy-amount");
+  const buyAmountInput = document.getElementById("buy-amount");
+  if (resetBuyBtn && buyAmountInput) {
+    resetBuyBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      buyAmountInput.value = 0;
+      if (typeof updateBuyUnit === "function") updateBuyUnit();
+    });
+  }
+
+  // Add unit update on input for sell and buy amount
+  if (sellAmountInput) {
+    sellAmountInput.addEventListener("input", updateSellUnit);
+  }
+  if (buyAmountInput) {
+    buyAmountInput.addEventListener("input", updateBuyUnit);
+  }
+
+  // Cache frequently used DOM elements
+  waveLoader1 = document.querySelector(".wave-loader1");
+  waveLoader2 = document.querySelector(".wave-loader2");
+  batteryLevelElem = document.getElementById("battery-level");
+  batteryGaugePercentageElem = document.getElementById(
+    "battery-gauge-percentage"
+  );
+  batteryGaugeLevelElem = document.getElementById("battery-gauge-level");
+  hydrogenLevelElem = document.getElementById("hydrogen-level");
+  hydrogenGaugePercentageElem = document.getElementById(
+    "hydrogen-gauge-percentage"
+  );
+  hydrogenGaugeLevelElem = document.getElementById("hydrogen-gauge-level");
 });
 
 let isNotificationVisible = false;
@@ -127,6 +187,7 @@ export class battery {
       batteryPercentage.toFixed(1) + " %";
     document.getElementById("battery-gauge-level").style.width =
       batteryPercentage.toFixed(1) + "%";
+    errorCheck();
   }
 }
 
@@ -240,6 +301,7 @@ export class electrolyzer {
           hydrogenPercentage.toFixed(1) + " %";
         document.getElementById("hydrogen-gauge-level").style.width =
           hydrogenPercentage + "%";
+        errorCheck();
       } else {
         document.getElementById("hydrogen-level").innerHTML =
           "Not enough battery for hydrogen production";
@@ -252,6 +314,7 @@ export class electrolyzer {
         hydrogenPercentage.toFixed(1) + " %";
       document.getElementById("hydrogen-gauge-level").style.width =
         hydrogenPercentage + "%";
+      errorCheck();
     }
   }
 }
@@ -360,6 +423,28 @@ async function fetchBatteryLevel() {
   }
 }
 
+// Helper functions to get user-defined thresholds or defaults
+function getBuyThreshold() {
+  const input = document.getElementById("buy-threshold");
+  const value = input && input.value ? parseFloat(input.value) : NaN;
+  return !isNaN(value) && value > 0 ? value : 80;
+}
+function getSellThreshold() {
+  const input = document.getElementById("sell-threshold");
+  const value = input && input.value ? parseFloat(input.value) : NaN;
+  return !isNaN(value) && value > 0 ? value : 150;
+}
+function getBuyAmount() {
+  const input = document.getElementById("buy-amount");
+  const value = input && input.value ? parseFloat(input.value) : NaN;
+  return !isNaN(value) && value > 0 ? value : 1;
+}
+function getSellAmount() {
+  const input = document.getElementById("sell-amount");
+  const value = input && input.value ? parseFloat(input.value) : NaN;
+  return !isNaN(value) && value > 0 ? value : 1;
+}
+
 export class tradeElectricity {
   constructor() {
     this.electricityPrice = null;
@@ -374,71 +459,67 @@ export class tradeElectricity {
     this.electricityPrice = await getLastWholeSalePrice();
     console.log("Preis in der Simulation geladen", this.electricityPrice);
 
-    //Check if elements exist before trying to modify them
+    // Update all current price displays
     const currentPriceElement = document.getElementById("current-price");
     if (currentPriceElement) {
       currentPriceElement.innerHTML = this.electricityPrice + "€/MWh";
     }
     document.getElementById("current-price").innerHTML = this.electricityPrice;
-    const buyingPriceElement = document.getElementById("buying-price");
-    if (buyingPriceElement) {
-      if (this.electricityPrice > 100) {
-        buyingPriceElement.innerHTML =
-          "Current Price is over threshold -> sell electricity";
-        if (charge.storage != 0) {
-          charge.storage -= 1;
-          this.money += this.electricityPrice;
-          document.getElementById("money").innerHTML =
-            " : " + this.money + " €";
-        }
-      } else if (this.electricityPrice < 80) {
-        buyingPriceElement.innerHTML =
-          "Current Price is under threshold -> buy electricity";
-        charge.storage += 1;
-        this.money -= this.electricityPrice;
-        document.getElementById("money").innerHTML = " : " + this.money + " €";
-      }
-    }
+    // Update market price next to buy/sell buttons
+    const marketPriceSell = document.getElementById(
+      "current-market-price-sell"
+    );
+    const marketPriceBuy = document.getElementById("current-market-price-buy");
+    if (marketPriceSell) marketPriceSell.textContent = this.electricityPrice;
+    if (marketPriceBuy) marketPriceBuy.textContent = this.electricityPrice;
   }
 
   async buyElectricity() {
-    if (this.money > 0) {
-      if (this.electricityPrice === null || isNaN(this.electricityPrice)) {
-        //waiting for api to fetch price
-        await this.priceCheck();
-        if (this.electricityPrice === null || isNaN(this.electricityPrice))
-          return;
-      }
-      if (charge.storage + 1 <= charge.capacity && this.money > 0) {
-        console.log("Bought 1kWh");
-        showNotification("1kW Electricity bought!", "buy");
-        this.money -= this.electricityPrice * 0.1;
-        charge.updateBatteryStorage(1);
-        document.getElementById("money").innerHTML =
-          " : " + this.money.toFixed(2) + " €";
-      }
+    await this.priceCheck();
+    const amount = getBuyAmount();
+    if (this.money > 0 && charge.storage + amount <= charge.capacity) {
+      this.money -= this.electricityPrice * 0.1 * amount;
+      charge.updateBatteryStorage(amount);
+      showNotification(
+        `${amount} kWh Electricity bought at ${this.electricityPrice} €/MWh!`,
+        "buy"
+      );
+      document.getElementById("money").innerHTML =
+        " : " + this.money.toFixed(2) + " €";
+    } else {
+      showNotification(
+        `Cannot buy: not enough money or battery capacity.`,
+        "sell"
+      );
     }
   }
   async sellElectricity() {
-    if (charge.storage >= 1) {
-      if (this.electricityPrice === null || isNaN(this.electricityPrice)) {
-        await this.priceCheck();
-        if (this.electricityPrice === null || isNaN(this.electricityPrice))
-          return;
-      }
-      if (this.electricityPrice > 0) {
-        console.log("Sold 1kWh");
-        showNotification("1kW Electricity sold!", "sell");
-        this.money += this.electricityPrice * 0.1;
-        charge.updateBatteryStorage(-1);
-        document.getElementById("money").innerHTML =
-          " : " + this.money.toFixed(2) + " €";
-      }
+    await this.priceCheck();
+    const amount = getSellAmount();
+    if (charge.storage >= amount) {
+      this.money += this.electricityPrice * 0.1 * amount;
+      charge.updateBatteryStorage(-amount);
+      showNotification(
+        `${amount} kWh Electricity sold at ${this.electricityPrice} €/MWh!`,
+        "sell"
+      );
+      document.getElementById("money").innerHTML =
+        " : " + this.money.toFixed(2) + " €";
+    } else {
+      showNotification(`Cannot sell: not enough storage.`, "buy");
     }
   }
 }
 let trade = new tradeElectricity();
 
+// --- Weather API polling every 5 minutes ---
+function pollWeather() {
+  pv.checkforSun();
+}
+setInterval(pollWeather, 5 * 60 * 1000); // every 5 minutes
+pollWeather(); // initial call
+
+// --- Optimized updateSimulation ---
 async function updateSimulation() {
   //Check for sun and charge battery if possible
   let sun = await pv.checkforSun();
@@ -453,109 +534,36 @@ async function updateSimulation() {
       charge.updateBatteryStorage(powergenerated);
     }
   }
-
-  /**
-  //Send battery level to server
-  try {
-    const response = await fetch("http://localhost:3000/saveBatteryStatus", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ batteryLevel: charge.storage }),
-    });
-
-    if (response.ok) {
-    } else {
-      console.error("Failed to save battery level");
-    }
-  } catch (error) {
-    console.error("Error sending battery level to server:", error);
+  const waveLoader1 = document.querySelector(".wave-loader1");
+  if (waveLoader1) {
+    waveLoader1.style.setProperty(
+      "--before-top",
+      (charge.storage / charge.capacity) * 100 * -1 - 15 + "%"
+    );
+    waveLoader1.style.setProperty(
+      "--after-top",
+      (charge.storage / charge.capacity) * 100 * -1 - 15 + "%"
+    );
   }
-  //Send hydrogen level to server
-
-   try {
-    const response = await fetch("http://localhost:3000/saveHydrogenStatus", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ hydrogenLevel: hydro.storage }),
-    });
-
-    if (response.ok) {
-    } else {
-      console.error("Failed to save hydrogen level");
-    }
-  } catch (error) {
-    console.error("Error sending hydrogen level to server:", error);
+  const waveLoader2 = document.querySelector(".wave-loader2");
+  if (waveLoader2) {
+    waveLoader2.style.setProperty(
+      "--before-top",
+      (hydro.storage / hydro.capacity) * 100 * -1 - 15 + "%"
+    );
+    waveLoader2.style.setProperty(
+      "--after-top",
+      (hydro.storage / hydro.capacity) * 100 * -1 - 15 + "%"
+    );
   }
-   */
-
-  //Automate trade logic
-  if (trade.electricityPrice > 150) {
-    console.log("Electricity Price over Threshold: Selling Electricity");
-    await fc.produceElectricity();
-    document.getElementById("simulation-state").innerHTML = " Fuel Cell Mode ";
-    document.getElementById("fuelcell-static-arrow").style.display = "none";
-    document.getElementById("fuelcell-animated-arrow").style.display = "block";
-    await trade.sellElectricity();
-  } else {
-    document.getElementById("fuelcell-static-arrow").style.display = "block";
-    document.getElementById("fuelcell-animated-arrow").style.display = "none";
+  // Auto-convert electricity to hydrogen when battery >= 80%
+  if (
+    charge.storage / charge.capacity >= 0.8 &&
+    charge.storage > 0 &&
+    hydro.storage < hydro.capacity
+  ) {
+    hydro.produceHydrogen();
   }
-  if (trade.electricityPrice < 80) {
-    console.log("Electricity Price under Threshold: Buying Electricity");
-    await trade.buyElectricity();
-
-    if (trade.electricityPrice > 80 && trade.electricityPrice < 150) {
-      console.log("Electricity Price in acceptable range");
-      await hydro.produceHydrogen();
-
-      document.getElementById("electrolyzer-static-arrow").style.display =
-        "none";
-      document.getElementById("electrolyzer-animated-arrow").style.display =
-        "block";
-    } else {
-      document.getElementById("electrolyzer-static-arrow").style.display =
-        "block";
-      document.getElementById("electrolyzer-animated-arrow").style.display =
-        "none";
-    }
-  }
-  if (charge.storage / charge.capacity > 0.8 && trade.electricityPrice < 150) {
-    await hydro.produceHydrogen();
-
-    document.getElementById("electrolyzer-static-arrow").style.display = "none";
-    document.getElementById("electrolyzer-animated-arrow").style.display =
-      "block";
-  } else {
-    document.getElementById("electrolyzer-static-arrow").style.display =
-      "block";
-    document.getElementById("electrolyzer-animated-arrow").style.display =
-      "none";
-  }
-
-  const waveLoader1before = document.querySelector(".wave-loader1");
-  waveLoader1before.style.setProperty(
-    "--before-top",
-    (charge.storage / charge.capacity) * 100 * -1 - 15 + "%"
-  );
-  const waveLoader1after = document.querySelector(".wave-loader1");
-  waveLoader1after.style.setProperty(
-    "--after-top",
-    (charge.storage / charge.capacity) * 100 * -1 - 15 + "%"
-  );
-  const waveLoader2before = document.querySelector(".wave-loader2");
-  waveLoader2before.style.setProperty(
-    "--before-top",
-    (hydro.storage / hydro.capacity) * 100 * -1 - 15 + "%"
-  );
-  const waveLoader2after = document.querySelector(".wave-loader2");
-  waveLoader2after.style.setProperty(
-    "--after-top",
-    (hydro.storage / hydro.capacity) * 100 * -1 - 15 + "%"
-  );
 }
 
 function resetSimulation() {
@@ -705,14 +713,22 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   if (sellButton) {
-    sellButton.addEventListener("click", trade.sellElectricity.bind(trade));
+    sellButton.addEventListener("click", function (e) {
+      e.preventDefault();
+      isNotificationVisible = false; // allow new notification
+      trade.sellElectricity();
+    });
   }
   if (resetButton) {
     resetButton.addEventListener("click", resetSimulation);
   }
 
   if (buyButton) {
-    buyButton.addEventListener("click", trade.buyElectricity.bind(trade));
+    buyButton.addEventListener("click", function (e) {
+      e.preventDefault();
+      isNotificationVisible = false; // allow new notification
+      trade.buyElectricity();
+    });
   }
 
   const usecase = document.getElementById("use-case");
@@ -994,6 +1010,42 @@ function togglePrices() {
   isPriceVisible = !isPriceVisible;
 }
 
+setInterval(togglePrices, 10000);
+
+//Start-Synchronisation nur einmal beim Laden
+getCarbonIntensity();
+
+//Regelmäßige Updates laufen nur über updateSimulation()
+setInterval(updateSimulation, 1000);
+
+//TODO- farbschema an website anpassen
+
+function updateSellUnit() {
+  const input = document.getElementById("sell-amount");
+  const unitSpan = document.getElementById("sell-amount-unit");
+  if (input && unitSpan) {
+    const val = parseFloat(input.value) || 0;
+    if (val >= 1000) {
+      unitSpan.textContent = "MWh";
+    } else {
+      unitSpan.textContent = "kWh";
+    }
+  }
+}
+function updateBuyUnit() {
+  const input = document.getElementById("buy-amount");
+  const unitSpan = document.getElementById("buy-amount-unit");
+  if (input && unitSpan) {
+    const val = parseFloat(input.value) || 0;
+    if (val >= 1000) {
+      unitSpan.textContent = "MWh";
+    } else {
+      unitSpan.textContent = "kWh";
+    }
+  }
+}
+
+// Call errorCheck() after battery/hydrogen changes
 function errorCheck() {
   if (charge.storage < 0) {
     resetSimulation();
@@ -1002,14 +1054,3 @@ function errorCheck() {
     resetSimulation();
   }
 }
-
-setInterval(togglePrices, 10000);
-
-//Start-Synchronisation nur einmal beim Laden
-getCarbonIntensity();
-
-//Regelmäßige Updates laufen nur über updateSimulation()
-setInterval(updateSimulation, 1000);
-setInterval(errorCheck, 1000); //Check for errors every second
-
-//TODO- farbschema an website anpassen

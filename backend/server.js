@@ -386,3 +386,12 @@ https.createServer(sslOptions, app).listen(443, "0.0.0.0", async () => {
 app.listen(port, "0.0.0.0", () => {
   console.log(`HTTP Server running at http://0.0.0.0:${port}`);
 });
+
+app.get("/test-graph", (req, res) => {
+  res.json({
+    filePath: graphIdentifiersPath,
+    fileExists: fs.existsSync(graphIdentifiersPath),
+    data: graphIdentifiers,
+    keys: Object.keys(graphIdentifiers),
+  });
+});
