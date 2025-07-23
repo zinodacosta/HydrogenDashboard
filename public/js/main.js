@@ -10,7 +10,6 @@ let batteryChartInstance = null;
 let hydrogenData = [];
 let hydrogenChartInstance = null;
 
-
 function debounce(func, wait) {
   let timeout;
   return function executedFunction(...args) {
@@ -23,7 +22,6 @@ function debounce(func, wait) {
   };
 }
 
-
 async function fetchWithRetry(url, options = {}, maxRetries = 3) {
   for (let i = 0; i < maxRetries; i++) {
     try {
@@ -34,7 +32,7 @@ async function fetchWithRetry(url, options = {}, maxRetries = 3) {
       return response;
     } catch (error) {
       if (i === maxRetries - 1) throw error;
-      await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1))); 
+      await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
     }
   }
 }
@@ -172,7 +170,7 @@ const fetchData = debounce(async function () {
   } catch (error) {
     console.error("[ERROR] Fetching data:", error);
   }
-}, 300); 
+}, 300);
 
 //Function to create the first chart
 function createChart(canvasId, labels, values, labelName, borderColor) {
@@ -197,8 +195,13 @@ function createChart(canvasId, labels, values, labelName, borderColor) {
           tension: 0.1,
           fill: true,
           pointRadius: 0,
-          pointHoverRadius: 6,
+          pointHoverRadius: 8,
           pointHitRadius: 20,
+          borderWidth: 2.5,
+          pointBackgroundColor: borderColor,
+          pointHoverBorderWidth: 3.5,
+          pointHoverBackgroundColor: borderColor,
+          pointHoverBorderColor: "#fff",
         },
       ],
     },
@@ -239,6 +242,8 @@ function createChart(canvasId, labels, values, labelName, borderColor) {
           ticks: {
             font: {
               size: 14,
+              family: "Roboto, Arial, sans-serif",
+              weight: 500,
             },
           },
           type: "time",
@@ -255,13 +260,17 @@ function createChart(canvasId, labels, values, labelName, borderColor) {
           ticks: {
             font: {
               size: 14,
+              family: "Roboto, Arial, sans-serif",
+              weight: 500,
             },
           },
           title: {
             display: true,
             text: "€/MWh",
             font: {
-              size: 14,
+              size: 16,
+              family: "Roboto, Arial, sans-serif",
+              weight: 500,
             },
           },
           beginAtZero: true,
@@ -348,24 +357,64 @@ function updateSecondChart(graphDataArray) {
     myChartInstance2.destroy();
   }
 
-  //Create a new chart instance with the vertical line plugin
+  let datasets = graphDataArray.map((graphData) => ({
+    label: graphData.label,
+    data: graphData.values,
+    borderColor: graphData.borderColor,
+    backgroundColor: graphData.borderColor.startsWith("rgb")
+      ? graphData.borderColor.replace(/rgb\(([^)]+)\)/, "rgba($1, 0.8)") //Ensure transparency for background
+      : "rgba(0, 0, 0, 0.8)", //Fallback to black
+    tension: 0.1,
+    fill: false,
+    pointRadius: 0,
+    pointHoverRadius: 8,
+    pointHitRadius: 20,
+    borderWidth: 2.5,
+    pointBackgroundColor: graphData.borderColor,
+    pointHoverBorderWidth: 3.5,
+    pointHoverBackgroundColor: graphData.borderColor,
+    pointHoverBorderColor: "#fff",
+  }));
+
+  // Exclude 'actualelectricityconsumption' from the sum
+  const sumSourceData = graphDataArray.filter(
+    (g, idx) => !g.label.toLowerCase().includes("actual")
+  );
+
+  if (sumSourceData.length > 1) {
+    // Use the first non-actual dataset's labels as reference
+    const sumLabels = sumSourceData[0].labels;
+    const sumValues = sumLabels.map((_, idx) => {
+      let sum = 0;
+      for (let i = 0; i < sumSourceData.length; i++) {
+        sum += Number(sumSourceData[i].values[idx]) || 0;
+      }
+      return sum;
+    });
+    datasets.push({
+      label: "Sum",
+      data: sumValues,
+      borderColor: "#43a047",
+      backgroundColor: "rgba(67,160,71,0.15)",
+      tension: 0.1,
+      fill: false,
+      pointRadius: 0,
+      pointHoverRadius: 8,
+      pointHitRadius: 20,
+      borderWidth: 3.5,
+      pointBackgroundColor: "#43a047",
+      pointHoverBorderWidth: 3.5,
+      pointHoverBackgroundColor: "#43a047",
+      pointHoverBorderColor: "#fff",
+      borderDash: [6, 4],
+    });
+  }
+
   myChartInstance2 = new Chart(ctx, {
     type: "line",
     data: {
       labels: graphDataArray[0].labels,
-      datasets: graphDataArray.map((graphData) => ({
-        label: graphData.label,
-        data: graphData.values,
-        borderColor: graphData.borderColor,
-        backgroundColor: graphData.borderColor.startsWith("rgb")
-          ? graphData.borderColor.replace(/rgb\(([^)]+)\)/, "rgba($1, 0.8)") //Ensure transparency for background
-          : "rgba(0, 0, 0, 0.8)", //Fallback to black
-        tension: 0.1,
-        fill: false,
-        pointRadius: 0,
-        pointHoverRadius: 6,
-        pointHitRadius: 20,
-      })),
+      datasets: datasets,
     },
     options: {
       layout: {
@@ -400,6 +449,8 @@ function updateSecondChart(graphDataArray) {
           ticks: {
             font: {
               size: 14,
+              family: "Roboto, Arial, sans-serif",
+              weight: 500,
             },
           },
           type: "time",
@@ -415,13 +466,17 @@ function updateSecondChart(graphDataArray) {
           ticks: {
             font: {
               size: 14,
+              family: "Roboto, Arial, sans-serif",
+              weight: 500,
             },
           },
           title: {
             display: true,
             text: "MWh",
             font: {
-              size: 14,
+              size: 16,
+              family: "Roboto, Arial, sans-serif",
+              weight: 500,
             },
           },
           beginAtZero: true,
@@ -487,6 +542,12 @@ function createBatteryChart() {
           tension: 0.1,
           fill: true,
           pointRadius: 0,
+          borderWidth: 2.5,
+          pointHoverRadius: 8,
+          pointBackgroundColor: "rgb(255, 165, 0)",
+          pointHoverBorderWidth: 3.5,
+          pointHoverBackgroundColor: "rgb(255, 165, 0)",
+          pointHoverBorderColor: "#fff",
         },
       ],
     },
@@ -563,6 +624,12 @@ function createHydrogenChart() {
           tension: 0.1,
           fill: true,
           pointRadius: 0,
+          borderWidth: 2.5,
+          pointHoverRadius: 8,
+          pointBackgroundColor: "rgb(72, 255, 0)",
+          pointHoverBorderWidth: 3.5,
+          pointHoverBackgroundColor: "rgb(72, 255, 0)",
+          pointHoverBorderColor: "#fff",
         },
       ],
     },
@@ -690,4 +757,22 @@ document.addEventListener("DOMContentLoaded", function () {
       toggleButton.textContent = "▲";
     }
   });
+
+  // Quick Manual button interactivity
+  const quickManualBtn = document.getElementById("quick-manual-btn");
+  const quickManualInfo = document.getElementById("quick-manual-info");
+  if (quickManualBtn && quickManualInfo) {
+    quickManualBtn.addEventListener("click", function () {
+      if (
+        quickManualInfo.style.display === "none" ||
+        quickManualInfo.style.display === ""
+      ) {
+        quickManualInfo.style.display = "block";
+        quickManualBtn.textContent = "Hide Manual";
+      } else {
+        quickManualInfo.style.display = "none";
+        quickManualBtn.textContent = "Quick Manual";
+      }
+    });
+  }
 });

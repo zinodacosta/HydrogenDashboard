@@ -140,10 +140,13 @@ export class photovoltaik {
       const cloudiness = data.current.cloud;
       const daytime = data.current.is_day;
       const citySelect = document.getElementById("city-select");
+      const sunElem = document.getElementById("sun");
       if (daytime) {
         if (cloudiness < 50) {
-          document.getElementById("sun").textContent =
-            "Sun is shining. Charge Mode";
+          if (sunElem) {
+            sunElem.innerHTML =
+              '<span class="pv-sun-highlight">Sun is shining</span>';
+          }
           document.getElementById("simulation-state").innerHTML =
             " Charge Mode ";
           document.getElementById("pv-static-arrow").style.display = "none";
@@ -151,13 +154,12 @@ export class photovoltaik {
           sun = true;
           if (citySelect) {
             citySelect.classList.remove("flashing-border");
-            citySelect.classList.add("flashing-border-green");
+            citySelect.classList.remove("flashing-border-green");
           }
         } else {
           document.getElementById("simulation-state").innerHTML =
             "Stand-By Mode";
-          document.getElementById("sun").textContent =
-            "It is cloudy. PV not charging";
+          if (sunElem) sunElem.textContent = "It is cloudy. PV not charging";
           document.getElementById("pv-animated-arrow").style.display = "none";
           document.getElementById("pv-static-arrow").style.display = "block";
           sun = false;
@@ -165,10 +167,10 @@ export class photovoltaik {
             citySelect.classList.remove("flashing-border-green");
             citySelect.classList.add("flashing-border");
           }
+          if (sunElem) sunElem.classList.remove("pv-sun-highlight");
         }
       } else {
-        document.getElementById("sun").textContent =
-          "It is night-time. PV not charging";
+        if (sunElem) sunElem.textContent = "It is night-time. PV not charging";
         document.getElementById("pv-animated-arrow").style.display = "none";
         document.getElementById("pv-static-arrow").style.display = "block";
         sun = false;
@@ -176,6 +178,7 @@ export class photovoltaik {
           citySelect.classList.remove("flashing-border-green");
           citySelect.classList.add("flashing-border");
         }
+        if (sunElem) sunElem.classList.remove("pv-sun-highlight");
       }
       return sun;
     } catch (error) {
@@ -185,6 +188,8 @@ export class photovoltaik {
         citySelect.classList.remove("flashing-border-green");
         citySelect.classList.add("flashing-border");
       }
+      const sunElem = document.getElementById("sun");
+      if (sunElem) sunElem.classList.remove("pv-sun-highlight");
     }
   }
 }
@@ -502,6 +507,7 @@ export class tradeElectricity {
     const marketPriceBuy = document.getElementById("current-market-price-buy");
     if (marketPriceSell) marketPriceSell.textContent = this.electricityPrice;
     if (marketPriceBuy) marketPriceBuy.textContent = this.electricityPrice;
+    console.log("Set DOM market price to:", this.electricityPrice);
   }
 
   async buyElectricity() {
@@ -548,6 +554,28 @@ export class tradeElectricity {
       showNotification(`Cannot sell: not enough storage.`, "buy");
     }
   }
+
+  // New method to sell a custom amount (for auto-sell)
+  async sellCustomAmount(amount) {
+    await this.priceCheck();
+    if (charge.storage >= amount && amount > 0) {
+      const pricePerKWh = this.electricityPrice / 1000;
+      this.money += pricePerKWh * amount;
+      charge.updateBatteryStorage(-amount);
+      showNotification(
+        `${amount} kWh Electricity automatically sold at ${pricePerKWh.toFixed(
+          3
+        )} €/kWh!`,
+        "sell"
+      );
+      const moneyElem = document.getElementById("money");
+      if (moneyElem) {
+        moneyElem.innerHTML = this.money.toFixed(2) + " €";
+        moneyElem.classList.add("money-pop");
+        setTimeout(() => moneyElem.classList.remove("money-pop"), 700);
+      }
+    }
+  }
 }
 let trade = new tradeElectricity();
 
@@ -557,6 +585,13 @@ function pollWeather() {
 }
 setInterval(pollWeather, 5 * 60 * 1000);
 pollWeather();
+
+// --- Regularly update current market price ---
+setInterval(() => {
+  if (typeof trade !== "undefined" && trade.priceCheck) {
+    trade.priceCheck();
+  }
+}, 10000);
 
 async function updateSimulation() {
   let sun = await pv.checkforSun();
@@ -601,6 +636,15 @@ async function updateSimulation() {
   ) {
     hydro.produceHydrogen();
   }
+
+  // Auto-sell logic: if both battery and hydrogen tank are full, sell all electricity
+  if (charge.storage >= charge.capacity && hydro.storage >= hydro.capacity) {
+    // Leave a small buffer (e.g., 0.1 kWh) to avoid floating point issues
+    const sellAmount = Math.max(0, charge.storage - 0.1);
+    if (sellAmount > 0.05) {
+      trade.sellCustomAmount(sellAmount);
+    }
+  }
 }
 
 function resetSimulation() {
@@ -628,6 +672,9 @@ function resetSimulation() {
   document.getElementById("hydrogen-gauge-percentage").innerText = " 0 %";
   document.getElementById("hydrogen-gauge-level").style.width = 0;
   document.getElementById("money").innerText = "  0 €";
+
+  // Show notification
+  showNotification("Simulation reset!", "buy");
 }
 
 //Slider für Simulation

@@ -96,12 +96,12 @@
       <div id="code-expanded" style="display: none">
         <div id="corner-content">
 
-          <h2>Wholesale Price</h2>
+          <h2 class="pretty-header">Wholesale Price</h2>
           <!-- Canvas for Chart -->
           <canvas id="myChart" width="400" height="70"></canvas>
 
           <div id="graph-selector2">
-            <h2 id="chart2-title">Electricity Consumption</h2>
+            <h2 id="chart2-title" class="pretty-header">Electricity Consumption</h2>
             <h3>Select Power Generation:</h3>
           
             <div class="checkbox-container">
@@ -142,20 +142,31 @@
 
 
             <!-- Hydrogen Eco System Section -->
-            <h2 class="widget-title">Hydrogen Eco Simulation</h2>
+            <h2 class="widget-title pretty-header">Hydrogen Eco Simulation</h2>
 
-            <h3>Select Use Case: </h3>
-
-            <div class="usecase-container">
-              <select id="use-case" class="use-case">
-                <option value="offgrid">Off-Grid Sustainable Home</option>
-                <option value="microgrid">Microgrid for a Remote Village</option>
-                <option value="evcharge">EV Charging Station with Renewable Energy</option>
-                <option value="industrial">Industrial Hydrogen Production Plant</option>
-              </select>
+            <div class="usecase-flex-row">
+              <div class="usecase-panel">
+                <h3>Select Use Case: </h3>
+                <div class="usecase-container">
+                  <select id="use-case" class="use-case">
+                    <option value="offgrid">Off-Grid Sustainable Home</option>
+                    <option value="microgrid">Microgrid for a Remote Village</option>
+                    <option value="evcharge">EV Charging Station with Renewable Energy</option>
+                    <option value="industrial">Industrial Hydrogen Production Plant</option>
+                  </select>
+                </div>
+                <div id="bullet-points-container"></div>
+              </div>
+              <div class="quick-manual-panel">
+                <strong>How it works:</strong><br>
+                <ul>
+                  <li>The app starts the electrolyzer if the battery hits 80%.</li>
+                  <li>It automatically sells electricity at market price if both the battery and hydrogen tank are full.</li>
+                  <li>Select a sunny location so the photovoltaik charges.</li>
+                  <li>Use case selection changes the parameters of the machinery.</li>
+                </ul>
+              </div>
             </div>
-
-            <div id="bullet-points-container"></div>
             
             <div class="eco-system-container">
               <div class="eco-item" id="photovoltaik">
@@ -270,8 +281,9 @@
             </div>
             <div id="button-container">
               <div class="money-row" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                <span>Money in Account:</span>
+                <span>Account Balance:</span>
                 <span id="money" class="money-highlight"></span>
+                <span class="trade-market-price">Current Market Price: <span id="current-market-price-sell"></span> €/MWh</span>
               </div>
               <div class="trade-row">
                 <button id="sell-button" class="button sell">Sell</button>
@@ -281,7 +293,6 @@
                 <button class="trade-increment" data-target="sell-amount" data-inc="10">+10</button>
                 <button class="trade-increment" data-target="sell-amount" data-inc="100">+100</button>
                 <button id="reset-sell-amount" class="trade-reset" title="Reset to 0">⟲</button>
-                <span class="trade-market-price">Current Market Price: <span id="current-market-price-sell"></span> €/MWh</span>
               </div>
               <div class="trade-row">
                 <button id="buy-button" class="button buy">Buy</button>
@@ -291,7 +302,6 @@
                 <button class="trade-increment" data-target="buy-amount" data-inc="10">+10</button>
                 <button class="trade-increment" data-target="buy-amount" data-inc="100">+100</button>
                 <button id="reset-buy-amount" class="trade-reset" title="Reset to 0">⟲</button>
-                <span class="trade-market-price">Current Market Price: <span id="current-market-price-buy"></span> €/MWh</span>
               </div>
               <button id="convert-to-hydrogen" class="start-btn">Start Electrolyzer</button>
               <button id="convert-to-hydrogen-stop" class="stop-btn">Stop Electrolyzer</button>
@@ -366,9 +376,9 @@
                 <p>Battery</p>
               </div>
             </div>
-            <h2>Battery Storage</h2>
+            <h2 class="pretty-header">Battery Storage</h2>
             <canvas id="batteryChart"></canvas>
-            <h2>Hydrogen Storage</h2>
+            <h2 class="pretty-header">Hydrogen Storage</h2>
             <canvas id="hydrogenChart"></canvas>
             <div id="notification" class="notification">1kW Electricity bought!</div>
 
