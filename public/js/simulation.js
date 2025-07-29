@@ -6,6 +6,9 @@ const API_BASE_URL = "https://api.kitechnik.com";
 
 const apiKey = "e7c7b0c5b06544339dd03539253001";
 let city = "Frankfurt";
+let waveLoader1, waveLoader2;
+let batteryLevelElem, batteryGaugePercentageElem, batteryGaugeLevelElem;
+let hydrogenLevelElem, hydrogenGaugePercentageElem, hydrogenGaugeLevelElem;
 //js for dropdown menu of location
 document.addEventListener("DOMContentLoaded", function () {
   const citySelect = document.getElementById("city-select");

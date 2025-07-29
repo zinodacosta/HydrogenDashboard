@@ -139,6 +139,17 @@ const fetchData = debounce(async function () {
     console.log("[INFO] Received data:", data);
 
     if (!data.labels || !data.values) {
+      console.error(
+        "[ERROR] Data structure is incorrect. Full response:",
+        data
+      );
+      // Optionally show a user-friendly message in the UI
+      const chartErrorElem = document.getElementById("chart-error");
+      if (chartErrorElem) {
+        chartErrorElem.textContent =
+          "Fehler beim Laden der Daten: Unerwartete Datenstruktur.";
+        chartErrorElem.style.display = "block";
+      }
       throw new Error(
         "Data structure is incorrect. Expected labels and values arrays."
       );
@@ -169,6 +180,12 @@ const fetchData = debounce(async function () {
     fetchDataForSecondGraph();
   } catch (error) {
     console.error("[ERROR] Fetching data:", error);
+    const chartErrorElem = document.getElementById("chart-error");
+    if (chartErrorElem) {
+      chartErrorElem.textContent =
+        "Fehler beim Laden der Daten: " + error.message;
+      chartErrorElem.style.display = "block";
+    }
   }
 }, 300);
 
