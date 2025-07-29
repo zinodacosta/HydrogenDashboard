@@ -207,6 +207,10 @@ let latestWholesalePrice = { timestamp: null, value: null };
 
 async function fetchWholesalePrice() {
   const adjustedTimestamp = getNextDayTimestamp();
+  console.log(
+    "getNextDayTimestamp in fetchWholesalePrice returned:",
+    adjustedTimestamp
+  );
   const currentTimestamp = getCurrentHourTimestamp();
 
   try {
@@ -295,6 +299,10 @@ app.get("/data", cacheMiddleware(5 * 60 * 1000), async (req, res) => {
 
     //Calculate the timestamp for the next day at 00:00 UTC
     const nextTimestamp = getNextDayTimestamp();
+    console.log(
+      "getNextDayTimestamp in /data endpoint returned:",
+      nextTimestamp
+    );
 
     //Construct the API URL with the dynamic timestamp and graph identifier
     const dynamicApiUrl = `https://www.smard.de/app/chart_data/${graphId}/DE/${graphId}_DE_hour_${nextTimestamp}.json`;
