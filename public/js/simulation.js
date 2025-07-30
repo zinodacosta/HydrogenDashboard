@@ -124,6 +124,7 @@ export class photovoltaik {
   constructor() {
     this.power = 250; //Watt
     this.efficiency = 20;
+    this.lastSunStatus = false; // Cache for sun status
   }
   updatePVEfficiency(amount) {
     this.efficiency = amount;
@@ -183,6 +184,7 @@ export class photovoltaik {
         }
         if (sunElem) sunElem.classList.remove("pv-sun-highlight");
       }
+      this.lastSunStatus = sun; // Cache the sun status
       return sun;
     } catch (error) {
       console.error("Error", error);
@@ -597,7 +599,8 @@ setInterval(() => {
 }, 10000);
 
 async function updateSimulation() {
-  let sun = await pv.checkforSun();
+  // Use the cached sun status instead of checking every second
+  let sun = pv.lastSunStatus || false;
   if (sun && charge.storage < charge.capacity) {
     let powergenerated =
       ((pv.efficiency / 100) *

@@ -160,11 +160,6 @@ function getCurrentHourTimestamp() {
   //set the minutes and seconds to 0
   now.setMinutes(0, 0, 0);
 
-  //Round to the next hour if the current minute is not 0
-  if (now.getMinutes() !== 0) {
-    now.setHours(now.getHours() + 1);
-  }
-
   //get timestamp in milliseconds
   const roundedTimestamp = now.getTime();
 
@@ -245,7 +240,7 @@ async function fetchWholesalePrice() {
   }
 }
 
-app.get("/get-wholesale-price", cacheMiddleware(1 * 60 * 1000), (req, res) => {
+app.get("/get-wholesale-price", (req, res) => {
   if (latestWholesalePrice.timestamp === null) {
     return res.status(404).json({ error: "No wholesale price available yet" });
   }
