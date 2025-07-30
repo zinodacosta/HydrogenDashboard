@@ -101,6 +101,29 @@ h2 {
     margin-right: 5px;
 }
 
+/* Realism checkbox styling */
+.realism-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding-bottom: 10px;
+}
+
+.realism-row input[type="checkbox"] {
+    margin: 0;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.realism-row label {
+    font-size: 16px;
+    color: #212427;
+    cursor: pointer;
+    margin: 0;
+}
+
 /* Footer */
 footer {
     background-color: #343a40;

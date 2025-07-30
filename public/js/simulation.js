@@ -1,6 +1,7 @@
 let electrolyzerInterval = null;
 let fuelCellInterval = null;
-let speedfactor = 1;
+let realism = 1;
+let speedfactor = 1 / realism;
 
 const API_BASE_URL = "https://api.kitechnik.com";
 
@@ -300,7 +301,12 @@ export class electrolyzer {
       //max hydrogen possible under current battery level
       let maxHydrogen = this.capacity - this.storage;
       let possibleHydrogenProduced =
-        (charge.storage / (this.efficiency / 100) / 55.5) * 1000 * speedfactor;
+        (charge.storage *
+          55.5 *
+          (this.efficiency / 100) *
+          (this.power / 1000) *
+          speedfactor) /
+        10000;
 
       //only produce whats possible under both constraints
       let actualHydrogenProduced = Math.min(
@@ -309,7 +315,7 @@ export class electrolyzer {
       );
 
       let actualBatteryConsumption =
-        ((actualHydrogenProduced / 1000) * 55.5) / (this.efficiency / 100);
+        actualHydrogenProduced * (1 / (this.efficiency / 100));
 
       if (
         charge.storage >= actualBatteryConsumption &&
@@ -742,6 +748,20 @@ document.addEventListener("DOMContentLoaded", function () {
     speedfactor = input;
     console.log(input);
   });
+
+  // Realism checkbox functionality
+  const realismCheckbox = document.getElementById("realism-checkbox");
+  if (realismCheckbox) {
+    realismCheckbox.addEventListener("change", function () {
+      if (this.checked) {
+        realism = 3600;
+      } else {
+        realism = 1;
+      }
+      speedfactor = 1 / realism;
+      console.log("Realism changed to:", realism);
+    });
+  }
 
   batteryEfficiencySlider.addEventListener("input", function () {
     const efficiency = parseFloat(batteryEfficiencySlider.value);
