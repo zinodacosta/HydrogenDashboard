@@ -300,12 +300,7 @@ export class electrolyzer {
       //max hydrogen possible under current battery level
       let maxHydrogen = this.capacity - this.storage;
       let possibleHydrogenProduced =
-        (charge.storage *
-          55.5 *
-          (this.efficiency / 100) *
-          (this.power / 1000) *
-          speedfactor) /
-        10000;
+        (charge.storage / (this.efficiency / 100) / 55.5) * 1000 * speedfactor;
 
       //only produce whats possible under both constraints
       let actualHydrogenProduced = Math.min(
@@ -314,7 +309,7 @@ export class electrolyzer {
       );
 
       let actualBatteryConsumption =
-        actualHydrogenProduced * (1 / (this.efficiency / 100));
+        ((actualHydrogenProduced / 1000) * 55.5) / (this.efficiency / 100);
 
       if (
         charge.storage >= actualBatteryConsumption &&
