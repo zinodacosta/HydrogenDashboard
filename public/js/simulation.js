@@ -307,6 +307,7 @@ export class electrolyzer {
           (this.power / 1000) *
           speedfactor) /
         10000;
+      //Batteriespeicher * 55.5kg/kWh * Elektrolyse Wirkungsgrad * Elektrolyse Leistung
 
       //only produce whats possible under both constraints
       let actualHydrogenProduced = Math.min(
@@ -609,6 +610,8 @@ async function updateSimulation() {
         (charge.efficiency / 100) *
         speedfactor) /
       1000;
+    //PV Leistung * PV Wirkungsgrad * Batterie Wirkungsgrad / 1000
+    
     if (powergenerated + charge.storage <= charge.capacity) {
       charge.updateBatteryStorage(powergenerated);
     }
