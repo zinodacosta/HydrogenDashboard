@@ -97,6 +97,45 @@
         <div id="corner-content">
 
           <h2 class="pretty-header">Wholesale Price</h2>
+          <!-- Indicator Controls -->
+          <div class="indicator-controls">
+            <h4>Technical Indicators:</h4>
+            <div class="indicator-checkboxes">
+              <label class="indicator-checkbox">
+                <input type="checkbox" id="show-ema" />
+                <span class="checkbox-label">EMA (Trend)</span>
+                <button class="info-button" id="ema-info-btn" type="button">ⓘ</button>
+              </label>
+              <label class="indicator-checkbox">
+                <input type="checkbox" id="show-bollinger" />
+                <span class="checkbox-label">Bollinger Bands (Volatility)</span>
+                <button class="info-button" id="bollinger-info-btn" type="button">ⓘ</button>
+              </label>
+              <label class="indicator-checkbox">
+                <input type="checkbox" id="show-oscillator" />
+                <span class="checkbox-label">Price Oscillator (Position)</span>
+                <button class="info-button" id="oscillator-info-btn" type="button">ⓘ</button>
+              </label>
+            </div>
+          </div>
+
+          <!-- EMA Configuration -->
+          <div class="ema-config" id="ema-config" style="display: none;">
+            <label for="moving-average-window">EMA Period:</label>
+            <input
+              type="range"
+              id="moving-average-window"
+              min="2"
+              max="8"
+              value="4"
+              step="1"
+            />
+            <span id="moving-average-window-value">4</span>
+          </div>
+
+          <div class="data-limitation">
+            <small><strong>Note:</strong> Analysis based on 1 week of data. For seasonal patterns and long-term trends, more historical data would be needed.</small>
+          </div>
           <!-- Canvas for Chart -->
           <canvas id="myChart" width="400" height="70"></canvas>
           <div id="chart-error" style="display:none; color: #b00020; font-weight: bold; margin-top: 8px;"></div>

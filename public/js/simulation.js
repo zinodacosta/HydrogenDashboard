@@ -421,10 +421,15 @@ export class powersource {
 
 async function getLastWholeSalePrice() {
   try {
+    console.log(
+      "Fetching wholesale price at:",
+      new Date().toLocaleTimeString()
+    );
     const response = await fetch(
       "https://api.kitechnik.com/get-wholesale-price"
     );
     const data = await response.json();
+    console.log("Received price data:", data);
     return data.value;
   } catch (error) {
     console.error("Error fetching Last Price", error);
@@ -504,7 +509,7 @@ export class tradeElectricity {
 
     const currentPriceElement = document.getElementById("current-price");
     if (currentPriceElement) {
-      currentPriceElement.innerHTML = this.electricityPrice + "€/MWh";
+      currentPriceElement.innerHTML = this.electricityPrice;
     }
     document.getElementById("current-price").innerHTML = this.electricityPrice;
 
@@ -596,9 +601,10 @@ pollWeather();
 // --- Regularly update current market price ---
 setInterval(() => {
   if (typeof trade !== "undefined" && trade.priceCheck) {
+    console.log("Updating market price at:", new Date().toLocaleTimeString());
     trade.priceCheck();
   }
-}, 10000);
+}, 3600000); // Update every hour (3,600,000 ms)
 
 async function updateSimulation() {
   // Use the cached sun status instead of checking every second
@@ -611,7 +617,7 @@ async function updateSimulation() {
         speedfactor) /
       1000;
     //PV Leistung * PV Wirkungsgrad * Batterie Wirkungsgrad / 1000
-    
+
     if (powergenerated + charge.storage <= charge.capacity) {
       charge.updateBatteryStorage(powergenerated);
     }

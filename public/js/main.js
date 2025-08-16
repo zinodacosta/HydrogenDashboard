@@ -9,6 +9,12 @@ let batteryData = [];
 let batteryChartInstance = null;
 let hydrogenData = [];
 let hydrogenChartInstance = null;
+let movingAverageWindow = 4; // Default moving average window size (optimized for 1 week of data)
+
+// Indicator visibility states
+let showEMA = false;
+let showBollinger = false;
+let showOscillator = false;
 
 function debounce(func, wait) {
   let timeout;
@@ -189,6 +195,74 @@ const fetchData = debounce(async function () {
   }
 }, 300);
 
+//Function to calculate exponential moving average
+function calculateEMA(values, period = 5) {
+  if (!values || values.length === 0) return [];
+
+  const ema = [];
+  const multiplier = 2 / (period + 1);
+
+  // First EMA value is the same as SMA
+  let sum = 0;
+  for (let i = 0; i < Math.min(period, values.length); i++) {
+    sum += values[i] || 0;
+  }
+  ema.push(sum / Math.min(period, values.length));
+
+  // Calculate EMA for remaining values
+  for (let i = 1; i < values.length; i++) {
+    const currentEMA = values[i] * multiplier + ema[i - 1] * (1 - multiplier);
+    ema.push(currentEMA);
+  }
+
+  return ema;
+}
+
+//Function to calculate Bollinger Bands
+function calculateBollingerBands(values, period = 20, stdDev = 2) {
+  if (!values || values.length === 0)
+    return { upper: [], middle: [], lower: [] };
+
+  const bands = { upper: [], middle: [], lower: [] };
+
+  for (let i = 0; i < values.length; i++) {
+    const start = Math.max(0, i - period + 1);
+    const window = values.slice(start, i + 1);
+
+    // Calculate SMA (middle band)
+    const sma =
+      window.reduce((sum, val) => sum + (val || 0), 0) / window.length;
+
+    // Calculate standard deviation
+    const variance =
+      window.reduce((sum, val) => {
+        return sum + Math.pow((val || 0) - sma, 2);
+      }, 0) / window.length;
+    const standardDeviation = Math.sqrt(variance);
+
+    bands.middle.push(sma);
+    bands.upper.push(sma + standardDeviation * stdDev);
+    bands.lower.push(sma - standardDeviation * stdDev);
+  }
+
+  return bands;
+}
+
+//Function to calculate Price Oscillator
+function calculatePriceOscillator(values) {
+  if (!values || values.length === 0) return [];
+
+  const weekHigh = Math.max(...values);
+  const weekLow = Math.min(...values);
+  const range = weekHigh - weekLow;
+
+  if (range === 0) return values.map(() => 50); // If no range, return neutral
+
+  return values.map((price) => {
+    return ((price - weekLow) / range) * 100;
+  });
+}
+
 //Function to create the first chart
 function createChart(canvasId, labels, values, labelName, borderColor) {
   const ctx = document.getElementById(canvasId).getContext("2d");
@@ -197,30 +271,133 @@ function createChart(canvasId, labels, values, labelName, borderColor) {
     typeof label === "string" ? new Date(label) : label
   );
 
+  // Calculate moving average for wholesale price
+  let datasets = [
+    {
+      label: labelName,
+      data: values,
+      borderColor: borderColor,
+      backgroundColor: borderColor.startsWith("rgb")
+        ? borderColor.replace(/rgb\(([^)]+)\)/, "rgba($1, 0.8)")
+        : "rgba(0, 0, 0, 0.8)", //Fallback to black
+      tension: 0.1,
+      fill: true,
+      pointRadius: 0,
+      pointHoverRadius: 8,
+      pointHitRadius: 20,
+      borderWidth: 2.5,
+      pointBackgroundColor: borderColor,
+      pointHoverBorderWidth: 3.5,
+      pointHoverBackgroundColor: borderColor,
+      pointHoverBorderColor: "#fff",
+    },
+  ];
+
+  // Add indicators for wholesale price
+  if (labelName === "Wholesale Price" && values.length > 0) {
+    // Add EMA
+    if (showEMA) {
+      const emaValues = calculateEMA(values, movingAverageWindow);
+      const getPeriodDescription = (period) => {
+        if (period <= 3) return "Very Short-term";
+        if (period <= 5) return "Short-term";
+        return "Medium-term";
+      };
+
+      datasets.push({
+        label: `EMA (${movingAverageWindow}) - ${getPeriodDescription(
+          movingAverageWindow
+        )}`,
+        data: emaValues,
+        borderColor: "rgb(255, 0, 0)", // Red color for EMA
+        backgroundColor: "rgba(255, 0, 0, 0.1)",
+        tension: 0.1,
+        fill: false,
+        pointRadius: 0,
+        pointHoverRadius: 8,
+        pointHitRadius: 20,
+        borderWidth: 2,
+        pointBackgroundColor: "rgb(255, 0, 0)",
+        pointHoverBorderWidth: 3.5,
+        pointHoverBackgroundColor: "rgb(255, 0, 0)",
+        pointHoverBorderColor: "#fff",
+        borderDash: [5, 5], // Dashed line for EMA
+      });
+    }
+
+    // Add Bollinger Bands
+    if (showBollinger) {
+      const bollingerBands = calculateBollingerBands(
+        values,
+        Math.min(20, values.length),
+        2
+      );
+
+      datasets.push({
+        label: "Bollinger Upper Band",
+        data: bollingerBands.upper,
+        borderColor: "rgba(0, 128, 255, 0.6)", // Light blue
+        backgroundColor: "rgba(0, 128, 255, 0.1)",
+        tension: 0.1,
+        fill: false,
+        pointRadius: 0,
+        pointHoverRadius: 8,
+        pointHitRadius: 20,
+        borderWidth: 1.5,
+        pointBackgroundColor: "rgba(0, 128, 255, 0.6)",
+        pointHoverBorderWidth: 3.5,
+        pointHoverBackgroundColor: "rgba(0, 128, 255, 0.6)",
+        pointHoverBorderColor: "#fff",
+        borderDash: [3, 3], // Dotted line
+      });
+
+      datasets.push({
+        label: "Bollinger Lower Band",
+        data: bollingerBands.lower,
+        borderColor: "rgba(0, 128, 255, 0.6)", // Light blue
+        backgroundColor: "rgba(0, 128, 255, 0.1)",
+        tension: 0.1,
+        fill: false,
+        pointRadius: 0,
+        pointHoverRadius: 8,
+        pointHitRadius: 20,
+        borderWidth: 1.5,
+        pointBackgroundColor: "rgba(0, 128, 255, 0.6)",
+        pointHoverBorderWidth: 3.5,
+        pointHoverBackgroundColor: "rgba(0, 128, 255, 0.6)",
+        pointHoverBorderColor: "#fff",
+        borderDash: [3, 3], // Dotted line
+      });
+    }
+
+    // Add Price Oscillator (secondary axis)
+    if (showOscillator) {
+      const oscillatorValues = calculatePriceOscillator(values);
+      datasets.push({
+        label: "Price Oscillator",
+        data: oscillatorValues,
+        borderColor: "rgb(255, 165, 0)", // Orange
+        backgroundColor: "rgba(255, 165, 0, 0.1)",
+        tension: 0.1,
+        fill: false,
+        pointRadius: 0,
+        pointHoverRadius: 8,
+        pointHitRadius: 20,
+        borderWidth: 2,
+        pointBackgroundColor: "rgb(255, 165, 0)",
+        pointHoverBorderWidth: 3.5,
+        pointHoverBackgroundColor: "rgb(255, 165, 0)",
+        pointHoverBorderColor: "#fff",
+        yAxisID: "oscillator", // Use secondary axis
+      });
+    }
+  }
+
   myChartInstance = new Chart(ctx, {
     type: "line",
     data: {
       labels: formattedLabels,
-      datasets: [
-        {
-          label: labelName,
-          data: values,
-          borderColor: borderColor,
-          backgroundColor: borderColor.startsWith("rgb")
-            ? borderColor.replace(/rgb\(([^)]+)\)/, "rgba($1, 0.8)")
-            : "rgba(0, 0, 0, 0.8)", //Fallback to black
-          tension: 0.1,
-          fill: true,
-          pointRadius: 0,
-          pointHoverRadius: 8,
-          pointHitRadius: 20,
-          borderWidth: 2.5,
-          pointBackgroundColor: borderColor,
-          pointHoverBorderWidth: 3.5,
-          pointHoverBackgroundColor: borderColor,
-          pointHoverBorderColor: "#fff",
-        },
-      ],
+      datasets: datasets,
     },
     options: {
       layout: {
@@ -232,15 +409,34 @@ function createChart(canvasId, labels, values, labelName, borderColor) {
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          display: false,
+          display: true,
+          position: "top",
+          labels: {
+            usePointStyle: true,
+            padding: 20,
+            font: {
+              size: 12,
+              family: "Roboto, Arial, sans-serif",
+            },
+          },
         },
         tooltip: {
           enabled: true,
           mode: "index",
           intersect: false,
           callbacks: {
-            label: (context) =>
-              `${context.dataset.label}: ${context.raw.toFixed(2)} €/MWh`,
+            label: (context) => {
+              const label = context.dataset.label;
+              const value = context.raw.toFixed(2);
+
+              if (label.includes("Price Oscillator")) {
+                return `${label}: ${value}%`;
+              } else if (label.includes("Bollinger")) {
+                return `${label}: ${value} €/MWh`;
+              } else {
+                return `${label}: ${value} €/MWh`;
+              }
+            },
           },
         },
         verticalLine1: {},
@@ -291,6 +487,35 @@ function createChart(canvasId, labels, values, labelName, borderColor) {
             },
           },
           beginAtZero: true,
+        },
+        oscillator: {
+          type: "linear",
+          display: showOscillator,
+          position: "right",
+          ticks: {
+            font: {
+              size: 12,
+              family: "Roboto, Arial, sans-serif",
+              weight: 500,
+            },
+            max: 100,
+            min: 0,
+            callback: function (value) {
+              return value + "%";
+            },
+          },
+          title: {
+            display: showOscillator,
+            text: "Price Oscillator (%)",
+            font: {
+              size: 14,
+              family: "Roboto, Arial, sans-serif",
+              weight: 500,
+            },
+          },
+          grid: {
+            drawOnChartArea: false,
+          },
         },
       },
     },
@@ -742,6 +967,100 @@ document.addEventListener("DOMContentLoaded", function () {
   const codeMinimized = document.getElementById("code-minimized");
   const content = document.getElementById("corner-content");
   const toggleButton = document.getElementById("toggle-widget");
+
+  // Moving average configuration
+  const movingAverageWindowSlider = document.getElementById(
+    "moving-average-window"
+  );
+  const movingAverageWindowValue = document.getElementById(
+    "moving-average-window-value"
+  );
+
+  // Indicator visibility controls
+  const showEMACheckbox = document.getElementById("show-ema");
+  const showBollingerCheckbox = document.getElementById("show-bollinger");
+  const showOscillatorCheckbox = document.getElementById("show-oscillator");
+
+  if (movingAverageWindowSlider && movingAverageWindowValue) {
+    movingAverageWindowSlider.addEventListener("input", function () {
+      movingAverageWindow = parseInt(this.value);
+      movingAverageWindowValue.textContent = movingAverageWindow;
+      // Auto-update the chart when slider changes
+      if (graphType === "wholesalePrice") {
+        fetchData();
+      }
+    });
+  }
+
+  // Add event listeners for indicator checkboxes
+  if (showEMACheckbox) {
+    showEMACheckbox.addEventListener("change", function () {
+      showEMA = this.checked;
+
+      // Show/hide EMA configuration
+      const emaConfig = document.getElementById("ema-config");
+      if (emaConfig) {
+        emaConfig.style.display = showEMA ? "flex" : "none";
+      }
+
+      if (graphType === "wholesalePrice") {
+        fetchData();
+      }
+    });
+  }
+
+  if (showBollingerCheckbox) {
+    showBollingerCheckbox.addEventListener("change", function () {
+      showBollinger = this.checked;
+      if (graphType === "wholesalePrice") {
+        fetchData();
+      }
+    });
+  }
+
+  if (showOscillatorCheckbox) {
+    showOscillatorCheckbox.addEventListener("change", function () {
+      showOscillator = this.checked;
+      if (graphType === "wholesalePrice") {
+        fetchData();
+      }
+    });
+  }
+
+  // Add event listeners for info buttons
+  const emaInfoBtn = document.getElementById("ema-info-btn");
+  const bollingerInfoBtn = document.getElementById("bollinger-info-btn");
+  const oscillatorInfoBtn = document.getElementById("oscillator-info-btn");
+
+  if (emaInfoBtn) {
+    emaInfoBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      alert(
+        "EMA (Exponential Moving Average):\n\n• Shows trend direction and strength\n• More responsive than simple moving averages\n• Gives more weight to recent prices\n• Red dashed line on the chart\n• Higher values = stronger uptrend\n• Lower values = stronger downtrend"
+      );
+    });
+  }
+
+  if (bollingerInfoBtn) {
+    bollingerInfoBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      alert(
+        "Bollinger Bands:\n\n• Shows price volatility and potential reversal points\n• Upper/lower bands based on standard deviation\n• Blue dotted lines on the chart\n• Price touching upper band = overbought (consider selling)\n• Price touching lower band = oversold (consider buying)\n• Bands narrowing = low volatility, prepare for breakout"
+      );
+    });
+  }
+
+  if (oscillatorInfoBtn) {
+    oscillatorInfoBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      alert(
+        "Price Oscillator:\n\n• Shows relative price position within the week (0-100%)\n• Orange line on secondary Y-axis\n• 0% = week's lowest price (cheapest)\n• 100% = week's highest price (most expensive)\n• 0-20% = very cheap, good time to buy\n• 80-100% = very expensive, good time to sell\n• 20-80% = normal range, monitor for opportunities"
+      );
+    });
+  }
 
   //standard values
   content.style.height = "300px";
