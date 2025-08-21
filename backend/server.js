@@ -116,7 +116,7 @@ function getNextDayTimestamp() {
   today.setUTCHours(0, 0, 0, 0); //Set time to 00:00 UTC
   today.setUTCDate(today.getUTCDate() - counter); //Move to the days before
   const nextDayTimestamp = today.getTime(); //Get timestamp in milliseconds
-  const adjustedTimestamp = nextDayTimestamp - 7200000; //Adjust timestamp by 1 hour
+  const adjustedTimestamp = nextDayTimestamp - 7200000; //Adjust timestamp by 2 hour
   return adjustedTimestamp;
 }
 
@@ -162,6 +162,12 @@ function getCurrentHourTimestamp() {
 
   //get timestamp in milliseconds
   const roundedTimestamp = now.getTime();
+
+  console.log("getCurrentHourTimestamp debug:");
+  console.log("  Current time:", now.toLocaleString());
+  console.log("  Current time UTC:", now.toUTCString());
+  console.log("  Rounded timestamp:", roundedTimestamp);
+  console.log("  Rounded time:", new Date(roundedTimestamp).toLocaleString());
 
   return roundedTimestamp;
 }
@@ -220,24 +226,81 @@ async function fetchWholesalePrice() {
     const data = await response.json();
     if (data && data.series && Array.isArray(data.series)) {
       const validEntries = data.series.filter((entry) => entry[1] !== null);
-      let lastEntry = validEntries.find(
-        (entry) => entry[0] === currentTimestamp
+
+      // Get Unix timestamp for current full hour
+      const currentHourTimestamp = getCurrentHourTimestamp();
+
+      console.log(
+        "Current hour timestamp:",
+        currentHourTimestamp,
+        "Time:",
+        new Date(currentHourTimestamp).toLocaleString()
+      );
+      console.log("Available timestamps in API data:");
+      validEntries.slice(-5).forEach((entry) => {
+        console.log(
+          `  ${entry[0]} -> ${new Date(entry[0]).toLocaleString()} -> ${
+            entry[1]
+          } €/MWh`
+        );
+      });
+
+      console.log("Full API response structure:");
+      console.log("Total entries:", data.series.length);
+      console.log("First entry:", data.series[0]);
+      console.log("Last entry:", data.series[data.series.length - 1]);
+
+      // Find exact match for current hour timestamp
+      let targetEntry = validEntries.find(
+        (entry) => entry[0] === currentHourTimestamp
       );
 
-      if (!lastEntry) {
-        lastEntry = validEntries[validEntries.length - 1];
+      // If not found, get the most recent entry
+      if (!targetEntry) {
+        targetEntry = validEntries[validEntries.length - 1];
+        console.log("No exact match found, using most recent entry");
+      } else {
+        console.log("Exact match found!");
       }
 
       latestWholesalePrice = {
-        timestamp: lastEntry[0],
-        value: lastEntry[1],
+        timestamp: targetEntry[0],
+        value: targetEntry[1],
       };
+
+      console.log(
+        `Wholesale price updated at ${new Date().toLocaleString()}: ${
+          targetEntry[1]
+        } €/MWh (data timestamp: ${new Date(targetEntry[0]).toLocaleString()})`
+      );
     } else {
       throw new Error("API response structure invalid.");
     }
   } catch (error) {
     console.error("Error fetching wholesale price:", error);
   }
+}
+
+// Function to schedule hourly wholesale price updates
+function scheduleHourlyWholesalePriceUpdate() {
+  const now = new Date();
+  const minutesUntilNextHour = 60 - now.getMinutes();
+  const secondsUntilNextHour = minutesUntilNextHour * 60 - now.getSeconds();
+  const millisecondsUntilNextHour = secondsUntilNextHour * 1000;
+
+  console.log(
+    `Next wholesale price update scheduled in ${minutesUntilNextHour} minutes and ${now.getSeconds()} seconds`
+  );
+
+  // Schedule the first update at the top of the next hour
+  setTimeout(() => {
+    fetchWholesalePrice();
+
+    // Then set up recurring hourly updates
+    setInterval(() => {
+      fetchWholesalePrice();
+    }, 60 * 60 * 1000); // Every hour (60 minutes * 60 seconds * 1000 milliseconds)
+  }, millisecondsUntilNextHour);
 }
 
 app.get("/get-wholesale-price", (req, res) => {
@@ -380,6 +443,9 @@ https.createServer(sslOptions, app).listen(443, "0.0.0.0", async () => {
   try {
     await fetchWholesalePrice();
     await fetchCarbonIntensity();
+
+    // Schedule hourly wholesale price updates
+    scheduleHourlyWholesalePriceUpdate();
   } catch (error) {
     console.error("Error saving price on server startup:", error);
   }

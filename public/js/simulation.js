@@ -598,13 +598,39 @@ function pollWeather() {
 setInterval(pollWeather, 5 * 60 * 1000);
 pollWeather();
 
-// --- Regularly update current market price ---
-setInterval(() => {
-  if (typeof trade !== "undefined" && trade.priceCheck) {
-    console.log("Updating market price at:", new Date().toLocaleTimeString());
-    trade.priceCheck();
-  }
-}, 3600000); // Update every hour (3,600,000 ms)
+// --- Regularly update current market price at the top of each hour ---
+function scheduleHourlyPriceUpdate() {
+  const now = new Date();
+  const minutesUntilNextHour = 60 - now.getMinutes();
+  const secondsUntilNextHour = minutesUntilNextHour * 60 - now.getSeconds();
+  const millisecondsUntilNextHour = secondsUntilNextHour * 1000;
+
+  console.log(
+    `Next client-side price update scheduled in ${minutesUntilNextHour} minutes and ${now.getSeconds()} seconds`
+  );
+
+  // Schedule the first update at the top of the next hour
+  setTimeout(() => {
+    if (typeof trade !== "undefined" && trade.priceCheck) {
+      console.log("Updating market price at:", new Date().toLocaleTimeString());
+      trade.priceCheck();
+    }
+
+    // Then set up recurring hourly updates
+    setInterval(() => {
+      if (typeof trade !== "undefined" && trade.priceCheck) {
+        console.log(
+          "Updating market price at:",
+          new Date().toLocaleTimeString()
+        );
+        trade.priceCheck();
+      }
+    }, 3600000); // Update every hour (3,600,000 ms)
+  }, millisecondsUntilNextHour);
+}
+
+// Start the hourly price update scheduling
+scheduleHourlyPriceUpdate();
 
 async function updateSimulation() {
   // Use the cached sun status instead of checking every second
@@ -1045,6 +1071,16 @@ document.getElementById("convert-to-hydrogen").addEventListener("click", () => {
     document.getElementById("electrolyzer-static-arrow").style.display = "none";
     document.getElementById("electrolyzer-animated-arrow").style.display =
       "block";
+    const outStatic = document.getElementById(
+      "electrolyzer-output-static-arrow"
+    );
+    const outAnim = document.getElementById(
+      "electrolyzer-output-animated-arrow"
+    );
+    if (outStatic && outAnim) {
+      outStatic.style.display = "none";
+      outAnim.style.display = "block";
+    }
     //Starte die Umwandlung im Elektrolyseur, wenn noch kein Intervall läuft
     if (electrolyzerInterval === null) {
       electrolyzerInterval = setInterval(() => {
@@ -1064,6 +1100,16 @@ document
       document.getElementById("fuelcell-static-arrow").style.display = "none";
       document.getElementById("fuelcell-animated-arrow").style.display =
         "block";
+      const h2fStatic = document.getElementById(
+        "hydrogen-to-fuelcell-static-arrow"
+      );
+      const h2fAnim = document.getElementById(
+        "hydrogen-to-fuelcell-animated-arrow"
+      );
+      if (h2fStatic && h2fAnim) {
+        h2fStatic.style.display = "none";
+        h2fAnim.style.display = "block";
+      }
       showNotification("Started Fuel Cell!", "buy");
       //Starte die Umwandlung im Elektrolyseur, wenn noch kein Intervall läuft
       if (fuelCellInterval === null) {
@@ -1083,6 +1129,16 @@ document
       "block";
     document.getElementById("electrolyzer-animated-arrow").style.display =
       "none";
+    const outStatic = document.getElementById(
+      "electrolyzer-output-static-arrow"
+    );
+    const outAnim = document.getElementById(
+      "electrolyzer-output-animated-arrow"
+    );
+    if (outStatic && outAnim) {
+      outStatic.style.display = "block";
+      outAnim.style.display = "none";
+    }
     if (electrolyzerInterval !== null) {
       clearInterval(electrolyzerInterval); //Stoppe den Elektrolyseur
       electrolyzerInterval = null;
@@ -1097,6 +1153,16 @@ document
     document.getElementById("fuelcell-static-arrow").style.display = "block";
     document.getElementById("fuelcell-animated-arrow").style.display = "none";
     showNotification("Stopped Fuel Cell!", "sell");
+    const h2fStatic = document.getElementById(
+      "hydrogen-to-fuelcell-static-arrow"
+    );
+    const h2fAnim = document.getElementById(
+      "hydrogen-to-fuelcell-animated-arrow"
+    );
+    if (h2fStatic && h2fAnim) {
+      h2fStatic.style.display = "block";
+      h2fAnim.style.display = "none";
+    }
     if (fuelCellInterval !== null) {
       clearInterval(fuelCellInterval); //Stoppe die Brennstoffzelle
       fuelCellInterval = null;
