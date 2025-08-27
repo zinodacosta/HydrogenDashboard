@@ -171,7 +171,7 @@ body {
     align-items: center;
     gap: 8px;
     cursor: pointer;
-    padding: 8px 12px;
+    padding: 8px 5px;
     background-color: white;
     border-radius: 6px;
     border: 1px solid #dee2e6;
@@ -230,6 +230,7 @@ body {
         flex-direction: column;
         gap: 10px;
     }
+
     
     .indicator-checkbox {
         width: 100%;
@@ -708,7 +709,7 @@ label {
 
 .flow-item {
     display: flex;
-    margin-top: -40px;
+    margin-top: 10px;
     flex-direction: column;
     align-items: center;
     text-align: center;
@@ -1281,31 +1282,52 @@ label {
     border: 1.5px solid #e0e0e0;
     border-radius: 12px;
     box-shadow: 0 2px 12px rgba(30, 98, 208, 0.07);
-    padding: 24px 4px 24px 4px;
-    margin-bottom: 18px;
+    padding: 12px 2px 12px 2px;
+    margin-bottom: 1px;
     width: 100%;
     box-sizing: border-box;
-    overflow-x: visible;
+    overflow: visible !important;
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
     align-items: center;
     justify-content: flex-start;
-    height: 500px;
+    height: auto;
     min-height: 0;
+    gap: 0px !important;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .flowchart::-webkit-scrollbar {
+    display: none;
   }
   .flowchart .flow-item, #pv-charging-arrow, #electrolyzer-charging-arrow, #fuelcell-charging-arrow, #electrolyzer-output-charging-arrow, #hydrogen-to-fuelcell-charging-arrow, #fuelcell-to-charging-charging-arrow {
     width: 100%;
-    margin-bottom: 80px;
+    margin-bottom: 0px;
     text-align: center;
     flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 240px;
-    padding-top: 32px;
-    padding-bottom: 32px;
+    height: 10px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    min-width: 0;
+    gap: 0px !important;
+  }
+  .flowchart .flow-item, #pv-charging-arrow, #electrolyzer-charging-arrow, #fuelcell-charging-arrow, #electrolyzer-output-charging-arrow, #hydrogen-to-fuelcell-charging-arrow, #fuelcell-to-charging-charging-arrow {
+    width: 100%;
+    margin-bottom: 0px;
+    text-align: center;
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+    padding-top: 3px;
+    padding-bottom: 3px;
     min-width: 0;
   }
   .flowchart .flow-item:last-child, #fuelcell-charging-arrow:last-child {
@@ -1369,10 +1391,27 @@ label {
     margin-bottom: 18px;
     box-sizing: border-box;
   }
-  .flowchart, #corner-content, #code-expanded, #code-minimized {
+  #corner-content{
     min-width: 0;
     overflow-x: auto;
-    padding-bottom: 24px;
+    padding-bottom: 350px;
+  }
+  #code-minimized{
+
+        min-width: 0;
+    overflow-x: auto;
+    padding-bottom: 20px;
+  }
+  #code-expanded{
+            min-width: 0;
+    overflow-x: auto;
+    padding-bottom: 2000px;
+  }
+  .flowchart{
+        min-width: 0;
+    overflow-x: auto;
+    padding-bottom: 1250px;
+
   }
 }
 

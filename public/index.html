@@ -97,6 +97,33 @@
         <div id="corner-content">
 
           <h2 class="pretty-header">Wholesale Price</h2>
+          <!-- Trade Panel: Account Balance, Market Price, Sell/Buy fields -->
+          <div class="trade-panel" style="margin-bottom: 18px; border: 2px solid #1976d2; border-radius: 10px; padding: 12px; background: #f5faff;">
+            <div class="money-row" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+              <span>Account Balance:</span>
+              <span id="money" class="money-highlight"></span>
+              <span style="margin-left: 16px;">Electricity stored: <span id="battery-level-top" class="level-highlight">0 kWh</span></span>
+              <span class="trade-market-price" style="margin-left: 16px;">Current Market Price: <span id="current-market-price-sell"></span> €/MWh</span>
+            </div>
+            <div class="trade-row" style="margin-bottom: 8px;">
+              <button id="sell-button" class="button sell">Sell</button>
+              <input type="number" id="sell-amount" min="0.1" step="0.1" placeholder="kWh" class="trade-input">
+              <span id="sell-amount-unit" style="margin-left:4px;">kWh</span>
+              <button class="trade-increment" data-target="sell-amount" data-inc="1">+1</button>
+              <button class="trade-increment" data-target="sell-amount" data-inc="10">+10</button>
+              <button class="trade-increment" data-target="sell-amount" data-inc="100">+100</button>
+              <button id="reset-sell-amount" class="trade-reset" title="Reset to 0">⟲</button>
+            </div>
+            <div class="trade-row">
+              <button id="buy-button" class="button buy">Buy</button>
+              <input type="number" id="buy-amount" min="0.1" step="0.1" placeholder="kWh" class="trade-input">
+              <span id="buy-amount-unit" style="margin-left:4px;">kWh</span>
+              <button class="trade-increment" data-target="buy-amount" data-inc="1">+1</button>
+              <button class="trade-increment" data-target="buy-amount" data-inc="10">+10</button>
+              <button class="trade-increment" data-target="buy-amount" data-inc="100">+100</button>
+              <button id="reset-buy-amount" class="trade-reset" title="Reset to 0">⟲</button>
+            </div>
+          </div>
           <!-- Indicator Controls -->
           <div class="indicator-controls">
             <h4>Technical Indicators:</h4>
@@ -197,16 +224,18 @@
                 </div>
                 <div id="bullet-points-container"></div>
               </div>
-              <div class="quick-manual-panel">
-                <strong>How it works:</strong><br>
-                <ul>
-                  <li>The app starts the electrolyzer if the battery hits 80%.</li>
-                  <li>It automatically sells electricity at market price if both the battery and hydrogen tank are full.</li>
-                  <li>Select a sunny location so the photovoltaik charges.</li>
-                  <li>Use case selection changes the parameters of the machinery.</li>
-                  <li>For demonstration purposes, the simulation shows an hour progress every second.<br>If you want it to be realistic, check the button below.</li>
+            <div class="quick-manual-panel">
+              <div class="how-it-works-panel" style="background: #e3f2fd; border: 2px solid #1976d2; border-radius: 10px; padding: 14px; margin-top: 6px; margin-bottom: 6px; box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);">
+                <strong style="font-size: 1.1em; color: #1976d2;">How it works:</strong><br>
+                <ul style="margin-top: 6px; margin-bottom: 0;">
+                  <li>Selecting an use case changes the parameters of the machinery</li>
+                  <li>Application uses geolocation to determine if selected location is sunny and charges photovoltaik</li>
+                  <li>The electrolyzer works automatically when battery storage is over 80%</li>
+                  <li>Everything can be adjusted manually as well</li>
+                  <li>Electricity can be manually bought and sold at market price</li>
                 </ul>
               </div>
+            </div>
             </div>
             
             <div class="eco-system-container">
@@ -237,6 +266,7 @@
                   <option value="New York">New York</option>
                   <option value="Madrid">Madrid</option>
                   <option value="Tokyo">Tokyo</option>
+                  <option value="Always Sunny">Always Sunny</option>
                 </select>
                 <p>Current Location: <span id="location"></span></p>
                 <p>PV Status: <span id="sun"></span></p>
@@ -321,29 +351,6 @@
               </div>
             </div>
             <div id="button-container">
-              <div class="money-row" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                <span>Account Balance:</span>
-                <span id="money" class="money-highlight"></span>
-                <span class="trade-market-price">Current Market Price: <span id="current-market-price-sell"></span> €/MWh</span>
-              </div>
-              <div class="trade-row">
-                <button id="sell-button" class="button sell">Sell</button>
-                <input type="number" id="sell-amount" min="0.1" step="0.1" placeholder="kWh" class="trade-input">
-                <span id="sell-amount-unit" style="margin-left:4px;">kWh</span>
-                <button class="trade-increment" data-target="sell-amount" data-inc="1">+1</button>
-                <button class="trade-increment" data-target="sell-amount" data-inc="10">+10</button>
-                <button class="trade-increment" data-target="sell-amount" data-inc="100">+100</button>
-                <button id="reset-sell-amount" class="trade-reset" title="Reset to 0">⟲</button>
-              </div>
-              <div class="trade-row">
-                <button id="buy-button" class="button buy">Buy</button>
-                <input type="number" id="buy-amount" min="0.1" step="0.1" placeholder="kWh" class="trade-input">
-                <span id="buy-amount-unit" style="margin-left:4px;">kWh</span>
-                <button class="trade-increment" data-target="buy-amount" data-inc="1">+1</button>
-                <button class="trade-increment" data-target="buy-amount" data-inc="10">+10</button>
-                <button class="trade-increment" data-target="buy-amount" data-inc="100">+100</button>
-                <button id="reset-buy-amount" class="trade-reset" title="Reset to 0">⟲</button>
-              </div>
               <button id="convert-to-hydrogen" class="start-btn">Start Electrolyzer</button>
               <button id="convert-to-hydrogen-stop" class="stop-btn">Stop Electrolyzer</button>
               <button id="convert-to-electricity" class="start-btn">Start Fuelcell</button>
@@ -352,10 +359,6 @@
                 <label for="speed-factor">Speed Factor:</label>
                 <input type="range" id="speed-factor" step="1" min="1" max="10" />
                 <span id="speed-factor-value">1x</span>
-              </div>
-              <div class="realism-row" style="margin-top: 10px;">
-                <input type="checkbox" id="realism-checkbox" />
-                <label for="realism-checkbox">Realism</label>
               </div>
               <button id="reset" class="reset-btn">Reset Simulation</button>
             </div>

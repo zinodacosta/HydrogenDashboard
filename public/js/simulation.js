@@ -145,6 +145,16 @@ export class photovoltaik {
       const cloudiness = data.current.cloud;
       const daytime = data.current.is_day;
       const citySelect = document.getElementById("city-select");
+      if (citySelect == "Always Sunny") {
+        daytime = true;
+        cloudiness = 0;
+        if (sunElem) {
+          sunElem.innerHTML =
+            '<span class="pv-sun-highlight">Sun is shining</span>';
+        }
+        document.getElementById("simulation-state").innerHTML = "Charge Mode";
+        document.getElementById("pv-static-arrow").style.display = "none";
+      }
       const sunElem = document.getElementById("sun");
       if (daytime) {
         if (cloudiness < 50) {
@@ -225,6 +235,8 @@ export class battery {
     //Update the battery level and gauge
     document.getElementById("battery-level").innerHTML =
       this.storage.toFixed(2) + " kWh";
+    const batteryLevelTop = document.getElementById("battery-level-top");
+    if (batteryLevelTop) batteryLevelTop.innerHTML = this.storage.toFixed(2) + " kWh";
     let batteryPercentage = (this.storage / this.capacity) * 100;
     document.getElementById("battery-gauge-percentage").innerHTML =
       batteryPercentage.toFixed(1) + " %";
@@ -264,6 +276,8 @@ export class fuelcell {
 
       document.getElementById("battery-level").innerHTML =
         charge.storage.toFixed(2) + " kWh";
+      const batteryLevelTop = document.getElementById("battery-level-top");
+      if (batteryLevelTop) batteryLevelTop.innerHTML = charge.storage.toFixed(2) + " kWh";
       let batteryPercentage = (this.storage / this.capacity) * 100;
       document.getElementById("battery-gauge-percentage").innerHTML =
         batteryPercentage.toFixed(1) + " %";
@@ -461,6 +475,8 @@ async function fetchBatteryLevel() {
       document.getElementById(
         "battery-level"
       ).innerText = ` ${data.level.toFixed(2)} kWh`;
+      const batteryLevelTop = document.getElementById("battery-level-top");
+      if (batteryLevelTop) batteryLevelTop.innerText = ` ${data.level.toFixed(2)} kWh`;
       let batteryPercentage = (charge.storage / charge.capacity) * 100;
       document.getElementById("battery-gauge-percentage").innerHTML =
         batteryPercentage.toFixed(1) + " %";
@@ -706,6 +722,8 @@ function resetSimulation() {
   }
 
   document.getElementById("battery-level").innerText = " 0 kWh";
+  const batteryLevelTop = document.getElementById("battery-level-top");
+  if (batteryLevelTop) batteryLevelTop.innerText = " 0 kWh";
   document.getElementById("battery-gauge-percentage").innerText = " 0 %";
   document.getElementById("battery-gauge-level").style.width = 0;
 
@@ -714,6 +732,18 @@ function resetSimulation() {
   document.getElementById("hydrogen-gauge-percentage").innerText = " 0 %";
   document.getElementById("hydrogen-gauge-level").style.width = 0;
   document.getElementById("money").innerText = "  0 €";
+
+  // Ensure Fuel Cell -> Charging Station arrow is static after reset
+  const fc2cStatic = document.getElementById(
+    "fuelcell-to-charging-static-arrow"
+  );
+  const fc2cAnim = document.getElementById(
+    "fuelcell-to-charging-animated-arrow"
+  );
+  if (fc2cStatic && fc2cAnim) {
+    fc2cStatic.style.display = "block";
+    fc2cAnim.style.display = "none";
+  }
 
   // Show notification
   showNotification("Simulation reset!", "buy");
@@ -1110,6 +1140,17 @@ document
         h2fStatic.style.display = "none";
         h2fAnim.style.display = "block";
       }
+      // Animate Fuel Cell -> Charging Station arrow while fuel cell runs
+      const fc2cStatic = document.getElementById(
+        "fuelcell-to-charging-static-arrow"
+      );
+      const fc2cAnim = document.getElementById(
+        "fuelcell-to-charging-animated-arrow"
+      );
+      if (fc2cStatic && fc2cAnim) {
+        fc2cStatic.style.display = "none";
+        fc2cAnim.style.display = "block";
+      }
       showNotification("Started Fuel Cell!", "buy");
       //Starte die Umwandlung im Elektrolyseur, wenn noch kein Intervall läuft
       if (fuelCellInterval === null) {
@@ -1162,6 +1203,17 @@ document
     if (h2fStatic && h2fAnim) {
       h2fStatic.style.display = "block";
       h2fAnim.style.display = "none";
+    }
+    // Set Fuel Cell -> Charging Station arrow to static when stopping
+    const fc2cStatic = document.getElementById(
+      "fuelcell-to-charging-static-arrow"
+    );
+    const fc2cAnim = document.getElementById(
+      "fuelcell-to-charging-animated-arrow"
+    );
+    if (fc2cStatic && fc2cAnim) {
+      fc2cStatic.style.display = "block";
+      fc2cAnim.style.display = "none";
     }
     if (fuelCellInterval !== null) {
       clearInterval(fuelCellInterval); //Stoppe die Brennstoffzelle
