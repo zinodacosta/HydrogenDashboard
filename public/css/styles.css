@@ -1,3 +1,7 @@
+/* Add spacing between bullet points in the how-it-works-panel */
+.how-it-works-panel ul li {
+  margin-bottom: 5px;
+}
 /* General styles */
 body {
     font-family: 'Roboto', sans-serif;

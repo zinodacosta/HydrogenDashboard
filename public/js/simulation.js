@@ -6,7 +6,7 @@ let speedfactor = 1 / realism;
 const API_BASE_URL = "https://api.kitechnik.com";
 
 const apiKey = "e7c7b0c5b06544339dd03539253001";
-let city = "Frankfurt";
+let city = "Always Sunny";
 let waveLoader1, waveLoader2;
 let batteryLevelElem, batteryGaugePercentageElem, batteryGaugeLevelElem;
 let hydrogenLevelElem, hydrogenGaugePercentageElem, hydrogenGaugeLevelElem;
@@ -236,7 +236,8 @@ export class battery {
     document.getElementById("battery-level").innerHTML =
       this.storage.toFixed(2) + " kWh";
     const batteryLevelTop = document.getElementById("battery-level-top");
-    if (batteryLevelTop) batteryLevelTop.innerHTML = this.storage.toFixed(2) + " kWh";
+    if (batteryLevelTop)
+      batteryLevelTop.innerHTML = this.storage.toFixed(2) + " kWh";
     let batteryPercentage = (this.storage / this.capacity) * 100;
     document.getElementById("battery-gauge-percentage").innerHTML =
       batteryPercentage.toFixed(1) + " %";
@@ -277,7 +278,8 @@ export class fuelcell {
       document.getElementById("battery-level").innerHTML =
         charge.storage.toFixed(2) + " kWh";
       const batteryLevelTop = document.getElementById("battery-level-top");
-      if (batteryLevelTop) batteryLevelTop.innerHTML = charge.storage.toFixed(2) + " kWh";
+      if (batteryLevelTop)
+        batteryLevelTop.innerHTML = charge.storage.toFixed(2) + " kWh";
       let batteryPercentage = (this.storage / this.capacity) * 100;
       document.getElementById("battery-gauge-percentage").innerHTML =
         batteryPercentage.toFixed(1) + " %";
@@ -476,7 +478,8 @@ async function fetchBatteryLevel() {
         "battery-level"
       ).innerText = ` ${data.level.toFixed(2)} kWh`;
       const batteryLevelTop = document.getElementById("battery-level-top");
-      if (batteryLevelTop) batteryLevelTop.innerText = ` ${data.level.toFixed(2)} kWh`;
+      if (batteryLevelTop)
+        batteryLevelTop.innerText = ` ${data.level.toFixed(2)} kWh`;
       let batteryPercentage = (charge.storage / charge.capacity) * 100;
       document.getElementById("battery-gauge-percentage").innerHTML =
         batteryPercentage.toFixed(1) + " %";

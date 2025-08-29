@@ -228,11 +228,16 @@
               <div class="how-it-works-panel" style="background: #e3f2fd; border: 2px solid #1976d2; border-radius: 10px; padding: 14px; margin-top: 6px; margin-bottom: 6px; box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);">
                 <strong style="font-size: 1.1em; color: #1976d2;">How it works:</strong><br>
                 <ul style="margin-top: 6px; margin-bottom: 0;">
-                  <li>Selecting an use case changes the parameters of the machinery</li>
-                  <li>Application uses geolocation to determine if selected location is sunny and charges photovoltaik</li>
-                  <li>The electrolyzer works automatically when battery storage is over 80%</li>
-                  <li>Everything can be adjusted manually as well</li>
-                  <li>Electricity can be manually bought and sold at market price</li>
+<li>
+  The Hydrogen Eco Simulation aims for economic profit by using power generated from photovoltaics,<br> buying electricity at low prices, 
+  converting excess electricity to hydrogen via an electrolyzer, 
+  and <br>converting hydrogen back to electricity via a fuel cell when prices are high.
+</li>
+<li>Selecting a use case changes the parameters of the machinery.</li>
+<li>The application uses geolocation to determine if the selected location is sunny and charges the photovoltaics accordingly.</li>
+<li>The electrolyzer operates automatically when battery storage is over 80%.</li>
+<li>All parameters can also be adjusted manually.</li>
+<li>Electricity can be manually bought and sold at market price in the topmost panel.</li>
                 </ul>
               </div>
             </div>
@@ -266,7 +271,7 @@
                   <option value="New York">New York</option>
                   <option value="Madrid">Madrid</option>
                   <option value="Tokyo">Tokyo</option>
-                  <option value="Always Sunny">Always Sunny</option>
+                  <option value="Always Sunny" selected>Always Sunny</option>
                 </select>
                 <p>Current Location: <span id="location"></span></p>
                 <p>PV Status: <span id="sun"></span></p>
