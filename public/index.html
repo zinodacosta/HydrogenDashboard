@@ -95,7 +95,10 @@
 
       <div id="code-expanded" style="display: none">
         <div id="corner-content">
-
+          <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <button id="lang-de" class="lang-btn lang-btn-off">DE</button>
+            <button id="lang-en" class="lang-btn lang-btn-on">EN</button>
+          </div>
           <h2 class="pretty-header">Wholesale Price</h2>
           <!-- Trade Panel: Account Balance, Market Price, Sell/Buy fields -->
           <div class="trade-panel" style="margin-bottom: 18px; border: 2px solid #1976d2; border-radius: 10px; padding: 12px; background: #f5faff;">
@@ -275,6 +278,7 @@
                 </select>
                 <p>Current Location: <span id="location"></span></p>
                 <p>PV Status: <span id="sun"></span></p>
+                <button id="reset" class="reset-btn">Reset Simulation</button>
               </div>
               <div class="eco-item" id="battery">
                 <h3>Battery</h3>
@@ -297,6 +301,10 @@
                   max="10000"
                 />
                 <span id="battery-capacity-value">10 kWh</span>
+                <div style="margin-top:8px;">
+                  <span style="color:#333; font-size:0.98em; display:block;">Battery Storage</span>
+                  <span id="battery-storage-percentage" class="level-highlight" style="box-shadow: 0 2px 8px rgba(76, 175, 80, 0.08); background: linear-gradient(90deg, #e8f5e9 0%, #c8e6c9 100%); color: #1b5e20; padding: 6px 18px; border-radius: 10px; font-weight: 700; font-size: 1.1em; display:block; margin-top:4px;">0%</span>
+                </div>
               </div>
               <div class="eco-item" id="electrolyzer">
                 <h3>Electrolyzer</h3>
@@ -332,6 +340,14 @@
                   max="10000"
                 />
                 <span id="electrolyzer-capacity-value">1000</span>
+                <div style="margin-top:8px;">
+                  <span style="color:#333; font-size:0.98em; display:block;">Hydrogen Storage</span>
+                  <span id="hydrogen-storage-percentage" class="hydrogen-highlight" style="box-shadow: 0 2px 8px rgba(76, 175, 80, 0.08); background: linear-gradient(90deg, #e3f2fd 0%, #b3e5fc 100%); color: #1565c0; padding: 6px 18px; border-radius: 10px; font-weight: 700; font-size: 1.1em; display:block; margin-top:4px;">0%</span>
+                  <div class="electrolyzer-controls" style="margin-top:10px;">
+                    <button id="convert-to-hydrogen" class="start-btn">Start Electrolyzer</button>
+                    <button id="convert-to-hydrogen-stop" class="stop-btn">Stop Electrolyzer</button>
+                  </div>
+                </div>
               </div>
               <div class="eco-item" id="fuelcell">
                 <h3>Fuel Cell</h3>
@@ -353,19 +369,19 @@
                   max="1000000"
                 />
                 <span id="fuelcell-power-value">200</span>
+                <div class="fuelcell-controls" style="margin-top:10px;">
+                  <button id="convert-to-electricity" class="start-btn">Start Fuelcell</button>
+                  <button id="convert-to-electricity-stop" class="stop-btn">Stop Fuelcell</button>
+                </div>
               </div>
             </div>
             <div id="button-container">
-              <button id="convert-to-hydrogen" class="start-btn">Start Electrolyzer</button>
-              <button id="convert-to-hydrogen-stop" class="stop-btn">Stop Electrolyzer</button>
-              <button id="convert-to-electricity" class="start-btn">Start Fuelcell</button>
-              <button id="convert-to-electricity-stop" class="stop-btn">Stop Fuelcell</button>
-              <div class="speed-row" style="margin-top: 18px;">
-                <label for="speed-factor">Speed Factor:</label>
-                <input type="range" id="speed-factor" step="1" min="1" max="10" />
-                <span id="speed-factor-value">1x</span>
-              </div>
-              <button id="reset" class="reset-btn">Reset Simulation</button>
+               <div class="speed-row" style="margin-top: 18px;">
+                 <label for="speed-factor">Speed Factor:</label>
+                 <input type="range" id="speed-factor" step="1" min="1" max="10" />
+                 <span id="speed-factor-value">1x</span>
+               </div>
+
             </div>
             <div class="flowchart">
               <div class="flow-item">
@@ -458,10 +474,16 @@
                 <p>Charging Station</p>
               </div>
             </div>
-            <h2 class="pretty-header">Battery Storage</h2>
-            <canvas id="batteryChart"></canvas>
-            <h2 class="pretty-header">Hydrogen Storage</h2>
-            <canvas id="hydrogenChart"></canvas>
+            <div style="display: flex; gap: 32px; align-items: flex-start; justify-content: center; margin-bottom: 24px;">
+              <div style="flex: 1; min-width: 320px; max-width: 600px;">
+                <h2 class="pretty-header">Battery Storage</h2>
+                <canvas id="batteryChart"></canvas>
+              </div>
+              <div style="flex: 1; min-width: 320px; max-width: 600px;">
+                <h2 class="pretty-header">Hydrogen Storage</h2>
+                <canvas id="hydrogenChart"></canvas>
+              </div>
+            </div>
             <div id="notification" class="notification">1kW Electricity bought!</div>
 
           </div>
@@ -471,6 +493,28 @@
     </div>
 
     <script type="module" src="/js/main.js"></script>
+    <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const deBtn = document.getElementById('lang-de');
+    const enBtn = document.getElementById('lang-en');
+    function setLang(active) {
+      if (active === 'DE') {
+        deBtn.classList.add('lang-btn-on');
+        deBtn.classList.remove('lang-btn-off');
+        enBtn.classList.add('lang-btn-off');
+        enBtn.classList.remove('lang-btn-on');
+      } else {
+        enBtn.classList.add('lang-btn-on');
+        enBtn.classList.remove('lang-btn-off');
+        deBtn.classList.add('lang-btn-off');
+        deBtn.classList.remove('lang-btn-on');
+      }
+    }
+    deBtn.addEventListener('click', function() { setLang('DE'); });
+    enBtn.addEventListener('click', function() { setLang('EN'); });
+    setLang('EN'); // Default
+  });
+</script>
   </body>
 </html>
 

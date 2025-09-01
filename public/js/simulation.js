@@ -238,6 +238,13 @@ export class battery {
     const batteryLevelTop = document.getElementById("battery-level-top");
     if (batteryLevelTop)
       batteryLevelTop.innerHTML = this.storage.toFixed(2) + " kWh";
+    const batteryStoragePercent = document.getElementById(
+      "battery-storage-percentage"
+    );
+    if (batteryStoragePercent && this.capacity > 0) {
+      const percent = (this.storage / this.capacity) * 100;
+      batteryStoragePercent.textContent = percent.toFixed(1) + "%";
+    }
     let batteryPercentage = (this.storage / this.capacity) * 100;
     document.getElementById("battery-gauge-percentage").innerHTML =
       batteryPercentage.toFixed(1) + " %";
@@ -343,8 +350,14 @@ export class electrolyzer {
 
         document.getElementById("hydrogen-level").innerHTML =
           this.storage.toFixed(2) + " g";
-
         let hydrogenPercentage = (this.storage / this.capacity) * 100;
+        const hydrogenStoragePercent = document.getElementById(
+          "hydrogen-storage-percentage"
+        );
+        if (hydrogenStoragePercent && this.capacity > 0) {
+          hydrogenStoragePercent.textContent =
+            hydrogenPercentage.toFixed(1) + "%";
+        }
 
         if (
           document.getElementById("simulation-state").innerHTML ===
