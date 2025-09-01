@@ -1624,6 +1624,14 @@ label {
   }
 }
 
+@media (max-width: 700px) {
+  .graph-row {
+    flex-direction: column !important;
+    gap: 18px !important;
+    align-items: stretch !important;
+  }
+}
+
 /* Ensure .flowchart is only vertically scrollable on mobile */
 @media (max-width: 700px) {
   .flowchart {
