@@ -250,6 +250,36 @@ export class battery {
       batteryPercentage.toFixed(1) + " %";
     document.getElementById("battery-gauge-level").style.width =
       batteryPercentage.toFixed(1) + "%";
+
+    // Electrolyzer arrow logic: animated only when electrolyzer is running
+    const staticArrow = document.getElementById("electrolyzer-static-arrow");
+    const animatedArrow = document.getElementById(
+      "electrolyzer-animated-arrow"
+    );
+    const outStaticArrow = document.getElementById(
+      "electrolyzer-output-static-arrow"
+    );
+    const outAnimatedArrow = document.getElementById(
+      "electrolyzer-output-animated-arrow"
+    );
+    let shouldBeAnimated =
+      electrolyzerInterval !== null || batteryPercentage >= 80;
+    // Fix: Only update battery->electrolyzer arrow if state changes
+    if (staticArrow && animatedArrow) {
+      if (typeof this.lastBatteryElectrolyzerArrowState === "undefined") {
+        this.lastBatteryElectrolyzerArrowState = null;
+      }
+      if (this.lastBatteryElectrolyzerArrowState !== shouldBeAnimated) {
+        staticArrow.style.display = shouldBeAnimated ? "none" : "block";
+        animatedArrow.style.display = shouldBeAnimated ? "block" : "none";
+        this.lastBatteryElectrolyzerArrowState = shouldBeAnimated;
+      }
+    }
+    // Output arrow always updates (no flicker issue)
+    if (outStaticArrow && outAnimatedArrow) {
+      outStaticArrow.style.display = shouldBeAnimated ? "none" : "block";
+      outAnimatedArrow.style.display = shouldBeAnimated ? "block" : "none";
+    }
     errorCheck();
   }
 }
@@ -819,16 +849,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const PVPowerSlider = document.getElementById("PV-power");
   const PVPowerValueDisplay = document.getElementById("PV-power-value");
-
-  const speedfactorSlider = document.getElementById("speed-factor");
-  const speedfactorDisplay = document.getElementById("speed-factor-value");
-
-  speedfactorSlider.addEventListener("input", function () {
-    const input = parseFloat(speedfactorSlider.value);
-    speedfactorDisplay.textContent = input + "x";
-    speedfactor = input;
-    console.log(input);
-  });
 
   // Realism checkbox functionality
   const realismCheckbox = document.getElementById("realism-checkbox");

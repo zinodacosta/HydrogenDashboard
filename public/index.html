@@ -37,6 +37,10 @@
   </head>
   <body>
     
+    <header style="width:100%;text-align:center;padding:12px 0;background:#f5f5f5;color:#333;position:fixed;top:0;left:0;font-size:0.95em;z-index:1000;">
+      Innovations-Agentur RLP Version 2025 09 02
+    </header>
+    <div style="height:48px;"></div> <!-- Spacer for header -->
     <div id="corner-widget" class="widget-card">
       <button id="toggle-widget">▲</button>
       <div id="code-minimized">
@@ -96,8 +100,7 @@
       <div id="code-expanded" style="display: none">
         <div id="corner-content">
           <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: 8px;">
-            <button id="lang-de" class="lang-btn lang-btn-off">DE</button>
-            <button id="lang-en" class="lang-btn lang-btn-on">EN</button>
+            <!-- Language buttons removed as requested -->
           </div>
           <h2 class="pretty-header">Wholesale Price</h2>
           <!-- Trade Panel: Account Balance, Market Price, Sell/Buy fields -->
@@ -232,16 +235,17 @@
                 <strong style="font-size: 1.1em; color: #1976d2;">How it works:</strong><br>
                 <ul style="margin-top: 6px; margin-bottom: 0;">
 <li>
-  The Hydrogen Eco Simulation aims for economic profit by using power generated from photovoltaics,<br> buying electricity at low prices, 
-  converting excess electricity to hydrogen via an electrolyzer, 
-  and <br>converting hydrogen back to electricity via a fuel cell when prices are high.
+  The <b>Hydrogen Eco Simulation</b> aims for economic profit by using power generated from photovoltaics,<br> buying electricity at low prices, 
+  converting excess electricity to hydrogen (<b>electricity to hydrogen</b>) via an electrolyzer, 
+  and <br>converting hydrogen back to electricity (<b>hydrogen back to electricity</b>) via a fuel cell when prices are high.
 </li>
 <li>Selecting a use case changes the parameters of the machinery.</li>
 <li>The application uses geolocation to determine if the selected location is sunny and charges the photovoltaics accordingly.</li>
-<li>The electrolyzer operates automatically when battery storage is over 80%.</li>
-<li>All parameters can also be adjusted manually.</li>
-<li>Electricity can be manually bought and sold at market price in the topmost panel.</li>
+<li>The electrolyzer operates <b>automatically</b> when battery storage is over 80%.</li>
+<li>All parameters can also be adjusted <b>manually</b>.</li>
+<li>Electricity can be <b>manually</b> bought and sold at market price in the topmost panel.</li>
                 </ul>
+                <div style="margin-top:8px;"><em>The simulation uses UTC time.</em></div>
               </div>
             </div>
             </div>
@@ -376,12 +380,6 @@
               </div>
             </div>
             <div id="button-container">
-               <div class="speed-row" style="margin-top: 18px;">
-                 <label for="speed-factor">Speed Factor:</label>
-                 <input type="range" id="speed-factor" step="1" min="1" max="10" />
-                 <span id="speed-factor-value">1x</span>
-               </div>
-
             </div>
             <div class="flowchart">
               <div class="flow-item">
@@ -493,28 +491,8 @@
     </div>
 
     <script type="module" src="/js/main.js"></script>
-    <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const deBtn = document.getElementById('lang-de');
-    const enBtn = document.getElementById('lang-en');
-    function setLang(active) {
-      if (active === 'DE') {
-        deBtn.classList.add('lang-btn-on');
-        deBtn.classList.remove('lang-btn-off');
-        enBtn.classList.add('lang-btn-off');
-        enBtn.classList.remove('lang-btn-on');
-      } else {
-        enBtn.classList.add('lang-btn-on');
-        enBtn.classList.remove('lang-btn-off');
-        deBtn.classList.add('lang-btn-off');
-        deBtn.classList.remove('lang-btn-on');
-      }
-    }
-    deBtn.addEventListener('click', function() { setLang('DE'); });
-    enBtn.addEventListener('click', function() { setLang('EN'); });
-    setLang('EN'); // Default
-  });
-</script>
+  <!-- Removed obsolete language button JS code -->
+  <!-- Footer removed, text moved to header -->
   </body>
 </html>
 

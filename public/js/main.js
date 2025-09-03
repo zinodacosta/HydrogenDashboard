@@ -941,6 +941,12 @@ function startMonitoring() {
     );
     if (!isNaN(batteryLevel)) {
       updateBatteryChart(batteryLevel);
+      // Arrow logic for electrolyzer
+      const staticArrow = document.getElementById("electrolyzer-static-arrow");
+      const animatedArrow = document.getElementById(
+        "electrolyzer-animated-arrow"
+      );
+
     }
   }, 1000);
   setInterval(() => {
