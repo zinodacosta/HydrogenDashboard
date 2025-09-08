@@ -1,3 +1,6 @@
+// --- Feedback API endpoint ---
+import nodemailer from "nodemailer";
+// ...existing code...
 import express from "express";
 import fetch from "node-fetch"; //http req lib
 import { fileURLToPath } from "url";
@@ -25,9 +28,31 @@ app.use(
   cors({
     origin: "*", // In production, specify your frontend domain
     methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// Feedback API endpoint
+app.post("/api/feedback", async (req, res) => {
+  const { name, feedback } = req.body;
+  let transporter = nodemailer.createTransport({
+    service: "outlook",
+    auth: {
+      user: "zinodacosta@outlook.com",
+      pass: "DtUx2KqdfzZn9r0u!",
+    },
+  });
+  try {
+    await transporter.sendMail({
+      from: "Hydrogen Dashboard <your_email@gmail.com>",
+      to: "zino@protonik.eu",
+      subject: `Dashboard Feedback from ${name}`,
+      text: feedback,
+    });
+    res.status(200).json({ message: "Feedback sent successfully!" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to send feedback." });
+  }
+});
 
 // Simple in-memory cache for API responses
 const cache = new Map();

@@ -946,7 +946,6 @@ function startMonitoring() {
       const animatedArrow = document.getElementById(
         "electrolyzer-animated-arrow"
       );
-
     }
   }, 1000);
   setInterval(() => {
@@ -969,6 +968,42 @@ window.onload = async () => {
 
 //init values
 document.addEventListener("DOMContentLoaded", function () {
+  // Modal logic for changelogs and feedback
+  const changelogsBtn = document.getElementById("changelogs-btn");
+  const changelogsModal = document.getElementById("changelogs-modal");
+  const feedbackBtn = document.getElementById("feedback-btn");
+  const feedbackModal = document.getElementById("feedback-modal");
+  const feedbackForm = document.getElementById("feedback-form");
+  const feedbackSuccess = document.getElementById("feedback-success");
+
+  if (changelogsBtn && changelogsModal) {
+    changelogsBtn.addEventListener("click", function () {
+      changelogsModal.style.display = "block";
+    });
+  }
+  if (feedbackBtn && feedbackModal) {
+    feedbackBtn.addEventListener("click", function () {
+      feedbackModal.style.display = "block";
+    });
+  }
+  if (feedbackForm) {
+    feedbackForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const name = document.getElementById("feedback-name").value;
+      const feedback = document.getElementById("feedback-text").value;
+      // Send feedback via mailto
+      const mailtoLink = `mailto:zino@protonik.eu?subject=Dashboard Feedback from ${encodeURIComponent(
+        name
+      )}&body=${encodeURIComponent(feedback)}`;
+      window.open(mailtoLink, "_blank");
+      if (feedbackSuccess) feedbackSuccess.style.display = "block";
+      setTimeout(() => {
+        if (feedbackSuccess) feedbackSuccess.style.display = "none";
+        if (feedbackModal) feedbackModal.style.display = "none";
+        feedbackForm.reset();
+      }, 2000);
+    });
+  }
   const codeExpanded = document.getElementById("code-expanded");
   const codeMinimized = document.getElementById("code-minimized");
   const content = document.getElementById("corner-content");

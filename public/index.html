@@ -36,10 +36,7 @@
     <script type="module" defer src="/js/main.js"></script>
   </head>
   <body>
-    <header style="width:100%;text-align:center;padding:12px 0;background:#f5f5f5;color:#333;position:fixed;top:0;left:0;font-size:0.95em;z-index:1000;">
-      Innovations-Agentur RLP Version 2025 09 04
-    </header>
-    <div style="height:48px;"></div> <!-- Spacer for header -->
+  <!-- Header removed as requested -->
     
   <!-- Header removed as requested -->
     <div id="corner-widget" class="widget-card">
@@ -488,6 +485,35 @@
                 <h2 class="pretty-header">Hydrogen Storage</h2>
                 <canvas id="hydrogenChart"></canvas>
               </div>
+            </div>
+            <div style="display:flex;justify-content:center;gap:24px;margin-bottom:32px;">
+              <button id="changelogs-btn" style="background:#1976d2;color:#fff;border:none;border-radius:8px;padding:12px 28px;font-size:1.08em;font-weight:500;box-shadow:0 2px 8px rgba(25,118,210,0.10);cursor:pointer;transition:background 0.2s;">
+                📋 Changelogs
+              </button>
+              <button id="feedback-btn" style="background:#43a047;color:#fff;border:none;border-radius:8px;padding:12px 28px;font-size:1.08em;font-weight:500;box-shadow:0 2px 8px rgba(67,160,71,0.10);cursor:pointer;transition:background 0.2s;">
+                💬 Report Feedback
+              </button>
+            </div>
+            <!-- Changelogs Modal -->
+            <div id="changelogs-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(25,118,210,0.18);padding:32px 24px;z-index:2000;min-width:320px;max-width:90vw;">
+              <h3 style="margin-top:0;color:#1976d2;">Changelogs</h3>
+              <div style="margin-bottom:18px;">Latest updates and changes will be listed here.</div>
+              <ul style="margin-bottom:18px;">
+                <li><b>2025-09-08:</b> Added feedback modal and changelogs.</li>
+              </ul>
+              <button onclick="document.getElementById('changelogs-modal').style.display='none'" style="background:#1976d2;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:1em;cursor:pointer;">Close</button>
+            </div>
+            <!-- Feedback Modal -->
+            <div id="feedback-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(67,160,71,0.18);padding:32px 24px;z-index:2000;min-width:320px;max-width:90vw;">
+              <h3 style="margin-top:0;color:#43a047;">Report Feedback</h3>
+              <form id="feedback-form" style="display:flex;flex-direction:column;gap:14px;">
+                <input type="text" id="feedback-name" name="name" placeholder="Your Name" style="padding:8px 12px;border-radius:6px;border:1px solid #ccc;font-size:1em;" required />
+                <textarea id="feedback-text" name="feedback" placeholder="Your Feedback" style="padding:8px 12px;border-radius:6px;border:1px solid #ccc;font-size:1em;min-height:80px;resize:vertical;" required></textarea>
+                <button type="submit" style="background:#43a047;color:#fff;border:none;border-radius:6px;padding:10px 22px;font-size:1.08em;font-weight:500;cursor:pointer;">Submit</button>
+              </form>
+              <button onclick="document.getElementById('feedback-modal').style.display='none'" style="background:#43a047;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:1em;cursor:pointer;margin-top:10px;">Close</button>
+              <div id="feedback-success" style="display:none;color:#43a047;margin-top:12px;font-weight:500;">Thank you for your feedback!</div>
+            </div>
             </div>
             <div id="notification" class="notification">1kW Electricity bought!</div>
 
