@@ -1035,12 +1035,9 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         );
         if (response.ok) {
-          if (feedbackSuccess) feedbackSuccess.style.display = "block";
-          setTimeout(() => {
-            if (feedbackSuccess) feedbackSuccess.style.display = "none";
-            if (feedbackModal) feedbackModal.style.display = "none";
-            feedbackForm.reset();
-          }, 2000);
+          if (feedbackModal) feedbackModal.style.display = "none";
+          feedbackForm.reset();
+          showFeedbackPopup("Thank you for your feedback!");
         } else {
           alert("Failed to send feedback. Please try again later.");
         }
@@ -1048,6 +1045,28 @@ document.addEventListener("DOMContentLoaded", function () {
         alert("Error sending feedback. Please check your connection.");
       }
     });
+
+    // Function to show a styled popup message
+    function showFeedbackPopup(message) {
+      let popup = document.createElement("div");
+      popup.textContent = message;
+      popup.style.position = "fixed";
+      popup.style.top = "20px";
+      popup.style.left = "50%";
+      popup.style.transform = "translateX(-50%)";
+      popup.style.background = "#43a047";
+      popup.style.color = "#fff";
+      popup.style.padding = "16px 32px";
+      popup.style.borderRadius = "8px";
+      popup.style.fontSize = "1.15em";
+      popup.style.fontWeight = "bold";
+      popup.style.zIndex = "9999";
+      popup.style.boxShadow = "0 2px 12px rgba(67,160,71,0.18)";
+      document.body.appendChild(popup);
+      setTimeout(() => {
+        popup.remove();
+      }, 2500);
+    }
   }
   const codeExpanded = document.getElementById("code-expanded");
   const codeMinimized = document.getElementById("code-minimized");

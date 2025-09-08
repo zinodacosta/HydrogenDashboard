@@ -496,6 +496,15 @@
             </div>
             <!-- Changelogs Modal -->
             <div id="changelogs-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(25,118,210,0.18);padding:32px 24px;z-index:2000;min-width:320px;max-width:90vw;">
+              <!-- Position modal to the left of maximized widget -->
+              <style>
+                #changelogs-modal {
+                  left: 0 !important;
+                  top: 50% !important;
+                  transform: translateY(-50%) !important;
+                  margin-left: 24px;
+                }
+              </style>
               <h3 style="margin-top:0;color:#1976d2;">Changelogs</h3>
               <div style="margin-bottom:18px;">Latest updates and changes will be listed here.</div>
               <ul style="margin-bottom:18px;">
@@ -506,6 +515,15 @@
             
             <!-- Feedback Modal -->
             <div id="feedback-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(67,160,71,0.18);padding:32px 24px;z-index:2000;min-width:320px;max-width:90vw;">
+              <!-- Position modal to the left of maximized widget -->
+              <style>
+                #feedback-modal {
+                  left: 0 !important;
+                  top: 50% !important;
+                  transform: translateY(-50%) !important;
+                  margin-left: 24px;
+                }
+              </style>
               <h3 style="margin-top:0;color:#43a047;">Report Feedback</h3>
               <form id="feedback-form" style="display:flex;flex-direction:column;gap:14px;">
                 <input type="text" id="feedback-name" name="name" placeholder="Your Name" style="padding:8px 12px;border-radius:6px;border:1px solid #ccc;font-size:1em;" required />
