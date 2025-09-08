@@ -980,28 +980,73 @@ document.addEventListener("DOMContentLoaded", function () {
     changelogsBtn.addEventListener("click", function () {
       changelogsModal.style.display = "block";
     });
+    // Close changelogs modal when clicking outside
+    window.addEventListener("mousedown", function (event) {
+      if (
+        changelogsModal.style.display === "block" &&
+        !changelogsModal.contains(event.target) &&
+        event.target !== changelogsBtn
+      ) {
+        changelogsModal.style.display = "none";
+      }
+    });
   }
   if (feedbackBtn && feedbackModal) {
     feedbackBtn.addEventListener("click", function () {
       feedbackModal.style.display = "block";
     });
+    // Close feedback modal when clicking outside
+    window.addEventListener("mousedown", function (event) {
+      if (
+        feedbackModal.style.display === "block" &&
+        !feedbackModal.contains(event.target) &&
+        event.target !== feedbackBtn
+      ) {
+        feedbackModal.style.display = "none";
+      }
+    });
   }
   if (feedbackForm) {
-    feedbackForm.addEventListener("submit", function (e) {
+    feedbackForm.addEventListener("submit", async function (e) {
       e.preventDefault();
       const name = document.getElementById("feedback-name").value;
       const feedback = document.getElementById("feedback-text").value;
-      // Send feedback via mailto
-      const mailtoLink = `mailto:zino@protonik.eu?subject=Dashboard Feedback from ${encodeURIComponent(
-        name
-      )}&body=${encodeURIComponent(feedback)}`;
-      window.open(mailtoLink, "_blank");
-      if (feedbackSuccess) feedbackSuccess.style.display = "block";
-      setTimeout(() => {
-        if (feedbackSuccess) feedbackSuccess.style.display = "none";
-        if (feedbackModal) feedbackModal.style.display = "none";
-        feedbackForm.reset();
-      }, 2000);
+      // Replace these with your actual EmailJS IDs
+      const service_id = "service_6dzl2ty";
+      const template_id = "template_z7m00z1";
+      const user_id = "8y-o0dYrM5tGv_Psj";
+      try {
+        const response = await fetch(
+          "https://api.emailjs.com/api/v1.0/email/send",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              service_id,
+              template_id,
+              user_id,
+              template_params: {
+                name,
+                message: feedback,
+              },
+            }),
+          }
+        );
+        if (response.ok) {
+          if (feedbackSuccess) feedbackSuccess.style.display = "block";
+          setTimeout(() => {
+            if (feedbackSuccess) feedbackSuccess.style.display = "none";
+            if (feedbackModal) feedbackModal.style.display = "none";
+            feedbackForm.reset();
+          }, 2000);
+        } else {
+          alert("Failed to send feedback. Please try again later.");
+        }
+      } catch (err) {
+        alert("Error sending feedback. Please check your connection.");
+      }
     });
   }
   const codeExpanded = document.getElementById("code-expanded");

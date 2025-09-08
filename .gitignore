@@ -1,4 +1,2 @@
 node_modules
-
-# Ignore backend server file
-backend/server.js
+server.js
