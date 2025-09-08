@@ -1030,17 +1030,24 @@ document.addEventListener("DOMContentLoaded", function () {
               template_params: {
                 name,
                 message: feedback,
+                to_email,
               },
             }),
           }
         );
         if (response.ok) {
-          if (feedbackSuccess) feedbackSuccess.style.display = "block";
-          setTimeout(() => {
-            if (feedbackSuccess) feedbackSuccess.style.display = "none";
-            if (feedbackModal) feedbackModal.style.display = "none";
-            feedbackForm.reset();
-          }, 2000);
+          if (feedbackModal) feedbackModal.style.display = "none";
+          feedbackForm.reset();
+          // Show notification popup
+          const notification = document.getElementById("notification");
+          if (notification) {
+            notification.textContent = "Thank you for your feedback!";
+            notification.style.display = "block";
+            setTimeout(() => {
+              notification.style.display = "none";
+              notification.textContent = "1kW Electricity bought!";
+            }, 2000);
+          }
         } else {
           alert("Failed to send feedback. Please try again later.");
         }
