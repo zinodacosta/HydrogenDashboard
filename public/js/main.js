@@ -1011,10 +1011,10 @@ document.addEventListener("DOMContentLoaded", function () {
       e.preventDefault();
       const name = document.getElementById("feedback-name").value;
       const feedback = document.getElementById("feedback-text").value;
-      // Replace these with your actual EmailJS IDs
+
       const service_id = "service_6dzl2ty";
       const template_id = "template_z7m00z1";
-      const user_id = "8y-o0dYrM5tGv_Psj";
+      const user_id = "bUrvh02pPSKz9XPKG";
       try {
         const response = await fetch(
           "https://api.emailjs.com/api/v1.0/email/send",
