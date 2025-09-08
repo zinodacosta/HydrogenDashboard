@@ -1012,7 +1012,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const name = document.getElementById("feedback-name").value;
       const feedback = document.getElementById("feedback-text").value;
 
-      const service_id = "service_hv9zxkk";
+      const service_id = "service_dwbojs8";
       const template_id = "template_z7m00z1";
       const user_id = "bUrvh02pPSKz9XPKG";
       try {
