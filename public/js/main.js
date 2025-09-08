@@ -1030,7 +1030,6 @@ document.addEventListener("DOMContentLoaded", function () {
               template_params: {
                 name,
                 message: feedback,
-                to_email,
               },
             }),
           }
