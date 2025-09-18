@@ -59,7 +59,7 @@
               <div id="battery-gauge-label">
                 <span id="battery-gauge-percentage">0%</span>
               </div>
-              <p class="gauge-text">Battery</p>
+              <p class="gauge-text" id="header-battery">Battery</p>
             </div>
 
             <!-- Hydrogen Level Gauge -->
@@ -76,7 +76,7 @@
               <div id="hydrogen-gauge-label">
                 <span id="hydrogen-gauge-percentage">0%</span>
               </div>
-              <p class="gauge-text">Hydrogen</p>
+              <p class="gauge-text" id="header-hydrogen">Hydrogen</p>
             </div>
           </div>
           <div class="mode-container">
@@ -98,10 +98,72 @@
       <div id="code-expanded" style="display: none">
         <div id="corner-content">
           <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: 8px;">
-            <!-- Language buttons removed as requested -->
+            <button id="lang-de" class="lang-toggle lang-off">DE</button>
+            <button id="lang-en" class="lang-toggle lang-on">EN</button>
+            <button id="documentation-btn" style="background:#ffa000;color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:1em;font-weight:600;box-shadow:0 2px 8px rgba(255,160,0,0.10);cursor:pointer;transition:background 0.2s;">📖 Documentation</button>
+            <style>
+              .lang-toggle {
+                background: #e3e3e3;
+                color: #1976d2;
+                border: 2px solid #1976d2;
+                border-radius: 8px;
+                padding: 8px 18px;
+                font-size: 1em;
+                font-weight: 600;
+                cursor: pointer;
+                box-shadow: 0 2px 8px rgba(25,118,210,0.08);
+                transition: background 0.2s, color 0.2s;
+                outline: none;
+              }
+              .arrow-toggle {
+                width: 40px;
+                height: 40px;
+                position: relative;
+                cursor: pointer;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+              }
+              .arrow-line {
+                position: absolute;
+                width: 28px;
+                height: 4px;
+                background: #1976d2;
+                border-radius: 2px;
+                transition: all 0.3s cubic-bezier(.4,2,.3,1);
+                left: 6px;
+              }
+              .arrow-line:nth-child(1) {
+                top: 14px;
+              }
+              .arrow-line:nth-child(2) {
+                top: 22px;
+              }
+              .arrow-toggle:not(.open) .arrow-line:nth-child(1) {
+                transform: rotate(-45deg) translate(0, 0);
+              }
+              .arrow-toggle:not(.open) .arrow-line:nth-child(2) {
+                transform: rotate(45deg) translate(0, 0);
+              }
+              .arrow-toggle.open .arrow-line:nth-child(1) {
+                transform: rotate(45deg) translate(0, 0);
+              }
+              .arrow-toggle.open .arrow-line:nth-child(2) {
+                transform: rotate(-45deg) translate(0, 0);
+              }
+              .lang-on {
+                background: #1976d2;
+                color: #fff;
+                border: 2px solid #1976d2;
+              }
+              .lang-off {
+                background: #e3e3e3;
+                color: #1976d2;
+                border: 2px solid #1976d2;
+              }
+            </style>
           </div>
-          <h2 class="pretty-header">Wholesale Price</h2>
-          <!-- Trade Panel: Account Balance, Market Price, Sell/Buy fields -->
+          <h2 class="pretty-header" id="trading-panel-title" style="margin-bottom:18px;">Trading Panel</h2>
           <div class="trade-panel" style="margin-bottom: 18px; border: 2px solid #1976d2; border-radius: 10px; padding: 12px; background: #f5faff;">
             <div class="money-row" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
               <span>Account Balance:</span>
@@ -109,17 +171,8 @@
               <span style="margin-left: 16px;">Electricity stored: <span id="battery-level-top" class="level-highlight">0 kWh</span></span>
               <span class="trade-market-price" style="margin-left: 16px;">Current Market Price: <span id="current-market-price-sell"></span> €/MWh</span>
             </div>
-            <div class="trade-row" style="margin-bottom: 8px;">
-              <button id="sell-button" class="button sell">Sell</button>
-              <input type="number" id="sell-amount" min="0.1" step="0.1" placeholder="kWh" class="trade-input">
-              <span id="sell-amount-unit" style="margin-left:4px;">kWh</span>
-              <button class="trade-increment" data-target="sell-amount" data-inc="1">+1</button>
-              <button class="trade-increment" data-target="sell-amount" data-inc="10">+10</button>
-              <button class="trade-increment" data-target="sell-amount" data-inc="100">+100</button>
-              <button id="reset-sell-amount" class="trade-reset" title="Reset to 0">⟲</button>
-            </div>
             <div class="trade-row">
-              <button id="buy-button" class="button buy">Buy</button>
+              <button id="buy-button" class="button buy">Buy Electricity</button>
               <input type="number" id="buy-amount" min="0.1" step="0.1" placeholder="kWh" class="trade-input">
               <span id="buy-amount-unit" style="margin-left:4px;">kWh</span>
               <button class="trade-increment" data-target="buy-amount" data-inc="1">+1</button>
@@ -127,43 +180,46 @@
               <button class="trade-increment" data-target="buy-amount" data-inc="100">+100</button>
               <button id="reset-buy-amount" class="trade-reset" title="Reset to 0">⟲</button>
             </div>
-          </div>
-          <!-- Indicator Controls -->
-          <div class="indicator-controls">
-            <h4>Technical Indicators:</h4>
-            <div class="indicator-checkboxes">
-              <label class="indicator-checkbox">
-                <input type="checkbox" id="show-ema" />
-                <span class="checkbox-label">EMA (Trend)</span>
-                <button class="info-button" id="ema-info-btn" type="button">ⓘ</button>
-              </label>
-              <label class="indicator-checkbox">
-                <input type="checkbox" id="show-bollinger" />
-                <span class="checkbox-label">Bollinger Bands (Volatility)</span>
-                <button class="info-button" id="bollinger-info-btn" type="button">ⓘ</button>
-              </label>
-              <label class="indicator-checkbox">
-                <input type="checkbox" id="show-oscillator" />
-                <span class="checkbox-label">Price Oscillator (Position)</span>
-                <button class="info-button" id="oscillator-info-btn" type="button">ⓘ</button>
-              </label>
+            <div class="trade-row" style="margin-bottom: 8px;">
+              <button id="buy-button" class="button buy">Buy Electricity</button>
+              <input type="number" id="buy-amount" min="0.1" step="0.1" placeholder="kWh" class="trade-input">
+              <span id="buy-amount-unit" style="margin-left:4px;">kWh</span>
+              <button class="trade-increment" data-target="buy-amount" data-inc="1">+1</button>
+              <button class="trade-increment" data-target="buy-amount" data-inc="10">+10</button>
+              <button class="trade-increment" data-target="buy-amount" data-inc="100">+100</button>
+              <button id="reset-buy-amount" class="trade-reset" title="Reset to 0">⟲</button>
             </div>
+            <div class="trade-row" style="margin-bottom: 8px;">
+              <button id="sell-button" class="button sell">Sell Electricity</button>
+              <input type="number" id="sell-amount" min="0.1" step="0.1" placeholder="kWh" class="trade-input">
+              <span id="sell-amount-unit" style="margin-left:4px;">kWh</span>
+              <button class="trade-increment" data-target="sell-amount" data-inc="1">+1</button>
+              <button class="trade-increment" data-target="sell-amount" data-inc="10">+10</button>
+              <button class="trade-increment" data-target="sell-amount" data-inc="100">+100</button>
+              <button id="reset-sell-amount" class="trade-reset" title="Reset to 0">⟲</button>
+            </div>
+            <div class="trade-row" style="margin-bottom: 8px;">
+              <button id="sell-hydrogen-button" class="button sell" style="background:#1976d2; color:#fff;">Sell Hydrogen</button>
+              <input type="number" id="sell-hydrogen-amount" min="0.1" step="0.1" placeholder="g" class="trade-input">
+              <span id="sell-hydrogen-amount-unit" style="margin-left:4px;">g</span>
+              <button class="trade-increment" data-target="sell-hydrogen-amount" data-inc="1">+1</button>
+              <button class="trade-increment" data-target="sell-hydrogen-amount" data-inc="10">+10</button>
+              <button class="trade-increment" data-target="sell-hydrogen-amount" data-inc="100">+100</button>
+              <button id="reset-sell-hydrogen-amount" class="trade-reset" title="Reset to 0">⟲</button>
+              <span class="trade-market-price" id="latest-hydrogen-price-label" style="margin-left: 16px;">Latest Hydrogen Price: <span id="latest-hydrogen-price">--</span> €/g</span>
+            </div>
+            <div style="height:12px;"></div>
+            <div class="trade-row" style="margin-bottom: 8px; flex-direction: column; align-items: flex-start;">
+              <button id="show-hydrogen-price-history" class="button" style="background:#ffa000; color:#fff; margin-left:0;">Show More</button>
+              <div id="hydrogen-price-history-container" style="display:none; margin-top:10px; width:100%;">
+                <canvas id="hydrogenPriceChart" width="400" height="240"></canvas>
+              </div>
+            </div>
+
+
           </div>
 
-          <!-- EMA Configuration -->
-          <div class="ema-config" id="ema-config" style="display: none;">
-            <label for="moving-average-window">EMA Period:</label>
-            <input
-              type="range"
-              id="moving-average-window"
-              min="2"
-              max="8"
-              value="4"
-              step="1"
-            />
-            <span id="moving-average-window-value">4</span>
-          </div>
-
+          <h2 class="pretty-header" id="wholesale-title" style="margin-top:32px;">Wholesale Price</h2>
           <div class="data-limitation">
             <small><strong>Note:</strong> Analysis based on 1 week of data. For seasonal patterns and long-term trends, more historical data would be needed.</small>
           </div>
@@ -213,11 +269,11 @@
 
 
             <!-- Hydrogen Eco System Section -->
-            <h2 class="widget-title pretty-header">Hydrogen Eco Simulation</h2>
+            <h2 class="widget-title pretty-header" id="eco-title">Hydrogen Eco Simulation</h2>
 
             <div class="usecase-flex-row">
               <div class="usecase-panel">
-                <h3>Select Use Case: </h3>
+                <h3 id="usecase-title">Select Use Case: </h3>
                 <div class="usecase-container">
                   <select id="use-case" class="use-case">
                     <option value="offgrid">Off-Grid Sustainable Home</option>
@@ -229,8 +285,8 @@
                 <div id="bullet-points-container"></div>
               </div>
             <div class="quick-manual-panel">
-              <div class="how-it-works-panel" style="background: #e3f2fd; border: 2px solid #1976d2; border-radius: 10px; padding: 14px; margin-top: 6px; margin-bottom: 6px; box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);">
-                <strong style="font-size: 1.1em; color: #1976d2;">How it works:</strong><br>
+              <div class="how-it-works-panel" id="how-it-works-panel" style="background: #e3f2fd; border: 2px solid #1976d2; border-radius: 10px; padding: 14px; margin-top: 6px; margin-bottom: 6px; box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);">
+                <strong id="how-it-works-title" style="font-size: 1.1em; color: #1976d2;">How it works:</strong><br>
                 <ul style="margin-top: 6px; margin-bottom: 0;">
 <li>
   The <b>Hydrogen Eco Simulation</b> aims for economic profit by using power generated from photovoltaics,<br> buying electricity at low prices, 
@@ -251,7 +307,7 @@
             <div class="eco-system-container">
               <div class="eco-item" id="photovoltaik">
                 <h3>Photovoltaik</h3>
-                <label for="PV-efficiency">PV Efficiency:</label>
+                <label for="PV-efficiency" id="pv-efficiency-label">PV Efficiency:</label>
                 <input
                   type="range"
                   id="PV-efficiency"
@@ -260,7 +316,7 @@
                   max="100"
                 />
                 <span id="PV-efficiency-value">20</span>
-                <label for="PV-power">Photovoltaik Power:</label>
+                <label for="PV-power" id="pv-power-label">Photovoltaik Power:</label>
                 <input
                   type="range"
                   id="PV-power"
@@ -269,7 +325,7 @@
                   max="1000000"
                 />
                 <span id="PV-power-value">200</span>
-                <label for="city-select">Select Location:</label>
+                <label for="city-select" id="city-select-label">Select Location:</label>
                 <select id="city-select">
                   <option value="Frankfurt">Frankfurt</option>
                   <option value="Sydney">Sydney</option>
@@ -278,8 +334,8 @@
                   <option value="Tokyo">Tokyo</option>
                   <option value="Always Sunny" selected>Always Sunny</option>
                 </select>
-                <p>Current Location: <span id="location"></span></p>
-                <p>PV Status: <span id="sun"></span></p>
+                <p id="current-location-label">Current Location: <span id="location"></span></p>
+                <p id="pv-status-label">PV Status: <span id="sun"></span></p>
                 <button id="reset" class="reset-btn">Reset Simulation</button>
               </div>
               <div class="eco-item" id="battery">
@@ -495,35 +551,34 @@
               </button>
             </div>
             <!-- Changelogs Modal -->
-            <div id="changelogs-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(25,118,210,0.18);padding:32px 24px;z-index:2000;min-width:320px;max-width:90vw;">
-              <!-- Position modal to the left of maximized widget -->
-              <style>
-                #changelogs-modal {
-                  left: 0 !important;
-                  top: 50% !important;
-                  transform: translateY(-50%) !important;
-                  margin-left: 24px;
-                }
-              </style>
+            <!-- Documentation Modal -->
+            <div id="documentation-modal" class="dashboard-modal" style="display:none;">
+              <h3 style="margin-top:0;color:#ffa000;">Documentation</h3>
+              <div>
+                <strong>Hydrogen Dashboard</strong> is designed to retrieve and visualize power generation and consumption data from the SMARD API. The dashboard provides graphical analysis and enables direct comparison with hydrogen as a fuel source.
+                <br><br>
+                <strong>Features:</strong> Simulation of charging and discharging for Photovoltaics, Battery, Hydrogen Electrolyzer, and Fuel Cell systems.
+                <br><br>
+                <strong>Concept:</strong><br>
+                This simulation models the economic strategy of buying and selling electricity based on market price thresholds. Electricity can be converted into hydrogen and vice versa to maximize monetary gains. The simulation incorporates machinery efficiency and power ratings, while intentionally omitting losses such as machine start-up or transaction-related inefficiencies for simplicity at this stage.
+              </div>
+              <button onclick="document.getElementById('documentation-modal').style.display='none'" style="background:#ffa000;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:1em;cursor:pointer;">Close</button>
+            </div>
+            <div id="changelogs-modal" class="dashboard-modal" style="display:none;">
               <h3 style="margin-top:0;color:#1976d2;">Changelogs</h3>
               <div style="margin-bottom:18px;">Latest updates and changes will be listed here.</div>
               <ul style="margin-bottom:18px;">
                 <li><b>2025-09-08:</b> Added feedback modal and changelogs.</li>
+                <li><b>2025-09-10:</b> Added documentation.</li>
+                <li><b>2025-09-16:</b> Hydrogen is now sellable.</li>
+                <li><b>2025-09-18:</b> Added language support for German.</li>
+                <li><b>2025-09-18:</b> Added realtime hydrogen price updates with graph.</li>
               </ul>
               <button onclick="document.getElementById('changelogs-modal').style.display='none'" style="background:#1976d2;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:1em;cursor:pointer;">Close</button>
             </div>
             
             <!-- Feedback Modal -->
-            <div id="feedback-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(67,160,71,0.18);padding:32px 24px;z-index:2000;min-width:320px;max-width:90vw;">
-              <!-- Position modal to the left of maximized widget -->
-              <style>
-                #feedback-modal {
-                  left: 0 !important;
-                  top: 50% !important;
-                  transform: translateY(-50%) !important;
-                  margin-left: 24px;
-                }
-              </style>
+            <div id="feedback-modal" class="dashboard-modal" style="display:none;">
               <h3 style="margin-top:0;color:#43a047;">Report Feedback</h3>
               <form id="feedback-form" style="display:flex;flex-direction:column;gap:14px;">
                 <input type="text" id="feedback-name" name="name" placeholder="Your Name" style="padding:8px 12px;border-radius:6px;border:1px solid #ccc;font-size:1em;" required />
@@ -547,6 +602,9 @@
   <!-- Footer removed, text moved to header -->
   </body>
 </html>
+
+
+            <!-- EMA configuration removed as requested -->
 
 
 

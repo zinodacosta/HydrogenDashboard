@@ -1,0 +1,22 @@
+[
+  { "price_eur_per_mwh": 258095, "date": "2025-05-21" },
+  { "price_eur_per_mwh": 240263, "date": "2025-05-28" },
+  { "price_eur_per_mwh": 242489, "date": "2025-06-04" },
+  { "price_eur_per_mwh": 234027, "date": "2025-06-11" },
+  { "price_eur_per_mwh": 238926, "date": "2025-06-18" },
+  { "price_eur_per_mwh": 238481, "date": "2025-06-25" },
+  { "price_eur_per_mwh": 236461, "date": "2025-07-02" },
+  { "price_eur_per_mwh": 237956, "date": "2025-07-09" },
+  { "price_eur_per_mwh": 225262, "date": "2025-07-16" },
+  { "price_eur_per_mwh": 233226, "date": "2025-07-23" },
+  { "price_eur_per_mwh": 248004, "date": "2025-07-30" },
+  { "price_eur_per_mwh": 235497, "date": "2025-08-06" },
+  { "price_eur_per_mwh": 225892, "date": "2025-08-13" },
+  { "price_eur_per_mwh": 236464, "date": "2025-08-20" },
+  { "price_eur_per_mwh": 233919, "date": "2025-08-27" },
+  { "price_eur_per_mwh": 226600, "date": "2025-09-03" },
+  { "price_eur_per_mwh": 252899, "date": "2025-09-10" },
+  { "price_eur_per_mwh": 237806, "date": "2025-09-17" }
+
+
+]

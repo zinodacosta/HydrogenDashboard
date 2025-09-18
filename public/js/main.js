@@ -1,3 +1,816 @@
+// Language translation logic
+let currentLanguage = "en";
+const translations = {
+  en: {
+    tradingPanelTitle: "Trading Panel",
+    latestHydrogenPriceLabel: "Latest Hydrogen Price:",
+    buyElectricity: "Buy Electricity",
+    sellElectricity: "Sell Electricity",
+    sellHydrogen: "Sell Hydrogen",
+    hydrogenAmount: "Amount (g)",
+    hydrogenPrice: "Price (€/g)",
+    electricityAmount: "Amount (kWh)",
+    electricityPrice: "Market Price (€/kWh)",
+    increment: "+",
+    reset: "Reset",
+    feedback: "Report Feedback",
+    changelogs: "Changelogs",
+    documentation: "Documentation",
+    batteryStorage: "Battery Storage",
+    hydrogenStorage: "Hydrogen Storage",
+    realism: "Realism",
+    realismInfo:
+      "This simulation compresses 1 hour into 1 second. Enable checkbox to simulate realistic circumstances.",
+    accountBalance: "Account Balance:",
+    electricityStored: "Electricity stored:",
+    hydrogenStored: "Hydrogen stored:",
+    currentMarketPrice: "Current Market Price:",
+    kWh: "kWh",
+    g: "g",
+    euro: "€",
+    wholesaleTitle: "Wholesale Price",
+    chart2Title: "Electricity Consumption",
+    ecoTitle: "Hydrogen Eco Simulation",
+    usecaseTitle: "Select Use Case:",
+    howItWorksTitle: "How it works:",
+    pvEfficiencyLabel: "PV Efficiency:",
+    pvPowerLabel: "Photovoltaik Power:",
+    citySelectLabel: "Select Location:",
+    currentLocationLabel: "Current Location:",
+    pvStatusLabel: "PV Status:",
+    resetSimulation: "Reset Simulation",
+    howItWorksText: `<ul style="margin-top: 6px; margin-bottom: 0;">
+<li>
+  The <b>Hydrogen Eco Simulation</b> aims for economic profit by using power generated from photovoltaics,<br> buying electricity at low prices, 
+  converting excess electricity to hydrogen (<b>electricity to hydrogen</b>) via an electrolyzer, 
+  and <br>converting hydrogen back to electricity (<b>hydrogen back to electricity</b>) via a fuel cell when prices are high.
+</li>
+<li>Selecting a use case changes the parameters of the machinery.</li>
+<li>The application uses geolocation to determine if the selected location is sunny and charges the photovoltaics accordingly.</li>
+<li>The electrolyzer operates <b>automatically</b> when battery storage is over 80%.</li>
+<li>All parameters can also be adjusted <b>manually</b>.</li>
+<li>Electricity can be <b>manually</b> bought and sold at market price in the topmost panel.</li>
+                </ul>
+                <div style="margin-top:8px;"><em>The simulation uses UTC time.</em></div>`,
+    useCases: {
+      offgrid: "Off-Grid Sustainable Home",
+      microgrid: "Microgrid for a Remote Village",
+      evcharge: "EV Charging Station with Renewable Energy",
+      industrial: "Industrial Hydrogen Production Plant",
+    },
+    useCaseBullets: {
+      offgrid: [
+        "Solar panels provide electricity for daily needs.",
+        "Battery stores excess electricity for nighttime use.",
+        "Electrolyzer converts surplus electricity to hydrogen.",
+        "Fuel cell converts hydrogen back to electricity when needed.",
+      ],
+      microgrid: [
+        "Microgrid supplies power to a remote village.",
+        "Renewable sources and battery storage stabilize supply.",
+        "Hydrogen storage enables long-term energy buffering.",
+        "System adapts to changing weather and demand.",
+      ],
+      evcharge: [
+        "EV charging station powered by renewables.",
+        "Battery and hydrogen storage balance peak loads.",
+        "Electrolyzer stores excess energy as hydrogen.",
+        "Fuel cell provides backup power for charging.",
+      ],
+      industrial: [
+        "Large-scale hydrogen production for industry.",
+        "Electrolyzer operates at high capacity.",
+        "Hydrogen stored and distributed for industrial use.",
+        "System optimizes for cost and efficiency.",
+      ],
+    },
+    batteryPanel: "Battery",
+    electrolyzerPanel: "Electrolyzer",
+    fuelcellPanel: "Fuel Cell",
+    photovoltaikPanel: "Photovoltaik",
+    batteryLevel: "Battery Level:",
+    batteryEfficiency: "Battery Efficiency:",
+    batteryCapacity: "Battery Capacity:",
+    hydrogenLevel: "Hydrogen Level:",
+    electrolyzerEfficiency: "Electrolyzer Efficiency:",
+    electrolyzerPower: "Electrolyzer Power:",
+    electrolyzerCapacity: "Electrolyzer Capacity:",
+    fuelcellEfficiency: "Fuelcell Efficiency:",
+    fuelcellPower: "Fuelcell Power:",
+    startElectrolyzer: "Start Electrolyzer",
+    stopElectrolyzer: "Stop Electrolyzer",
+    startFuelcell: "Start Fuelcell",
+    stopFuelcell: "Stop Fuelcell",
+    chargingStation: "Charging Station",
+    flowPhotovoltaik: "Photovoltaik",
+    flowBattery: "Battery",
+    flowElectrolyzer: "Electrolyzer",
+    flowHydrogenStorage: "Hydrogen Storage",
+    flowFuelcell: "Fuel Cell",
+    flowChargingStation: "Charging Station",
+    graphBatteryStorage: "Battery Storage",
+    graphHydrogenStorage: "Hydrogen Storage",
+    analysisNote:
+      "Note: Analysis based on 1 week of data. For seasonal patterns and long-term trends, more historical data would be needed.",
+    selectPowerGen: "Select Power Generation:",
+    powerGenOptions: [
+      "Brown Coal",
+      "Biomass",
+      "Wind Offshore",
+      "Wind Onshore",
+      "Hydroelectric",
+      "Natural Gas",
+      "Black Coal",
+      "Photovoltaik",
+      "Other Conventional",
+      "Other Renewable",
+    ],
+  },
+  de: {
+    tradingPanelTitle: "Handelspanel",
+    latestHydrogenPriceLabel: "Aktueller Wasserstoffpreis:",
+    buyElectricity: "Strom kaufen",
+    sellElectricity: "Strom verkaufen",
+    sellHydrogen: "Wasserstoff verkaufen",
+    hydrogenAmount: "Menge (g)",
+    hydrogenPrice: "Preis (€/g)",
+    electricityAmount: "Menge (kWh)",
+    electricityPrice: "Marktpreis (€/kWh)",
+    increment: "+",
+    reset: "Zurücksetzen",
+    feedback: "Feedback melden",
+    changelogs: "Änderungsprotokoll",
+    documentation: "Dokumentation",
+    batteryStorage: "Batteriespeicher",
+    hydrogenStorage: "Wasserstoffspeicher",
+    realism: "Realismus",
+    realismInfo:
+      "Diese Simulation komprimiert 1 Stunde in 1 Sekunde. Aktivieren Sie das Kontrollkästchen für realistische Umstände.",
+    selectLocation: "Standort wählen:",
+    currentLocation: "Aktueller Standort:",
+    pvStatusCloudy: "Es ist bewölkt. PV lädt nicht.",
+    hydrogenLevel: "Wasserstoffstand:",
+    electrolyzerEfficiency: "Elektrolyseur-Wirkungsgrad:",
+    electrolyzerPower: "Elektrolyseur-Leistung:",
+    electrolyzerCapacity: "Elektrolyseur-Kapazität:",
+    hydrogenStorage: "Wasserstoffspeicher",
+    batteryLevel: "Batteriestand:",
+    batteryEfficiency: "Batteriewirkungsgrad:",
+    batteryCapacity: "Batteriekapazität:",
+    batteryStorage: "Batteriespeicher",
+    accountBalance: "Kontostand:",
+    electricityStored: "Gespeicherter Strom:",
+    hydrogenStored: "Gespeicherter Wasserstoff:",
+    currentMarketPrice: "Aktueller Marktpreis:",
+    kWh: "kWh",
+    g: "g",
+    euro: "€",
+    wholesaleTitle: "Großhandelspreis",
+    chart2Title: "Stromverbrauch",
+    ecoTitle: "Wasserstoff-Öko-Simulation",
+    usecaseTitle: "Anwendungsfall wählen:",
+    howItWorksTitle: "So funktioniert es:",
+    pvEfficiencyLabel: "PV-Wirkungsgrad:",
+    pvPowerLabel: "Photovoltaik-Leistung:",
+    citySelectLabel: "Standort wählen:",
+    currentLocationLabel: "Aktueller Standort:",
+    pvStatusLabel: "PV-Status:",
+    resetSimulation: "Simulation zurücksetzen",
+    howItWorksText: `<ul style="margin-top: 6px; margin-bottom: 0;">
+<li>
+  Die <b>Wasserstoff-Öko-Simulation</b> zielt auf wirtschaftlichen Gewinn ab, indem Strom aus Photovoltaik genutzt,<br> Strom zu niedrigen Preisen gekauft, 
+  überschüssiger Strom mittels Elektrolyseur in Wasserstoff (<b>Strom zu Wasserstoff</b>) umgewandelt 
+  und <br>Wasserstoff bei hohen Preisen mittels Brennstoffzelle wieder in Strom (<b>Wasserstoff zu Strom</b>) zurückverwandelt wird.
+</li>
+<li>Die Auswahl eines Anwendungsfalls ändert die Parameter der Maschinen.</li>
+<li>Die Anwendung verwendet Geolokalisierung, um festzustellen, ob der gewählte Standort sonnig ist und lädt die Photovoltaik entsprechend.</li>
+<li>Der Elektrolyseur arbeitet <b>automatisch</b>, wenn der Batteriespeicher über 80% liegt.</li>
+<li>Alle Parameter können auch <b>manuell</b> angepasst werden.</li>
+<li>Strom kann <b>manuell</b> zum Marktpreis im obersten Panel gekauft und verkauft werden.</li>
+                </ul>
+                <div style="margin-top:8px;"><em>Die Simulation verwendet UTC-Zeit.</em></div>`,
+    useCases: {
+      offgrid: "Netzunabhängiges nachhaltiges Zuhause",
+      microgrid: "Mikronetz für ein abgelegenes Dorf",
+      evcharge: "EV-Ladestation mit erneuerbarer Energie",
+      industrial: "Industrielle Wasserstoffproduktionsanlage",
+    },
+    useCaseBullets: {
+      offgrid: [
+        "Solarmodule liefern Strom für den täglichen Bedarf.",
+        "Batterie speichert überschüssigen Strom für die Nacht.",
+        "Elektrolyseur wandelt überschüssigen Strom in Wasserstoff um.",
+        "Brennstoffzelle wandelt Wasserstoff bei Bedarf wieder in Strom um.",
+      ],
+      microgrid: [
+        "Mikronetz versorgt ein abgelegenes Dorf mit Strom.",
+        "Erneuerbare Quellen und Batteriespeicher stabilisieren die Versorgung.",
+        "Wasserstoffspeicher ermöglicht langfristige Energiepufferung.",
+        "System passt sich Wetter und Nachfrage an.",
+      ],
+      evcharge: [
+        "EV-Ladestation wird mit erneuerbaren Energien betrieben.",
+        "Batterie- und Wasserstoffspeicher gleichen Spitzenlasten aus.",
+        "Elektrolyseur speichert überschüssige Energie als Wasserstoff.",
+        "Brennstoffzelle liefert Backup-Strom für das Laden.",
+      ],
+      industrial: [
+        "Großtechnische Wasserstoffproduktion für die Industrie.",
+        "Elektrolyseur arbeitet mit hoher Kapazität.",
+        "Wasserstoff wird gespeichert und für industrielle Zwecke verteilt.",
+        "System optimiert Kosten und Effizienz.",
+      ],
+    },
+    batteryPanel: "Batterie",
+    electrolyzerPanel: "Elektrolyseur",
+    fuelcellPanel: "Brennstoffzelle",
+    photovoltaikPanel: "Photovoltaik",
+    batteryLevel: "Batteriestand:",
+    batteryEfficiency: "Batteriewirkungsgrad:",
+    batteryCapacity: "Batteriekapazität:",
+    hydrogenLevel: "Wasserstoffstand:",
+    electrolyzerEfficiency: "Elektrolyseur-Wirkungsgrad:",
+    electrolyzerPower: "Elektrolyseur-Leistung:",
+    electrolyzerCapacity: "Elektrolyseur-Kapazität:",
+    fuelcellEfficiency: "Brennstoffzellen-Wirkungsgrad:",
+    fuelcellPower: "Brennstoffzellen-Leistung:",
+    pvStatusSunny: "Die Sonne scheint. PV lädt.",
+    startElectrolyzer: "Elektrolyseur starten",
+    stopElectrolyzer: "Elektrolyseur stoppen",
+    startFuelcell: "Brennstoffzelle starten",
+    stopFuelcell: "Brennstoffzelle stoppen",
+    chargingStation: "Ladestation",
+    flowPhotovoltaik: "Photovoltaik",
+    flowBattery: "Batterie",
+    flowElectrolyzer: "Elektrolyseur",
+    flowHydrogenStorage: "Wasserstoffspeicher",
+    flowFuelcell: "Brennstoffzelle",
+    flowChargingStation: "Ladestation",
+    graphBatteryStorage: "Batteriespeicher",
+    graphHydrogenStorage: "Wasserstoffspeicher",
+    analysisNote:
+      "Hinweis: Analyse basiert auf 1 Woche Daten. Für saisonale Muster und langfristige Trends wären mehr historische Daten nötig.",
+    selectPowerGen: "Erzeugungsart wählen:",
+    powerGenOptions: [
+      "Braunkohle",
+      "Biomasse",
+      "Wind Offshore",
+      "Wind Onshore",
+      "Wasserkraft",
+      "Erdgas",
+      "Steinkohle",
+      "Photovoltaik",
+      "Andere konventionelle",
+      "Andere erneuerbare",
+    ],
+  },
+};
+
+function setLanguage(lang) {
+  // Trading Panel header
+  if (document.getElementById("trading-panel-title")) {
+    document.getElementById("trading-panel-title").textContent =
+      translations[lang].tradingPanelTitle;
+  }
+  // Latest Hydrogen Price label
+  if (document.getElementById("latest-hydrogen-price-label")) {
+    // Only replace the label text, not the value or unit
+    const labelEl = document.getElementById("latest-hydrogen-price-label");
+    const valueEl = document.getElementById("latest-hydrogen-price");
+    let labelText = translations[lang].latestHydrogenPriceLabel;
+    // Replace only the label part before the value span
+    labelEl.innerHTML = `${labelText} <span id='latest-hydrogen-price'>${
+      valueEl ? valueEl.textContent : "--"
+    }</span> €/g`;
+  }
+  // Realism label/info (if present)
+  if (document.getElementById("realism-label"))
+    document.getElementById("realism-label").textContent =
+      translations[lang].realism;
+  if (document.getElementById("realism-info"))
+    document.getElementById("realism-info").textContent =
+      translations[lang].realismInfo;
+  // PV Status (sun is shining)
+  if (
+    document.getElementById("pv-status-label") &&
+    document.getElementById("sun") &&
+    document.getElementById("sun").textContent.toLowerCase().includes("sun")
+  )
+    document.getElementById("pv-status-label").childNodes[0].textContent =
+      translations[lang].pvStatusLabel + " ";
+  if (
+    document.getElementById("sun") &&
+    document.getElementById("sun").textContent.toLowerCase().includes("sun")
+  )
+    document.getElementById("sun").textContent =
+      translations[lang].pvStatusSunny;
+  // Fuelcell Efficiency, Power
+  if (
+    document.getElementById("fuelcell-efficiency") &&
+    document.querySelector("label[for='fuelcell-efficiency']")
+  )
+    document.querySelector("label[for='fuelcell-efficiency']").textContent =
+      translations[lang].fuelcellEfficiency;
+  if (
+    document.getElementById("fuelcell-power") &&
+    document.querySelector("label[for='fuelcell-power']")
+  )
+    document.querySelector("label[for='fuelcell-power']").textContent =
+      translations[lang].fuelcellPower;
+  // PV Status (sun is shining)
+  if (
+    document.getElementById("pv-status-label") &&
+    document.getElementById("sun") &&
+    document.getElementById("sun").textContent.includes("sun")
+  )
+    document.getElementById("pv-status-label").childNodes[0].textContent =
+      translations[lang].pvStatusLabel + " ";
+  if (
+    document.getElementById("sun") &&
+    document.getElementById("sun").textContent.includes("sun")
+  )
+    document.getElementById("sun").textContent =
+      translations[lang].pvStatusSunny;
+  // Select Location label
+  if (document.getElementById("city-select-label"))
+    document.getElementById("city-select-label").textContent =
+      translations[lang].selectLocation || translations[lang].citySelectLabel;
+  // Current Location label
+  if (document.getElementById("current-location-label"))
+    document.getElementById(
+      "current-location-label"
+    ).childNodes[0].textContent =
+      (translations[lang].currentLocation ||
+        translations[lang].currentLocationLabel) + " ";
+  // PV Status (cloudy)
+  if (
+    document.getElementById("pv-status-label") &&
+    document.getElementById("sun") &&
+    document.getElementById("sun").textContent.includes("cloudy")
+  )
+    document.getElementById("pv-status-label").childNodes[0].textContent =
+      translations[lang].pvStatusLabel + " ";
+  if (
+    document.getElementById("sun") &&
+    document.getElementById("sun").textContent.includes("cloudy")
+  )
+    document.getElementById("sun").textContent =
+      translations[lang].pvStatusCloudy;
+  // Hydrogen Level
+  if (
+    document.getElementById("hydrogen-level") &&
+    document.querySelector("#electrolyzer h3")
+  )
+    document.querySelector("#electrolyzer h3").textContent =
+      translations[lang].electrolyzerPanel;
+  if (
+    document.getElementById("hydrogen-level") &&
+    document.getElementById("hydrogen-level").previousSibling &&
+    document
+      .getElementById("hydrogen-level")
+      .previousSibling.textContent.includes("Hydrogen Level")
+  )
+    document.getElementById("hydrogen-level").previousSibling.textContent =
+      translations[lang].hydrogenLevel;
+  // Electrolyzer Efficiency, Power, Capacity
+  if (
+    document.getElementById("electrolyzer-efficiency") &&
+    document.querySelector("label[for='electrolyzer-efficiency']")
+  )
+    document.querySelector("label[for='electrolyzer-efficiency']").textContent =
+      translations[lang].electrolyzerEfficiency;
+  if (
+    document.getElementById("electrolyzer-power") &&
+    document.querySelector("label[for='electrolyzer-power']")
+  )
+    document.querySelector("label[for='electrolyzer-power']").textContent =
+      translations[lang].electrolyzerPower;
+  if (
+    document.getElementById("electrolyzer-capacity") &&
+    document.querySelector("label[for='electrolyzer-capacity']")
+  )
+    document.querySelector("label[for='electrolyzer-capacity']").textContent =
+      translations[lang].electrolyzerCapacity;
+  // Hydrogen Storage
+  if (
+    document.getElementById("hydrogen-storage-percentage") &&
+    document.querySelector("#electrolyzer .level-highlight") &&
+    document.querySelector("#electrolyzer .level-highlight")
+      .previousElementSibling
+  )
+    document.querySelector(
+      "#electrolyzer .level-highlight"
+    ).previousElementSibling.textContent = translations[lang].hydrogenStorage;
+  // Battery Level
+  if (
+    document.getElementById("battery-level") &&
+    document.querySelector("#battery h3")
+  )
+    document.querySelector("#battery h3").textContent =
+      translations[lang].batteryPanel;
+  if (
+    document.getElementById("battery-level") &&
+    document.getElementById("battery-level").previousSibling &&
+    document
+      .getElementById("battery-level")
+      .previousSibling.textContent.includes("Battery Level")
+  )
+    document.getElementById("battery-level").previousSibling.textContent =
+      translations[lang].batteryLevel;
+  // Battery Efficiency, Capacity
+  if (
+    document.getElementById("battery-efficiency") &&
+    document.querySelector("label[for='battery-efficiency']")
+  )
+    document.querySelector("label[for='battery-efficiency']").textContent =
+      translations[lang].batteryEfficiency;
+  if (
+    document.getElementById("battery-capacity") &&
+    document.querySelector("label[for='battery-capacity']")
+  )
+    document.querySelector("label[for='battery-capacity']").textContent =
+      translations[lang].batteryCapacity;
+  // Battery Storage
+  if (
+    document.getElementById("battery-storage-percentage") &&
+    document.querySelector("#battery .level-highlight") &&
+    document.querySelector("#battery .level-highlight").previousElementSibling
+  )
+    document.querySelector(
+      "#battery .level-highlight"
+    ).previousElementSibling.textContent = translations[lang].batteryStorage;
+  // Machinery panels
+  if (
+    document.getElementById("photovoltaik") &&
+    document.querySelector("#photovoltaik h3")
+  )
+    document.querySelector("#photovoltaik h3").textContent =
+      translations[lang].photovoltaikPanel;
+  if (
+    document.getElementById("battery") &&
+    document.querySelector("#battery h3")
+  )
+    document.querySelector("#battery h3").textContent =
+      translations[lang].batteryPanel;
+  if (
+    document.getElementById("electrolyzer") &&
+    document.querySelector("#electrolyzer h3")
+  )
+    document.querySelector("#electrolyzer h3").textContent =
+      translations[lang].electrolyzerPanel;
+  if (
+    document.getElementById("fuelcell") &&
+    document.querySelector("#fuelcell h3")
+  )
+    document.querySelector("#fuelcell h3").textContent =
+      translations[lang].fuelcellPanel;
+  // Flow chart icon titles
+  document.querySelectorAll(".flow-item").forEach((el, i) => {
+    const flowKeys = [
+      "flowPhotovoltaik",
+      "flowBattery",
+      "flowElectrolyzer",
+      "flowHydrogenStorage",
+      "flowFuelcell",
+      "flowChargingStation",
+    ];
+    if (el.querySelector("p") && flowKeys[i])
+      el.querySelector("p").textContent = translations[lang][flowKeys[i]];
+  });
+  // Graph headers
+  document.querySelectorAll(".graph-row h2.pretty-header").forEach((el, i) => {
+    const graphKeys = ["graphBatteryStorage", "graphHydrogenStorage"];
+    if (graphKeys[i]) el.textContent = translations[lang][graphKeys[i]];
+  });
+  // Analysis note
+  if (document.querySelector(".data-limitation small"))
+    document.querySelector(".data-limitation small").textContent =
+      translations[lang].analysisNote;
+  // Power generation selection
+  if (document.querySelector("#graph-selector2 h3"))
+    document.querySelector("#graph-selector2 h3").textContent =
+      translations[lang].selectPowerGen;
+  // Power generation options (checkboxes and dropdown)
+  const powerGenLabels = translations[lang].powerGenOptions;
+  document.querySelectorAll(".checkbox-group input").forEach((input, i) => {
+    if (input.nextSibling && powerGenLabels[i])
+      input.nextSibling.textContent = " " + powerGenLabels[i];
+  });
+  const dropdown = document.getElementById("mobile-dropdown");
+  if (dropdown) {
+    Array.from(dropdown.options).forEach((opt, i) => {
+      if (powerGenLabels[i]) opt.textContent = powerGenLabels[i];
+    });
+  }
+  // Use case bullet points
+  if (
+    document.getElementById("use-case") &&
+    document.getElementById("bullet-points-container")
+  ) {
+    const useCaseSelect = document.getElementById("use-case");
+    const bulletContainer = document.getElementById("bullet-points-container");
+    const selected = useCaseSelect.value;
+    const bullets = translations[lang].useCaseBullets[selected] || [];
+    bulletContainer.innerHTML = `<ul>${bullets
+      .map((b) => `<li>${b}</li>`)
+      .join("")}</ul>`;
+    useCaseSelect.onchange = function () {
+      const selected = useCaseSelect.value;
+      const bullets = translations[lang].useCaseBullets[selected] || [];
+      bulletContainer.innerHTML = `<ul>${bullets
+        .map((b) => `<li>${b}</li>`)
+        .join("")}</ul>`;
+    };
+  }
+  currentLanguage = lang;
+  // Trade panel buttons and labels
+  document.getElementById("buy-button").textContent =
+    translations[lang].buyElectricity;
+  document.getElementById("sell-button").textContent =
+    translations[lang].sellElectricity;
+  document.getElementById("sell-hydrogen-button").textContent =
+    translations[lang].sellHydrogen;
+  // Amount/unit labels
+  document.getElementById("buy-amount-unit").textContent =
+    translations[lang].kWh;
+  document.getElementById("sell-amount-unit").textContent =
+    translations[lang].kWh;
+  document.getElementById("sell-hydrogen-amount-unit").textContent =
+    translations[lang].g;
+  // Account balance and market price
+  document.querySelector(".money-row span").textContent =
+    translations[lang].accountBalance;
+  document.getElementById("battery-level-top").previousSibling.textContent =
+    translations[lang].electricityStored;
+  document.querySelector(".trade-market-price").childNodes[0].textContent =
+    translations[lang].currentMarketPrice;
+  // Hydrogen stored label
+  if (document.getElementById("hydrogen-level-top")) {
+    document.getElementById("hydrogen-level-top").previousSibling.textContent =
+      translations[lang].hydrogenStored + " ";
+  }
+  // Update hydrogen storage value in topmost panel
+  window.setHydrogenTopPanel = function (val) {
+    const el = document.getElementById("hydrogen-level-top");
+    const hydrogenPanel = document.getElementById("hydrogen-level");
+    if (el && hydrogenPanel) {
+      el.textContent = hydrogenPanel.textContent;
+    } else if (el) {
+      el.textContent = `${val} g`;
+    }
+  };
+  // Feedback, changelogs, documentation
+  if (document.getElementById("feedback-btn"))
+    document.getElementById("feedback-btn").textContent =
+      translations[lang].feedback;
+  if (document.getElementById("changelogs-btn"))
+    document.getElementById("changelogs-btn").textContent =
+      translations[lang].changelogs;
+  if (document.getElementById("documentation-btn"))
+    document.getElementById("documentation-btn").textContent =
+      translations[lang].documentation;
+  // Realism label/info (if present)
+  if (document.getElementById("realism-label"))
+    document.getElementById("realism-label").textContent =
+      translations[lang].realism;
+  if (document.getElementById("realism-info"))
+    document.getElementById("realism-info").textContent =
+      translations[lang].realismInfo;
+  // Header fields
+  if (document.getElementById("header-battery"))
+    document.getElementById("header-battery").textContent =
+      translations[lang].batteryStorage;
+  if (document.getElementById("header-hydrogen"))
+    document.getElementById("header-hydrogen").textContent =
+      translations[lang].hydrogenStorage;
+  // Major panels and static fields
+  if (document.getElementById("wholesale-title"))
+    document.getElementById("wholesale-title").textContent =
+      translations[lang].wholesaleTitle;
+  if (document.getElementById("chart2-title"))
+    document.getElementById("chart2-title").textContent =
+      translations[lang].chart2Title;
+  if (document.getElementById("eco-title"))
+    document.getElementById("eco-title").textContent =
+      translations[lang].ecoTitle;
+  if (document.getElementById("usecase-title"))
+    document.getElementById("usecase-title").textContent =
+      translations[lang].usecaseTitle;
+  if (document.getElementById("how-it-works-title"))
+    document.getElementById("how-it-works-title").textContent =
+      translations[lang].howItWorksTitle;
+  // How it works text
+  if (document.getElementById("how-it-works-panel"))
+    document.getElementById(
+      "how-it-works-panel"
+    ).innerHTML = `<strong id="how-it-works-title" style="font-size: 1.1em; color: #1976d2;">${translations[lang].howItWorksTitle}</strong><br>${translations[lang].howItWorksText}`;
+  // Use case dropdown
+  if (document.getElementById("use-case")) {
+    const useCaseSelect = document.getElementById("use-case");
+    useCaseSelect.options[0].text = translations[lang].useCases.offgrid;
+    useCaseSelect.options[1].text = translations[lang].useCases.microgrid;
+    useCaseSelect.options[2].text = translations[lang].useCases.evcharge;
+    useCaseSelect.options[3].text = translations[lang].useCases.industrial;
+  }
+  if (document.getElementById("pv-efficiency-label"))
+    document.getElementById("pv-efficiency-label").textContent =
+      translations[lang].pvEfficiencyLabel;
+  if (document.getElementById("pv-power-label"))
+    document.getElementById("pv-power-label").textContent =
+      translations[lang].pvPowerLabel;
+  if (document.getElementById("city-select-label"))
+    document.getElementById("city-select-label").textContent =
+      translations[lang].citySelectLabel;
+  if (document.getElementById("current-location-label"))
+    document.getElementById(
+      "current-location-label"
+    ).childNodes[0].textContent = translations[lang].currentLocationLabel + " ";
+  if (document.getElementById("pv-status-label"))
+    document.getElementById("pv-status-label").childNodes[0].textContent =
+      translations[lang].pvStatusLabel + " ";
+  if (document.getElementById("reset"))
+    document.getElementById("reset").textContent =
+      translations[lang].resetSimulation;
+}
+
+document.getElementById("lang-de").addEventListener("click", function () {
+  setLanguage("de");
+});
+document.getElementById("lang-en").addEventListener("click", function () {
+  setLanguage("en");
+});
+
+window.addEventListener("DOMContentLoaded", function () {
+  // Hydrogen price logic
+  async function updateLatestHydrogenPrice() {
+    try {
+      const response = await fetch("hydrogen_price.json");
+      const data = await response.json();
+      if (Array.isArray(data) && data.length > 0) {
+        // Get the latest entry
+        const latest = data[data.length - 1];
+        // Convert €/MWh to €/kg using formula: €/kg = MWh€ × 0.0394, then €/g
+        const eurPerKg = latest.price_eur_per_mwh * 0.0394;
+        const eurPerG = eurPerKg / 1000;
+        document.getElementById("latest-hydrogen-price").textContent =
+          eurPerG.toFixed(3);
+      }
+    } catch (err) {
+      document.getElementById("latest-hydrogen-price").textContent = "--";
+    }
+  }
+
+  updateLatestHydrogenPrice();
+
+  // Hydrogen price history chart logic
+  let hydrogenPriceChartInstance = null;
+  async function showHydrogenPriceHistory() {
+    try {
+      const response = await fetch("hydrogen_price.json");
+      const data = await response.json();
+      if (Array.isArray(data) && data.length > 0) {
+        // Prepare chart data
+        const labels = data.map((entry) => entry.date);
+        const values = data.map((entry) =>
+          ((entry.price_eur_per_mwh * 0.0394) / 1000).toFixed(3)
+        );
+        const ctx = document
+          .getElementById("hydrogenPriceChart")
+          .getContext("2d");
+        if (hydrogenPriceChartInstance) hydrogenPriceChartInstance.destroy();
+        hydrogenPriceChartInstance = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Hydrogen Price (€/g)",
+                data: values,
+                borderColor: "#1976d2",
+                backgroundColor: "rgba(25,118,210,0.10)",
+                tension: 0.1,
+                fill: true,
+                pointRadius: 2,
+                borderWidth: 2.5,
+                pointHoverRadius: 6,
+                pointBackgroundColor: "#1976d2",
+                pointHoverBorderWidth: 3.5,
+                pointHoverBackgroundColor: "#1976d2",
+                pointHoverBorderColor: "#fff",
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: true },
+              tooltip: { enabled: true },
+            },
+            scales: {
+              x: {
+                title: { display: true, text: "Date" },
+                ticks: { font: { size: 12 } },
+              },
+              y: {
+                title: { display: true, text: "€/g" },
+                beginAtZero: false,
+                ticks: { font: { size: 12 } },
+              },
+            },
+          },
+        });
+      }
+    } catch (err) {
+      // Optionally show error
+    }
+  }
+
+  // Show More button logic
+  const showMoreBtn = document.getElementById("show-hydrogen-price-history");
+  const historyContainer = document.getElementById(
+    "hydrogen-price-history-container"
+  );
+  if (showMoreBtn && historyContainer) {
+    let expanded = false;
+    showMoreBtn.addEventListener("click", async function () {
+      expanded = !expanded;
+      if (expanded) {
+        historyContainer.style.display = "block";
+        showMoreBtn.textContent = "Hide";
+        await showHydrogenPriceHistory();
+      } else {
+        historyContainer.style.display = "none";
+        showMoreBtn.textContent = "Show More";
+      }
+    });
+  }
+  setLanguage(currentLanguage);
+});
+import { sellHydrogen } from "./simulation.js";
+// Hydrogen sell amount, increment buttons, reset, and price slider logic
+document.addEventListener("DOMContentLoaded", function () {
+  const sellHydrogenAmountInput = document.getElementById(
+    "sell-hydrogen-amount"
+  );
+  const sellHydrogenAmountUnit = document.getElementById(
+    "sell-hydrogen-amount-unit"
+  );
+  const sellHydrogenButton = document.getElementById("sell-hydrogen-button");
+  const sellHydrogenPriceSlider = document.getElementById(
+    "sell-hydrogen-price-slider"
+  );
+  const sellHydrogenPriceValue = document.getElementById(
+    "sell-hydrogen-price-value"
+  );
+  const resetSellHydrogenAmountBtn = document.getElementById(
+    "reset-sell-hydrogen-amount"
+  );
+  // Update price value display
+  if (sellHydrogenPriceSlider && sellHydrogenPriceValue) {
+    sellHydrogenPriceSlider.addEventListener("input", function () {
+      sellHydrogenPriceValue.textContent = sellHydrogenPriceSlider.value;
+    });
+    // Set initial value
+    sellHydrogenPriceValue.textContent = sellHydrogenPriceSlider.value;
+  }
+  // Increment buttons for hydrogen amount
+  document
+    .querySelectorAll('.trade-increment[data-target="sell-hydrogen-amount"]')
+    .forEach((btn) => {
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        const inc = parseFloat(btn.getAttribute("data-inc"));
+        if (sellHydrogenAmountInput) {
+          let val = parseFloat(sellHydrogenAmountInput.value) || 0;
+          val += inc;
+          if (val < 0.1) val = 0.1;
+          sellHydrogenAmountInput.value = val;
+        }
+      });
+    });
+  // Reset button for hydrogen amount
+  if (resetSellHydrogenAmountBtn && sellHydrogenAmountInput) {
+    resetSellHydrogenAmountBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      sellHydrogenAmountInput.value = 0;
+    });
+  }
+  // Sell hydrogen on button click
+  if (
+    sellHydrogenButton &&
+    sellHydrogenAmountInput &&
+    sellHydrogenPriceSlider
+  ) {
+    sellHydrogenButton.addEventListener("click", function () {
+      const amount = sellHydrogenAmountInput.value;
+      const price = sellHydrogenPriceSlider.value;
+      sellHydrogen(amount, price);
+      // Optionally reset amount after selling
+      sellHydrogenAmountInput.value = 0;
+    });
+  }
+});
 const API_BASE_URL = "https://api.kitechnik.com";
 
 let graphType = "wholesalePrice"; //Default graph type for the first chart
@@ -968,6 +1781,56 @@ window.onload = async () => {
 
 //init values
 document.addEventListener("DOMContentLoaded", function () {
+  // Documentation modal logic
+  const documentationBtn = document.getElementById("documentation-btn");
+  const documentationModal = document.getElementById("documentation-modal");
+  if (documentationBtn && documentationModal) {
+    documentationBtn.addEventListener("click", function () {
+      documentationModal.style.display = "block";
+    });
+    // Close documentation modal when clicking outside
+    window.addEventListener("mousedown", function (event) {
+      if (
+        documentationModal.style.display === "block" &&
+        !documentationModal.contains(event.target) &&
+        event.target !== documentationBtn
+      ) {
+        documentationModal.style.display = "none";
+      }
+    });
+  }
+  // Language toggle logic
+  const langDeBtn = document.getElementById("lang-de");
+  const langEnBtn = document.getElementById("lang-en");
+  let currentLang = "EN";
+
+  function setLanguage(lang) {
+    currentLang = lang;
+    if (lang === "DE") {
+      langDeBtn.classList.add("lang-on");
+      langDeBtn.classList.remove("lang-off");
+      langEnBtn.classList.add("lang-off");
+      langEnBtn.classList.remove("lang-on");
+      // TODO: Add logic to switch dashboard text to German
+    } else {
+      langEnBtn.classList.add("lang-on");
+      langEnBtn.classList.remove("lang-off");
+      langDeBtn.classList.add("lang-off");
+      langDeBtn.classList.remove("lang-on");
+      // TODO: Add logic to switch dashboard text to English
+    }
+  }
+
+  if (langDeBtn && langEnBtn) {
+    langDeBtn.addEventListener("click", function () {
+      if (currentLang !== "DE") setLanguage("DE");
+    });
+    langEnBtn.addEventListener("click", function () {
+      if (currentLang !== "EN") setLanguage("EN");
+    });
+    // Set initial state
+    setLanguage("EN");
+  }
   // Modal logic for changelogs and feedback
   const changelogsBtn = document.getElementById("changelogs-btn");
   const changelogsModal = document.getElementById("changelogs-modal");

@@ -1,3 +1,60 @@
+// Standalone hydrogen selling function for UI integration
+if (typeof window.money !== "number") {
+  window.money = 0;
+}
+export function sellHydrogen(amount, pricePerGram) {
+  // Assume hydro is the electrolyzer instance, and money is global or accessible
+  if (!window.hydro || typeof window.money === "undefined") {
+    showNotification("Hydrogen system not initialized.", "sell");
+    return false;
+  }
+  amount = parseFloat(amount);
+  pricePerGram = parseFloat(pricePerGram);
+  if (isNaN(amount) || amount <= 0) {
+    showNotification("Invalid hydrogen amount.", "sell");
+    return false;
+  }
+  if (isNaN(pricePerGram) || pricePerGram <= 0) {
+    showNotification("Invalid price per gram.", "sell");
+    return false;
+  }
+  if (window.hydro.storage < amount) {
+    showNotification("Not enough hydrogen to sell.", "sell");
+    return false;
+  }
+  const totalRevenue = amount * pricePerGram;
+  window.hydro.storage -= amount;
+  window.money += totalRevenue;
+  // Update UI
+  const hydrogenLevelElem = document.getElementById("hydrogen-level");
+  if (hydrogenLevelElem)
+    hydrogenLevelElem.innerHTML = window.hydro.storage.toFixed(2) + " g";
+  const moneyElem = document.getElementById("money");
+  if (moneyElem) moneyElem.innerHTML = window.money.toFixed(2) + " €";
+  // Update top panel hydrogen value
+  if (window.setHydrogenTopPanel)
+    window.setHydrogenTopPanel(window.hydro.storage.toFixed(2));
+  showNotification(
+    `Sold ${amount}g hydrogen for ${totalRevenue.toFixed(
+      2
+    )} € at ${pricePerGram.toFixed(2)} €/g`,
+    "sell"
+  );
+  // Update hydrogen gauge
+  const hydrogenStoragePercent = document.getElementById(
+    "hydrogen-storage-percentage"
+  );
+  if (hydrogenStoragePercent && window.hydro.capacity > 0) {
+    hydrogenStoragePercent.textContent =
+      ((window.hydro.storage / window.hydro.capacity) * 100).toFixed(1) + "%";
+  }
+  const hydrogenGaugeLevel = document.getElementById("hydrogen-gauge-level");
+  if (hydrogenGaugeLevel && window.hydro.capacity > 0) {
+    hydrogenGaugeLevel.style.width =
+      (window.hydro.storage / window.hydro.capacity) * 100 + "%";
+  }
+  return true;
+}
 let electrolyzerInterval = null;
 let fuelCellInterval = null;
 let realism = 1;
@@ -314,6 +371,8 @@ export class fuelcell {
 
       document.getElementById("battery-level").innerHTML =
         charge.storage.toFixed(2) + " kWh";
+      if (window.setHydrogenTopPanel)
+        window.setHydrogenTopPanel(hydro.storage.toFixed(2));
       const batteryLevelTop = document.getElementById("battery-level-top");
       if (batteryLevelTop)
         batteryLevelTop.innerHTML = charge.storage.toFixed(2) + " kWh";
@@ -443,6 +502,7 @@ export class heater {
 const pv = new photovoltaik();
 const charge = new battery();
 const hydro = new electrolyzer();
+window.hydro = hydro;
 const fc = new fuelcell();
 
 async function fetchHydrogenLevel() {
@@ -587,8 +647,11 @@ export class tradeElectricity {
   async buyElectricity() {
     await this.priceCheck();
     const amount = getBuyAmount();
-    if (this.money > 0 && charge.storage + amount <= charge.capacity) {
-      const pricePerKWh = this.electricityPrice / 1000;
+    const pricePerKWh = this.electricityPrice / 1000;
+    // Allow buying if price is negative, regardless of balance
+    const enoughMoney = pricePerKWh < 0 || this.money >= pricePerKWh * amount;
+    const enoughCapacity = charge.storage + amount <= charge.capacity;
+    if (enoughMoney && enoughCapacity) {
       this.money -= pricePerKWh * amount;
       charge.updateBatteryStorage(amount);
       showNotification(
@@ -600,10 +663,10 @@ export class tradeElectricity {
         moneyElem.innerHTML = this.money.toFixed(2) + " €";
       }
     } else {
-      showNotification(
-        `Cannot buy: not enough money or battery capacity.`,
-        "sell"
-      );
+      let reason = "";
+      if (!enoughMoney) reason += "not enough money. ";
+      if (!enoughCapacity) reason += "not enough battery capacity.";
+      showNotification(`Cannot buy: ${reason.trim()}`, "sell");
     }
   }
   async sellElectricity() {
