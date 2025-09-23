@@ -747,98 +747,8 @@ window.addEventListener("DOMContentLoaded", function () {
   }
   setLanguage(currentLanguage);
 });
-import { sellHydrogen } from "./simulation.js";
-// Hydrogen sell amount, increment buttons, reset, and price slider logic
-document.addEventListener("DOMContentLoaded", function () {
-  const sellHydrogenAmountInput = document.getElementById(
-    "sell-hydrogen-amount"
-  );
-  const sellHydrogenAmountUnit = document.getElementById(
-    "sell-hydrogen-amount-unit"
-  );
-  const sellHydrogenButton = document.getElementById("sell-hydrogen-button");
-  const sellHydrogenPriceSlider = document.getElementById(
-    "sell-hydrogen-price-slider"
-  );
-  const sellHydrogenPriceValue = document.getElementById(
-    "sell-hydrogen-price-value"
-  );
-  const resetSellHydrogenAmountBtn = document.getElementById(
-    "reset-sell-hydrogen-amount"
-  );
-  // Update price value display
-  if (sellHydrogenPriceSlider && sellHydrogenPriceValue) {
-    sellHydrogenPriceSlider.addEventListener("input", function () {
-      sellHydrogenPriceValue.textContent = sellHydrogenPriceSlider.value;
-    });
-    // Set initial value
-    sellHydrogenPriceValue.textContent = sellHydrogenPriceSlider.value;
-  }
-  // Increment buttons for hydrogen amount
-  document
-    .querySelectorAll('.trade-increment[data-target="sell-hydrogen-amount"]')
-    .forEach((btn) => {
-      btn.addEventListener("click", function (e) {
-        e.preventDefault();
-        const inc = parseFloat(btn.getAttribute("data-inc"));
-        if (sellHydrogenAmountInput) {
-          let val = parseFloat(sellHydrogenAmountInput.value) || 0;
-          val += inc;
-          if (val < 0.1) val = 0.1;
-          sellHydrogenAmountInput.value = val;
-        }
-      });
-    });
-  // Reset button for hydrogen amount
-  if (resetSellHydrogenAmountBtn && sellHydrogenAmountInput) {
-    resetSellHydrogenAmountBtn.addEventListener("click", function (e) {
-      e.preventDefault();
-      sellHydrogenAmountInput.value = 0;
-    });
-  }
-  // Sell hydrogen on button click
-  if (
-    sellHydrogenButton &&
-    sellHydrogenAmountInput &&
-    sellHydrogenPriceSlider
-  ) {
-    sellHydrogenButton.addEventListener("click", function () {
-      const amount = sellHydrogenAmountInput.value;
-      const price = sellHydrogenPriceSlider.value;
-      sellHydrogen(amount, price);
-      // Optionally reset amount after selling
-      sellHydrogenAmountInput.value = 0;
-      // Update hydrogen storage display after selling
-      updateHydrogenStorageDisplay();
-    });
-  }
 
-  // Add hydrogen storage display next to current market price
-  function updateHydrogenStorageDisplay() {
-    const marketPriceLabel = document.getElementById(
-      "latest-hydrogen-price-label"
-    );
-    if (marketPriceLabel) {
-      let storage =
-        window.hydro && window.hydro.storage ? window.hydro.storage : 0;
-      let storageSpan = document.getElementById("hydrogen-storage-inline");
-      if (!storageSpan) {
-        storageSpan = document.createElement("span");
-        storageSpan.id = "hydrogen-storage-inline";
-        storageSpan.style.marginLeft = "16px";
-        storageSpan.style.color = "#1976d2";
-        marketPriceLabel.appendChild(storageSpan);
-      }
-      storageSpan.textContent = `Hydrogen stored: ${parseFloat(storage).toFixed(
-        2
-      )} g`;
-    }
-  }
 
-  // Initial update and periodic refresh
-  updateHydrogenStorageDisplay();
-  setInterval(updateHydrogenStorageDisplay, 1000);
-});
 const API_BASE_URL = "https://api.kitechnik.com";
 
 let graphType = "wholesalePrice"; //Default graph type for the first chart
@@ -944,7 +854,7 @@ async function loadGraphIdentifiers() {
     const response = await fetchWithRetry(`${API_BASE_URL}/graphIdentifiers`);
     const data = await response.json();
     graphIdentifiers = data;
-    console.log("[INFO] Graph identifiers loaded:", graphIdentifiers);
+    //console.log("[INFO] Graph identifiers loaded:", graphIdentifiers);
   } catch (error) {
     console.error("[ERROR] Loading graph identifiers:", error.message);
   }
@@ -968,9 +878,6 @@ const fetchData = debounce(async function () {
     const startISOString = start.toISOString(); //Converts to ISO string
     const endISOString = end.toISOString();
 
-    console.log(
-      `[INFO] Fetching data for graph type: ${graphType}, Start: ${startISOString}, End: ${endISOString}`
-    );
 
     const graphData = graphIdentifiers[graphType]; //Resolve graphType to ID
     const graphId = graphData ? graphData.id : "1"; //Fallback to ID 1
@@ -983,7 +890,7 @@ const fetchData = debounce(async function () {
     );
 
     const data = await response.json();
-    console.log("[INFO] Received data:", data);
+
 
     if (!data.labels || !data.values) {
       console.error(

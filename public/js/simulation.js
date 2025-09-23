@@ -1,66 +1,49 @@
 // Standalone hydrogen selling function for UI integration
+// Unified hydrogen selling logic
 if (typeof window.money !== "number") {
   window.money = 0;
 }
-export function sellHydrogen(amount, pricePerGram) {
+
+function sellHydrogen(amount, pricePerGram) {
   if (!window.hydro || typeof window.money === "undefined") {
     showNotification("Hydrogen system not initialized.", "sell");
     return false;
   }
-  amount = parseFloat(amount);
-  console.log("Sell Hydrogen called with:", { amount, pricePerGram });
-  // If pricePerGram is not provided or invalid, get latest price from DOM
-  let price = parseFloat(pricePerGram);
-  if (isNaN(price) || price <= 0) {
-    const priceEl = document.getElementById("latest-hydrogen-price");
-    if (priceEl && !isNaN(parseFloat(priceEl.textContent))) {
-      price = parseFloat(priceEl.textContent);
-      console.log("Using latest hydrogen price from DOM:", price);
-    }
-  }
-  if (isNaN(amount) || amount <= 0) {
+  const amt = parseFloat(amount);
+  const price = parseFloat(pricePerGram);
+  if (isNaN(amt) || amt <= 0) {
     showNotification("Invalid hydrogen amount.", "sell");
-    console.log("Invalid hydrogen amount", amount);
     return false;
   }
   if (isNaN(price) || price <= 0) {
-    showNotification("Invalid price per gram.", "sell");
-    console.log("Invalid price per gram", price);
+    showNotification("Invalid hydrogen price.", "sell");
     return false;
   }
-  if (window.hydro.storage < amount) {
+  if (window.hydro.storage < amt) {
     showNotification(
       `Not enough hydrogen to sell. You have ${window.hydro.storage.toFixed(
         2
-      )} g, tried to sell ${amount} g.`,
+      )} g, tried to sell ${amt} g.`,
       "sell"
     );
-    console.log("Not enough hydrogen to sell", window.hydro.storage, amount);
     return false;
   }
-  const totalRevenue = amount * price;
-  window.hydro.storage -= amount;
-  window.money += totalRevenue;
-  console.log(
-    `Sold ${amount}g hydrogen for ${totalRevenue.toFixed(
-      2
-    )} € at ${price.toFixed(2)} €/g. New storage: ${
-      window.hydro.storage
-    }, New money: ${window.money}`
-  );
+  // Perform the sale
+  window.hydro.storage -= amt;
+  window.money += amt * price;
+
   // Update UI
   const hydrogenLevelElem = document.getElementById("hydrogen-level");
   if (hydrogenLevelElem)
     hydrogenLevelElem.innerHTML = window.hydro.storage.toFixed(2) + " g";
   const moneyElem = document.getElementById("money");
   if (moneyElem) moneyElem.innerHTML = window.money.toFixed(2) + " €";
-  // Update top panel hydrogen value
   if (window.setHydrogenTopPanel)
     window.setHydrogenTopPanel(window.hydro.storage.toFixed(2));
   showNotification(
-    `Sold ${amount}g hydrogen for ${totalRevenue.toFixed(
+    `Sold ${amt}g hydrogen for ${(amt * price).toFixed(2)} € at ${price.toFixed(
       2
-    )} € at ${price.toFixed(2)} €/g`,
+    )} €/g`,
     "sell"
   );
   // Update hydrogen gauge
@@ -92,6 +75,9 @@ let batteryLevelElem, batteryGaugePercentageElem, batteryGaugeLevelElem;
 let hydrogenLevelElem, hydrogenGaugePercentageElem, hydrogenGaugeLevelElem;
 //js for dropdown menu of location
 document.addEventListener("DOMContentLoaded", function () {
+  // Debug: Check presence of sell hydrogen button and inputs
+  // Use number input for price instead of slider
+  const sellHydrogenPriceInput = document.getElementById("sell-hydrogen-price");
   // Add hydrogen storage display next to current market price
   function updateHydrogenStorageDisplay() {
     const marketPriceLabel = document.getElementById(
@@ -144,22 +130,27 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  document.querySelectorAll(".trade-increment").forEach((btn) => {
-    btn.addEventListener("click", function (e) {
-      e.preventDefault();
-      const targetId = btn.getAttribute("data-target");
-      const inc = parseFloat(btn.getAttribute("data-inc"));
-      const input = document.getElementById(targetId);
-      if (input) {
-        let val = parseFloat(input.value) || 0;
-        val += inc;
-        if (val < 0.1) val = 0.1;
-        input.value = val;
-        if (targetId === "sell-amount") updateSellUnit();
-        if (targetId === "buy-amount") updateBuyUnit();
-      }
+  // Only keep increment logic for buy/sell electricity, not hydrogen here
+  document
+    .querySelectorAll(
+      '.trade-increment[data-target="buy-amount"], .trade-increment[data-target="sell-amount"]'
+    )
+    .forEach((btn) => {
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        const targetId = btn.getAttribute("data-target");
+        const inc = parseFloat(btn.getAttribute("data-inc"));
+        const input = document.getElementById(targetId);
+        if (input) {
+          let val = parseFloat(input.value) || 0;
+          val += inc;
+          if (val < 0.1) val = 0.1;
+          input.value = val;
+          if (targetId === "sell-amount") updateSellUnit();
+          if (targetId === "buy-amount") updateBuyUnit();
+        }
+      });
     });
-  });
 
   const resetSellBtn = document.getElementById("reset-sell-amount");
   const sellAmountInput = document.getElementById("sell-amount");
@@ -525,9 +516,6 @@ export class electrolyzer {
         document.getElementById("hydrogen-gauge-level").style.width =
           hydrogenPercentage + "%";
         errorCheck();
-      } else {
-        document.getElementById("hydrogen-level").innerHTML =
-          "Not enough battery for hydrogen production";
       }
     } else {
       document.getElementById("hydrogen-level").innerHTML =
@@ -688,7 +676,6 @@ export class tradeElectricity {
   }
   async priceCheck() {
     this.electricityPrice = await getLastWholeSalePrice();
-    console.log("Preis in der Simulation geladen", this.electricityPrice);
 
     const currentPriceElement = document.getElementById("current-price");
     if (currentPriceElement) {
@@ -702,7 +689,6 @@ export class tradeElectricity {
     const marketPriceBuy = document.getElementById("current-market-price-buy");
     if (marketPriceSell) marketPriceSell.textContent = this.electricityPrice;
     if (marketPriceBuy) marketPriceBuy.textContent = this.electricityPrice;
-    console.log("Set DOM market price to:", this.electricityPrice);
   }
 
   async buyElectricity() {
@@ -1377,6 +1363,106 @@ document
       console.log("Fuel Cell stopped");
     }
   });
+
+document.addEventListener("DOMContentLoaded", function () {
+  const sellHydrogenAmountInput = document.getElementById(
+    "sell-hydrogen-amount"
+  );
+  const sellHydrogenAmountUnit = document.getElementById(
+    "sell-hydrogen-amount-unit"
+  );
+  const sellHydrogenButton = document.getElementById("sell-hydrogen-button");
+  const sellHydrogenPriceSlider = document.getElementById(
+    "sell-hydrogen-price-slider"
+  );
+  const sellHydrogenPriceValue = document.getElementById(
+    "sell-hydrogen-price-value"
+  );
+  const resetSellHydrogenAmountBtn = document.getElementById(
+    "reset-sell-hydrogen-amount"
+  );
+  // Update price value display
+  if (sellHydrogenPriceSlider && sellHydrogenPriceValue) {
+    sellHydrogenPriceSlider.addEventListener("input", function () {
+      sellHydrogenPriceValue.textContent = sellHydrogenPriceSlider.value;
+    });
+    // Set initial value
+    sellHydrogenPriceValue.textContent = sellHydrogenPriceSlider.value;
+  }
+  // Increment buttons for hydrogen amount
+  document
+    .querySelectorAll('.trade-increment[data-target="sell-hydrogen-amount"]')
+    .forEach((btn) => {
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        const inc = parseFloat(btn.getAttribute("data-inc"));
+        if (sellHydrogenAmountInput) {
+          let val = parseFloat(sellHydrogenAmountInput.value) || 0;
+          val += inc;
+          if (val < 0.1) val = 0.1;
+          sellHydrogenAmountInput.value = val;
+        }
+      });
+    });
+  // Reset button for hydrogen amount
+  if (resetSellHydrogenAmountBtn && sellHydrogenAmountInput) {
+    resetSellHydrogenAmountBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      sellHydrogenAmountInput.value = 0;
+    });
+  }
+  // Sell hydrogen on button click
+  if (sellHydrogenButton && sellHydrogenAmountInput) {
+    sellHydrogenButton.addEventListener("click", function () {
+      const amount = sellHydrogenAmountInput.value;
+      let price = null;
+      if (
+        typeof sellHydrogenPriceInput !== "undefined" &&
+        sellHydrogenPriceInput &&
+        sellHydrogenPriceInput.value
+      ) {
+        price = sellHydrogenPriceInput.value;
+      } else {
+        // Fallback: get latest price from DOM
+        const priceEl = document.getElementById("latest-hydrogen-price");
+        if (priceEl && priceEl.textContent) {
+          price = priceEl.textContent;
+        }
+      }
+      const result = sellHydrogen(amount, price);
+      if (result) {
+        // Do NOT reset input value here; only update storage display
+        updateHydrogenStorageDisplay();
+      }
+    });
+  }
+
+  // Add hydrogen storage display next to current market price
+  function updateHydrogenStorageDisplay() {
+    const marketPriceLabel = document.getElementById(
+      "latest-hydrogen-price-label"
+    );
+    if (marketPriceLabel) {
+      let storage =
+        window.hydro && window.hydro.storage ? window.hydro.storage : 0;
+      let storageSpan = document.getElementById("hydrogen-storage-inline");
+      if (!storageSpan) {
+        storageSpan = document.createElement("span");
+        storageSpan.id = "hydrogen-storage-inline";
+        storageSpan.style.marginLeft = "16px";
+        storageSpan.style.color = "#1976d2";
+        marketPriceLabel.appendChild(storageSpan);
+      }
+      storageSpan.textContent = `Hydrogen stored: ${parseFloat(storage).toFixed(
+        2
+      )} g`;
+    }
+  }
+
+  // Initial update and periodic refresh
+  updateHydrogenStorageDisplay();
+  setInterval(updateHydrogenStorageDisplay, 1000);
+});
 
 const priceContainer = document.getElementById("price-container");
 const co2Container = document.getElementById("co2-container");
