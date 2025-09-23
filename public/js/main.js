@@ -808,8 +808,36 @@ document.addEventListener("DOMContentLoaded", function () {
       sellHydrogen(amount, price);
       // Optionally reset amount after selling
       sellHydrogenAmountInput.value = 0;
+      // Update hydrogen storage display after selling
+      updateHydrogenStorageDisplay();
     });
   }
+
+  // Add hydrogen storage display next to current market price
+  function updateHydrogenStorageDisplay() {
+    const marketPriceLabel = document.getElementById(
+      "latest-hydrogen-price-label"
+    );
+    if (marketPriceLabel) {
+      let storage =
+        window.hydro && window.hydro.storage ? window.hydro.storage : 0;
+      let storageSpan = document.getElementById("hydrogen-storage-inline");
+      if (!storageSpan) {
+        storageSpan = document.createElement("span");
+        storageSpan.id = "hydrogen-storage-inline";
+        storageSpan.style.marginLeft = "16px";
+        storageSpan.style.color = "#1976d2";
+        marketPriceLabel.appendChild(storageSpan);
+      }
+      storageSpan.textContent = `Hydrogen stored: ${parseFloat(storage).toFixed(
+        2
+      )} g`;
+    }
+  }
+
+  // Initial update and periodic refresh
+  updateHydrogenStorageDisplay();
+  setInterval(updateHydrogenStorageDisplay, 1000);
 });
 const API_BASE_URL = "https://api.kitechnik.com";
 

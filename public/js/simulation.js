@@ -3,28 +3,51 @@ if (typeof window.money !== "number") {
   window.money = 0;
 }
 export function sellHydrogen(amount, pricePerGram) {
-  // Assume hydro is the electrolyzer instance, and money is global or accessible
   if (!window.hydro || typeof window.money === "undefined") {
     showNotification("Hydrogen system not initialized.", "sell");
     return false;
   }
   amount = parseFloat(amount);
-  pricePerGram = parseFloat(pricePerGram);
+  console.log("Sell Hydrogen called with:", { amount, pricePerGram });
+  // If pricePerGram is not provided or invalid, get latest price from DOM
+  let price = parseFloat(pricePerGram);
+  if (isNaN(price) || price <= 0) {
+    const priceEl = document.getElementById("latest-hydrogen-price");
+    if (priceEl && !isNaN(parseFloat(priceEl.textContent))) {
+      price = parseFloat(priceEl.textContent);
+      console.log("Using latest hydrogen price from DOM:", price);
+    }
+  }
   if (isNaN(amount) || amount <= 0) {
     showNotification("Invalid hydrogen amount.", "sell");
+    console.log("Invalid hydrogen amount", amount);
     return false;
   }
-  if (isNaN(pricePerGram) || pricePerGram <= 0) {
+  if (isNaN(price) || price <= 0) {
     showNotification("Invalid price per gram.", "sell");
+    console.log("Invalid price per gram", price);
     return false;
   }
   if (window.hydro.storage < amount) {
-    showNotification("Not enough hydrogen to sell.", "sell");
+    showNotification(
+      `Not enough hydrogen to sell. You have ${window.hydro.storage.toFixed(
+        2
+      )} g, tried to sell ${amount} g.`,
+      "sell"
+    );
+    console.log("Not enough hydrogen to sell", window.hydro.storage, amount);
     return false;
   }
-  const totalRevenue = amount * pricePerGram;
+  const totalRevenue = amount * price;
   window.hydro.storage -= amount;
   window.money += totalRevenue;
+  console.log(
+    `Sold ${amount}g hydrogen for ${totalRevenue.toFixed(
+      2
+    )} € at ${price.toFixed(2)} €/g. New storage: ${
+      window.hydro.storage
+    }, New money: ${window.money}`
+  );
   // Update UI
   const hydrogenLevelElem = document.getElementById("hydrogen-level");
   if (hydrogenLevelElem)
@@ -37,7 +60,7 @@ export function sellHydrogen(amount, pricePerGram) {
   showNotification(
     `Sold ${amount}g hydrogen for ${totalRevenue.toFixed(
       2
-    )} € at ${pricePerGram.toFixed(2)} €/g`,
+    )} € at ${price.toFixed(2)} €/g`,
     "sell"
   );
   // Update hydrogen gauge
@@ -69,11 +92,41 @@ let batteryLevelElem, batteryGaugePercentageElem, batteryGaugeLevelElem;
 let hydrogenLevelElem, hydrogenGaugePercentageElem, hydrogenGaugeLevelElem;
 //js for dropdown menu of location
 document.addEventListener("DOMContentLoaded", function () {
+  // Add hydrogen storage display next to current market price
+  function updateHydrogenStorageDisplay() {
+    const marketPriceLabel = document.getElementById(
+      "latest-hydrogen-price-label"
+    );
+    if (marketPriceLabel) {
+      let storage =
+        window.hydro && window.hydro.storage ? window.hydro.storage : 0;
+      let storageSpan = document.getElementById("hydrogen-storage-inline");
+      if (!storageSpan) {
+        storageSpan = document.createElement("span");
+        storageSpan.id = "hydrogen-storage-inline";
+        storageSpan.style.marginLeft = "16px";
+        storageSpan.style.color = "#1976d2";
+        marketPriceLabel.appendChild(storageSpan);
+      }
+      storageSpan.textContent = `Hydrogen stored: ${parseFloat(storage).toFixed(
+        2
+      )} g`;
+    }
+  }
+
+  // Initial update and periodic refresh
+  updateHydrogenStorageDisplay();
+  setInterval(updateHydrogenStorageDisplay, 1000);
   const citySelect = document.getElementById("city-select");
   const locationDisplay = document.getElementById("location");
   if (!citySelect || !locationDisplay) return;
 
+  // Set city to the selected value from dropdown on initial load
+  city = citySelect.value;
   locationDisplay.innerHTML = city;
+
+  // Set PV Status to current value on page load (do not force 'Sun is shining')
+  pv.checkforSun();
 
   if (citySelect) {
     citySelect.classList.remove("flashing-border");
@@ -191,23 +244,29 @@ export class photovoltaik {
     this.power = amount;
   }
   async checkforSun() {
+    // Ensure PV charges if 'Always Sunny' is selected
     document.getElementById("location").innerHTML = city;
     let sun = false;
-    const citySelect = document.getElementById("city-select");
     const sunElem = document.getElementById("sun");
-    // If Always Sunny is selected, force charging
-    if (citySelect && citySelect.value === "Always Sunny") {
-      sun = true;
+    const citySelectElem = document.getElementById("city-select");
+    if (city === "Always Sunny") {
+      // Force sunny state
       if (sunElem) {
         sunElem.innerHTML =
           '<span class="pv-sun-highlight">Sun is shining</span>';
       }
       document.getElementById("simulation-state").innerHTML = "Charge Mode";
       document.getElementById("pv-static-arrow").style.display = "none";
-      // Add any logic here to trigger PV charging
-      return true;
+      document.getElementById("pv-animated-arrow").style.display = "block";
+      sun = true;
+      if (citySelectElem) {
+        citySelectElem.classList.remove("flashing-border");
+        citySelectElem.classList.remove("flashing-border-green");
+      }
+      this.lastSunStatus = sun;
+      return sun;
     }
-    // Otherwise, check weather API
+    // ...existing code for API/weather-based charging...
     try {
       const response = await fetch(
         `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${city}`
@@ -226,9 +285,9 @@ export class photovoltaik {
           document.getElementById("pv-static-arrow").style.display = "none";
           document.getElementById("pv-animated-arrow").style.display = "block";
           sun = true;
-          if (citySelect) {
-            citySelect.classList.remove("flashing-border");
-            citySelect.classList.remove("flashing-border-green");
+          if (citySelectElem) {
+            citySelectElem.classList.remove("flashing-border");
+            citySelectElem.classList.remove("flashing-border-green");
           }
         } else {
           document.getElementById("simulation-state").innerHTML =
@@ -237,9 +296,9 @@ export class photovoltaik {
           document.getElementById("pv-animated-arrow").style.display = "none";
           document.getElementById("pv-static-arrow").style.display = "block";
           sun = false;
-          if (citySelect) {
-            citySelect.classList.remove("flashing-border-green");
-            citySelect.classList.add("flashing-border");
+          if (citySelectElem) {
+            citySelectElem.classList.remove("flashing-border-green");
+            citySelectElem.classList.add("flashing-border");
           }
           if (sunElem) sunElem.classList.remove("pv-sun-highlight");
         }
@@ -248,9 +307,9 @@ export class photovoltaik {
         document.getElementById("pv-animated-arrow").style.display = "none";
         document.getElementById("pv-static-arrow").style.display = "block";
         sun = false;
-        if (citySelect) {
-          citySelect.classList.remove("flashing-border-green");
-          citySelect.classList.add("flashing-border");
+        if (citySelectElem) {
+          citySelectElem.classList.remove("flashing-border-green");
+          citySelectElem.classList.add("flashing-border");
         }
         if (sunElem) sunElem.classList.remove("pv-sun-highlight");
       }
@@ -258,8 +317,8 @@ export class photovoltaik {
       return sun;
     } catch (error) {
       console.error("Error", error);
-      const citySelect = document.getElementById("city-select");
-      if (citySelect) {
+      const citySelectElem = document.getElementById("city-select");
+      if (citySelectElem) {
         citySelect.classList.remove("flashing-border-green");
         citySelect.classList.add("flashing-border");
       }
@@ -805,15 +864,6 @@ async function updateSimulation() {
   ) {
     hydro.produceHydrogen();
   }
-
-  // Auto-sell logic: if both battery and hydrogen tank are full, sell all electricity
-  if (charge.storage >= charge.capacity && hydro.storage >= hydro.capacity) {
-    // Leave a small buffer (e.g., 0.1 kWh) to avoid floating point issues
-    const sellAmount = Math.max(0, charge.storage - 0.1);
-    if (sellAmount > 0.05) {
-      trade.sellCustomAmount(sellAmount);
-    }
-  }
 }
 
 function resetSimulation() {
@@ -987,7 +1037,12 @@ document.addEventListener("DOMContentLoaded", function () {
     sellButton.addEventListener("click", function (e) {
       e.preventDefault();
       isNotificationVisible = false;
-      trade.sellElectricity();
+      // Get amount and price from UI
+      const amountInput = document.getElementById("sell-amount");
+      const priceInput = document.getElementById("latest-hydrogen-price");
+      const amount = amountInput ? amountInput.value : 0;
+      const price = priceInput ? priceInput.textContent : undefined;
+      sellHydrogen(amount, price);
     });
   }
   if (resetButton) {
