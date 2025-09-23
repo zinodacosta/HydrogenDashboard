@@ -62,6 +62,7 @@ function sellHydrogen(amount, pricePerGram) {
   return true;
 }
 let electrolyzerInterval = null;
+let electrolyzerManuallyStopped = false;
 let fuelCellInterval = null;
 let realism = 1;
 let speedfactor = 1 / realism;
@@ -846,7 +847,8 @@ async function updateSimulation() {
   if (
     charge.storage / charge.capacity >= 0.8 &&
     charge.storage > 0 &&
-    hydro.storage < hydro.capacity
+    hydro.storage < hydro.capacity &&
+    !electrolyzerManuallyStopped
   ) {
     hydro.produceHydrogen();
   }
@@ -1253,7 +1255,8 @@ document.getElementById("convert-to-hydrogen").addEventListener("click", () => {
       outStatic.style.display = "none";
       outAnim.style.display = "block";
     }
-    //Starte die Umwandlung im Elektrolyseur, wenn noch kein Intervall läuft
+    // Reset manual stop flag when starting electrolyzer
+    electrolyzerManuallyStopped = false;
     if (electrolyzerInterval === null) {
       electrolyzerInterval = setInterval(() => {
         hydro.produceHydrogen(); //Wasserstoffproduktion schrittweise
@@ -1322,6 +1325,8 @@ document
       outStatic.style.display = "block";
       outAnim.style.display = "none";
     }
+    // Set manual stop flag so auto logic does not restart
+    electrolyzerManuallyStopped = true;
     if (electrolyzerInterval !== null) {
       clearInterval(electrolyzerInterval); //Stoppe den Elektrolyseur
       electrolyzerInterval = null;
