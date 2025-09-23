@@ -191,9 +191,23 @@ export class photovoltaik {
     this.power = amount;
   }
   async checkforSun() {
-    //check if api response shows local weather as sunny enough to charge pv
     document.getElementById("location").innerHTML = city;
     let sun = false;
+    const citySelect = document.getElementById("city-select");
+    const sunElem = document.getElementById("sun");
+    // If Always Sunny is selected, force charging
+    if (citySelect && citySelect.value === "Always Sunny") {
+      sun = true;
+      if (sunElem) {
+        sunElem.innerHTML =
+          '<span class="pv-sun-highlight">Sun is shining</span>';
+      }
+      document.getElementById("simulation-state").innerHTML = "Charge Mode";
+      document.getElementById("pv-static-arrow").style.display = "none";
+      // Add any logic here to trigger PV charging
+      return true;
+    }
+    // Otherwise, check weather API
     try {
       const response = await fetch(
         `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${city}`
@@ -201,18 +215,6 @@ export class photovoltaik {
       const data = await response.json();
       const cloudiness = data.current.cloud;
       const daytime = data.current.is_day;
-      const citySelect = document.getElementById("city-select");
-      if (citySelect == "Always Sunny") {
-        daytime = true;
-        cloudiness = 0;
-        if (sunElem) {
-          sunElem.innerHTML =
-            '<span class="pv-sun-highlight">Sun is shining</span>';
-        }
-        document.getElementById("simulation-state").innerHTML = "Charge Mode";
-        document.getElementById("pv-static-arrow").style.display = "none";
-      }
-      const sunElem = document.getElementById("sun");
       if (daytime) {
         if (cloudiness < 50) {
           if (sunElem) {
