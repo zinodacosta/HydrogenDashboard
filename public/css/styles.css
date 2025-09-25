@@ -505,14 +505,20 @@ footer {
 }
 
 
+
+
 #pv-static-arrow,
 #electrolyzer-static-arrow,
 #fuelcell-static-arrow,
 #electrolyzer-output-static-arrow,
 #hydrogen-to-fuelcell-static-arrow,
 #fuelcell-to-charging-static-arrow {
-    max-height: 30vh !important;
-    transform: scale(0.3) rotate(90deg) !important;
+  width: 120px !important;
+  height: 40px !important;
+  max-height: 40px !important;
+  min-height: 40px !important;
+  object-fit: contain !important;
+  transform: none !important;
 }
 
 #pv-animated-arrow,
@@ -521,8 +527,12 @@ footer {
 #electrolyzer-output-animated-arrow,
 #hydrogen-to-fuelcell-animated-arrow,
 #fuelcell-to-charging-animated-arrow {
-    max-height: 30vh !important;
-    transform: scale(0.3) !important;
+  width: 120px !important;
+  height: 40px !important;
+  max-height: 40px !important;
+  min-height: 40px !important;
+  object-fit: contain !important;
+  transform: none !important;
 }
 
 .use-case{
@@ -743,31 +753,7 @@ label {
     margin-top: 50px;
 }
 
-.arrow {
-    font-size: 100px;
-    font-weight: bold;
-    color: #2c3e50;
-}
-
-#pv-static-arrow,
-#electrolyzer-static-arrow,
-#fuelcell-static-arrow,
-#electrolyzer-output-static-arrow,
-#hydrogen-to-fuelcell-static-arrow,
-#fuelcell-to-charging-static-arrow {
-    width: 150px;  
-    height: auto;
-}
-
-#pv-animated-arrow,
-#electrolyzer-animated-arrow,
-#fuelcell-animated-arrow,
-#electrolyzer-output-animated-arrow,
-#hydrogen-to-fuelcell-animated-arrow {
-    width: 150px;  
-    height: auto;
-    transform: rotate(-90deg);
-}
+/* Removed conflicting arrow size rules. Only fixed size with !important is applied above. */
 
 #corner-widget {
     position: fixed;

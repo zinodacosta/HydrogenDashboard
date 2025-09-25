@@ -8,7 +8,7 @@ const translations = {
     sellElectricity: "Sell Electricity",
     sellHydrogen: "Sell Hydrogen",
     hydrogenAmount: "Amount (g)",
-    hydrogenPrice: "Price (€/g)",
+    hydrogenPrice: "Price (€/kg)",
     electricityAmount: "Amount (kWh)",
     electricityPrice: "Market Price (€/kWh)",
     increment: "+",
@@ -30,7 +30,7 @@ const translations = {
     euro: "€",
     wholesaleTitle: "Wholesale Price",
     chart2Title: "Electricity Consumption",
-    ecoTitle: "Hydrogen Eco Simulation",
+    ecoTitle: "Hydrogen Eco System",
     usecaseTitle: "Select Use Case:",
     howItWorksTitle: "How it works:",
     pvEfficiencyLabel: "PV Efficiency:",
@@ -41,7 +41,7 @@ const translations = {
     resetSimulation: "Reset Simulation",
     howItWorksText: `<ul style="margin-top: 6px; margin-bottom: 0;">
 <li>
-  The <b>Hydrogen Eco Simulation</b> aims for economic profit by using power generated from photovoltaics,<br> buying electricity at low prices, 
+  The <b>Hydrogen Eco System</b> aims for economic profit by using power generated from photovoltaics,<br> buying electricity at low prices, 
   converting excess electricity to hydrogen (<b>electricity to hydrogen</b>) via an electrolyzer, 
   and <br>converting hydrogen back to electricity (<b>hydrogen back to electricity</b>) via a fuel cell when prices are high.
 </li>
@@ -167,7 +167,7 @@ const translations = {
     euro: "€",
     wholesaleTitle: "Großhandelspreis",
     chart2Title: "Stromverbrauch",
-    ecoTitle: "Wasserstoff-Öko-Simulation",
+    ecoTitle: "Wasserstoff-Öko-System",
     usecaseTitle: "Anwendungsfall wählen:",
     howItWorksTitle: "So funktioniert es:",
     pvEfficiencyLabel: "PV-Wirkungsgrad:",
@@ -178,7 +178,7 @@ const translations = {
     resetSimulation: "Simulation zurücksetzen",
     howItWorksText: `<ul style="margin-top: 6px; margin-bottom: 0;">
 <li>
-  Die <b>Wasserstoff-Öko-Simulation</b> zielt auf wirtschaftlichen Gewinn ab, indem Strom aus Photovoltaik genutzt,<br> Strom zu niedrigen Preisen gekauft, 
+  Die <b>Wasserstoff-Öko-System</b> zielt auf wirtschaftlichen Gewinn ab, indem Strom aus Photovoltaik genutzt,<br> Strom zu niedrigen Preisen gekauft, 
   überschüssiger Strom mittels Elektrolyseur in Wasserstoff (<b>Strom zu Wasserstoff</b>) umgewandelt 
   und <br>Wasserstoff bei hohen Preisen mittels Brennstoffzelle wieder in Strom (<b>Wasserstoff zu Strom</b>) zurückverwandelt wird.
 </li>
@@ -281,7 +281,7 @@ function setLanguage(lang) {
     // Replace only the label part before the value span
     labelEl.innerHTML = `${labelText} <span id='latest-hydrogen-price'>${
       valueEl ? valueEl.textContent : "--"
-    }</span> €/g`;
+    }</span> €/kg`;
   }
   // Realism label/info (if present)
   if (document.getElementById("realism-label"))
@@ -748,7 +748,6 @@ window.addEventListener("DOMContentLoaded", function () {
   setLanguage(currentLanguage);
 });
 
-
 const API_BASE_URL = "https://api.kitechnik.com";
 
 let graphType = "wholesalePrice"; //Default graph type for the first chart
@@ -878,7 +877,6 @@ const fetchData = debounce(async function () {
     const startISOString = start.toISOString(); //Converts to ISO string
     const endISOString = end.toISOString();
 
-
     const graphData = graphIdentifiers[graphType]; //Resolve graphType to ID
     const graphId = graphData ? graphData.id : "1"; //Fallback to ID 1
 
@@ -890,7 +888,6 @@ const fetchData = debounce(async function () {
     );
 
     const data = await response.json();
-
 
     if (!data.labels || !data.values) {
       console.error(

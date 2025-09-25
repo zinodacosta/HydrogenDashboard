@@ -10,12 +10,14 @@ function sellHydrogen(amount, pricePerGram) {
     return false;
   }
   const amt = parseFloat(amount);
-  const price = parseFloat(pricePerGram);
+  // Convert grams to kilograms for price calculation
+  const amtKg = amt / 1000;
+  const pricePerKg = parseFloat(pricePerGram);
   if (isNaN(amt) || amt <= 0) {
     showNotification("Invalid hydrogen amount.", "sell");
     return false;
   }
-  if (isNaN(price) || price <= 0) {
+  if (isNaN(pricePerKg) || pricePerKg <= 0) {
     showNotification("Invalid hydrogen price.", "sell");
     return false;
   }
@@ -30,7 +32,7 @@ function sellHydrogen(amount, pricePerGram) {
   }
   // Perform the sale
   window.hydro.storage -= amt;
-  window.money += amt * price;
+  window.money += amtKg * pricePerKg;
 
   // Update UI
   const hydrogenLevelElem = document.getElementById("hydrogen-level");
@@ -41,9 +43,9 @@ function sellHydrogen(amount, pricePerGram) {
   if (window.setHydrogenTopPanel)
     window.setHydrogenTopPanel(window.hydro.storage.toFixed(2));
   showNotification(
-    `Sold ${amt}g hydrogen for ${(amt * price).toFixed(2)} € at ${price.toFixed(
+    `Sold ${amtKg.toFixed(3)}kg hydrogen for ${(amtKg * pricePerKg).toFixed(
       2
-    )} €/g`,
+    )} € at ${pricePerKg.toFixed(2)} €/kg`,
     "sell"
   );
   // Update hydrogen gauge
@@ -76,6 +78,24 @@ let batteryLevelElem, batteryGaugePercentageElem, batteryGaugeLevelElem;
 let hydrogenLevelElem, hydrogenGaugePercentageElem, hydrogenGaugeLevelElem;
 //js for dropdown menu of location
 document.addEventListener("DOMContentLoaded", function () {
+  // Simulation speed slider logic
+  const speedSlider = document.getElementById("simulation-speed-slider");
+  const speedIndicator = document.getElementById("simulation-speed-indicator");
+  function updateSpeedIndicator() {
+    if (speedSlider.value === "2") {
+      speedIndicator.textContent = "Fastest";
+      realism = 1;
+    } else {
+      speedIndicator.textContent = "Real-Time";
+      realism = 3600;
+    }
+    speedfactor = 1 / realism;
+  }
+  if (speedSlider && speedIndicator) {
+    speedSlider.value = "2";
+    updateSpeedIndicator();
+    speedSlider.addEventListener("input", updateSpeedIndicator);
+  }
   // Debug: Check presence of sell hydrogen button and inputs
   // Use number input for price instead of slider
   const sellHydrogenPriceInput = document.getElementById("sell-hydrogen-price");
@@ -95,9 +115,9 @@ document.addEventListener("DOMContentLoaded", function () {
         storageSpan.style.color = "#1976d2";
         marketPriceLabel.appendChild(storageSpan);
       }
-      storageSpan.textContent = `Hydrogen stored: ${parseFloat(storage).toFixed(
-        2
-      )} g`;
+      storageSpan.textContent = `Hydrogen stored: ${(
+        parseFloat(storage) / 1000
+      ).toFixed(3)} kg`;
     }
   }
 
@@ -113,7 +133,9 @@ document.addEventListener("DOMContentLoaded", function () {
   locationDisplay.innerHTML = city;
 
   // Set PV Status to current value on page load (do not force 'Sun is shining')
-  pv.checkforSun();
+  setTimeout(() => {
+    pv.checkforSun();
+  }, 1000);
 
   if (citySelect) {
     citySelect.classList.remove("flashing-border");
@@ -418,9 +440,23 @@ export class fuelcell {
           (this.power / 1000) *
           speedfactor) /
         100;
-      //Wasserstoffspeicher * 33.3kwH/kg * Brennstoffzelle Wirkungsgrad * Brennstoffzelle Leistung
-      charge.updateBatteryStorage(powerProduced);
-      hydro.storage -= powerProduced;
+      // Prevent battery from exceeding its max capacity
+      let availableCapacity = charge.capacity - charge.storage;
+      if (availableCapacity <= 0) {
+        // Battery is full, stop fuel cell and notify
+        if (
+          typeof fuelCellInterval !== "undefined" &&
+          fuelCellInterval !== null
+        ) {
+          clearInterval(fuelCellInterval);
+          fuelCellInterval = null;
+        }
+        showNotification("Battery is full.", "sell");
+        return;
+      }
+      let actualPowerProduced = Math.min(powerProduced, availableCapacity);
+      charge.updateBatteryStorage(actualPowerProduced);
+      hydro.storage -= actualPowerProduced;
 
       document.getElementById("battery-level").innerHTML =
         charge.storage.toFixed(2) + " kWh";
@@ -429,14 +465,13 @@ export class fuelcell {
       const batteryLevelTop = document.getElementById("battery-level-top");
       if (batteryLevelTop)
         batteryLevelTop.innerHTML = charge.storage.toFixed(2) + " kWh";
-      let batteryPercentage = (this.storage / this.capacity) * 100;
+      let batteryPercentage = (charge.storage / charge.capacity) * 100;
       document.getElementById("battery-gauge-percentage").innerHTML =
         batteryPercentage.toFixed(1) + " %";
       document.getElementById("battery-gauge-level").style.width =
         batteryPercentage.toFixed(1) + "%";
       document.getElementById("hydrogen-level").innerHTML =
         hydro.storage.toFixed(2) + " g";
-    } else {
     }
   }
 }
@@ -1025,12 +1060,7 @@ document.addEventListener("DOMContentLoaded", function () {
     sellButton.addEventListener("click", function (e) {
       e.preventDefault();
       isNotificationVisible = false;
-      // Get amount and price from UI
-      const amountInput = document.getElementById("sell-amount");
-      const priceInput = document.getElementById("latest-hydrogen-price");
-      const amount = amountInput ? amountInput.value : 0;
-      const price = priceInput ? priceInput.textContent : undefined;
-      sellHydrogen(amount, price);
+      trade.sellElectricity();
     });
   }
   if (resetButton) {
@@ -1041,7 +1071,13 @@ document.addEventListener("DOMContentLoaded", function () {
     buyButton.addEventListener("click", function (e) {
       e.preventDefault();
       isNotificationVisible = false;
+      // Ensure money is correct and not overwritten by hydrogen sales
+      if (typeof trade.money === "undefined") {
+        trade.money = window.money;
+      }
       trade.buyElectricity();
+      // Sync window.money after purchase
+      window.money = trade.money;
     });
   }
 
@@ -1304,6 +1340,8 @@ document
         }, 1000); //Alle Sekunde
         console.log("Fuel Cell started");
       }
+    } else {
+      showNotification("No hydrogen stored.", "sell");
     }
   });
 
@@ -1325,12 +1363,15 @@ document
       outStatic.style.display = "block";
       outAnim.style.display = "none";
     }
-    // Set manual stop flag so auto logic does not restart
-    electrolyzerManuallyStopped = true;
     if (electrolyzerInterval !== null) {
+      // Only set manual stop flag if interval was running
+      electrolyzerManuallyStopped = true;
       clearInterval(electrolyzerInterval); //Stoppe den Elektrolyseur
       electrolyzerInterval = null;
       console.log("Electrolyzer stopped");
+    } else {
+      // If never started, do not block future starts
+      electrolyzerManuallyStopped = false;
     }
   });
 
