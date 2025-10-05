@@ -16,7 +16,9 @@
   { "price_eur_per_mwh": 233919, "date": "2025-08-27" },
   { "price_eur_per_mwh": 226600, "date": "2025-09-03" },
   { "price_eur_per_mwh": 252899, "date": "2025-09-10" },
-  { "price_eur_per_mwh": 237806, "date": "2025-09-17" }
+  { "price_eur_per_mwh": 237806, "date": "2025-09-17" },
+  { "price_eur_per_mwh": 239102, "date": "2025-09-24" },
+  { "price_eur_per_mwh": 253042, "date": "2025-10-01" }
 
 
 ]

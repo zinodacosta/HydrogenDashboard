@@ -1,3 +1,183 @@
+@media (max-width: 700px) {
+  /* Only stack the language and documentation buttons vertically in sticky bar */
+  .sticky-bar .sticky-bar-buttons {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    gap: 8px !important;
+    height: auto !important;
+  }
+  #documentation-btn{
+    margin-right: 20px;
+    margin-top: 10px;
+  }
+  .sticky-bar-buttons .lang-toggle,
+  .sticky-bar-buttons {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 180px !important;
+    margin: 0 !important;
+    margin-bottom: 4px !important;
+    text-align: right !important;
+    border-radius: 8px !important;
+    font-size: 1em !important;
+    box-sizing: border-box;
+  }
+  .sticky-bar-buttons #documentation-btn {
+    margin-bottom: 0 !important;
+  }
+}
+@media (max-width: 700px) {
+  /* Sticky bar gauge containers and SVGs for mobile */
+  #sticky-battery-gauge,
+  #sticky-hydrogen-gauge {
+    margin-right: 0 !important;
+    padding: 0 !important;
+    width: 85px !important;
+    min-width: 0 !important;
+    max-width: 110px !important;
+    align-items: center !important;
+  }
+  #sticky-battery-gauge-svg,
+  #sticky-hydrogen-gauge-svg {
+    width: 90px !important;
+    height: 48px !important;
+    min-width: 0 !important;
+    max-width: 100px !important;
+    display: block;
+  }
+  #sticky-battery-gauge-percentage,
+  #sticky-hydrogen-gauge-percentage {
+    font-size: 13px !important;
+    margin-top: 0 !important;
+  }
+  #sticky-battery-gauge img,
+  #sticky-hydrogen-gauge img {
+    width: 28px !important;
+    height: 28px !important;
+    margin-top: -20px !important;
+    object-fit: contain;
+  }
+  #sticky-battery-gauge > div,
+  #sticky-hydrogen-gauge > div {
+    margin-top: 0 !important;
+    font-size: 13px !important;
+  }
+}
+.sticky-bar {
+  position: sticky;
+  top: 0;              
+  background: #f8f9fa;     
+  padding: 10px;
+}
+
+
+.flowchart-title {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1em;
+  font-weight: 600;
+  color: #1976d2;
+  letter-spacing: 0.5px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  padding-bottom: 2px;
+}
+
+.live-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #2ecc40;
+  margin-right: 8px;
+  box-shadow: 0 0 6px #2ecc40;
+  animation: live-blink 1s infinite alternate;
+}
+
+@keyframes live-blink {
+  0% { opacity: 1; }
+  100% { opacity: 0.3; }
+}
+/* --- Moved from index.html inline <style> --- */
+.lang-toggle {
+  background: #e3e3e3;
+  color: #1976d2;
+  border: 2px solid #1976d2;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(25,118,210,0.08);
+  transition: background 0.2s, color 0.2s;
+  outline: none;
+}
+.arrow-toggle {
+  width: 40px;
+  height: 40px;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.arrow-line {
+  position: absolute;
+  width: 28px;
+  height: 4px;
+  background: #1976d2;
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(.4,2,.3,1);
+  left: 6px;
+}
+.arrow-line:nth-child(1) {
+  top: 14px;
+}
+.arrow-line:nth-child(2) {
+  top: 22px;
+}
+.arrow-toggle:not(.open) .arrow-line:nth-child(1) {
+  transform: rotate(-45deg) translate(0, 0);
+}
+.arrow-toggle:not(.open) .arrow-line:nth-child(2) {
+  transform: rotate(45deg) translate(0, 0);
+}
+.arrow-toggle.open .arrow-line:nth-child(1) {
+  transform: rotate(45deg) translate(0, 0);
+}
+.arrow-toggle.open .arrow-line:nth-child(2) {
+  transform: rotate(-45deg) translate(0, 0);
+}
+.lang-on {
+  background: #1976d2;
+  color: #fff;
+  border: 2px solid #1976d2;
+}
+.lang-off {
+  background: #e3e3e3;
+  color: #1976d2;
+  border: 2px solid #1976d2;
+}
+
+.flowchart {
+  position: fixed;
+  z-index: 1000;
+  background: #ffffff;
+  border: 2px solid #1976d2;
+  border-radius: 12px;
+  padding: 8px 12px;
+  box-shadow: 0 6px 18px rgba(25,118,210,0.18);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%; /* Fixed width for language consistency */
+  min-width: 0;
+  max-width: 1200px;
+}
 /* Shared modal styles for dashboard windows */
 .dashboard-modal {
   position: fixed;
@@ -98,6 +278,17 @@ body {
 }
 
 @media (max-width: 768px) {
+
+  .sticky-bar-inner {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: stretch;
+    justify-content: space-evenly;
+    align-items: baseline;
+    gap: 1px !important;
+    margin-left: 15px;
+  }
     .ema-config {
         flex-direction: column;
         align-items: flex-start;
@@ -376,7 +567,7 @@ footer {
 
 #price-container, #co2-container {
     z-index: 1;
-    margin-top: 220px;
+    margin-top: 240px;
     margin-left: 20px;
     position: absolute;
     min-height: 50px;
@@ -445,6 +636,7 @@ footer {
         max-height: 30vh !important;
     }
     #corner-content {
+      
         padding: 5px; 
 }
 
@@ -730,14 +922,7 @@ label {
     color: #2c3e50;
 }
 
-.flowchart {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 30px;
-    margin: 10px 50px;
-    margin-top: -50px;
-}
+
 
 .flow-item {
     display: flex;
@@ -748,7 +933,7 @@ label {
 }
 
 .flow-item img {
-    width: 80px; 
+    width: 54px; 
     height: auto;
     margin-top: 50px;
 }
@@ -768,7 +953,7 @@ label {
 }
 
 /* Toggle button in the corner */
-#toggle-widget {
+#toggle-widget, #toggle-widget-expanded.toggle-widget {
     width: 30px;
     height: 30px;
     background-color: #000000;
@@ -788,15 +973,17 @@ label {
 }
 
 /* Content area of the widget */
+/* Make #corner-content fill the full height of #code-expanded */
 #corner-content {
-    
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 10px;
-    height: auto;
-    transition: height 0.3s ease;
-    overflow-y: auto; /* Ensure only one scroll bar for the content */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  height: 100%;
+  min-height: 0;
+  transition: height 0.3s ease;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 /* Styles for minimized and expanded states */
@@ -809,13 +996,16 @@ label {
 }
 
 #code-expanded {
-    background-color: #fff;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    max-width: 1200px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    overflow-y: auto; /* Ensure only one scroll bar for the content */
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  max-width: 1200px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  max-height: 660px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 
@@ -939,26 +1129,15 @@ label {
     gap: 15px;
     padding: 15px;
     height: auto;
-    transition: height 0.3s ease;
+  /* transition removed to prevent delayed scaling */
     overflow-y: auto;
 }
 
 #corner-content {
-    overflow-y: auto; 
     background-color: #f8f9fa;
-    transition: height 0.9s ease; 
-    max-height: 800px; 
+  /* transition removed to prevent delayed scaling */
 }
 
-#code-expanded {
-    background-color: #fff;
-    max-height: 900px; 
-    overflow-y: auto;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
 
 
 
@@ -982,7 +1161,7 @@ label {
 #electrolyzer-output-static-arrow,
 #hydrogen-to-fuelcell-static-arrow,
 #fuelcell-to-charging-static-arrow {
-    width: 100%;
+    width: 60%;
     height: auto;
 }
 
@@ -992,7 +1171,7 @@ label {
 #electrolyzer-output-animated-arrow,
 #hydrogen-to-fuelcell-animated-arrow,
 #fuelcell-to-charging-animated-arrow {
-    height: auto;
+    height: 100px;
     transform: rotate(-90deg);
 }
 
@@ -1287,41 +1466,35 @@ label {
 }
 
 @media (max-width: 700px) {
-  .flowchart {
-    min-height: 1250px !important;
-    padding-top: 18px !important;
-    padding-bottom: 18px !important;
-    box-sizing: border-box !important;
-  }
-}
 
-@media (max-width: 700px) {
-  .flowchart {
-    background: #fff;
-    border: 1.5px solid #e0e0e0;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(30, 98, 208, 0.07);
-    padding: 12px 2px 12px 2px;
-    margin-bottom: 1px;
-    width: 100%;
-    box-sizing: border-box;
-    overflow: visible !important;
+.dashboard-modal{
+  width: 20%;
+}
+  #toggle-widget, #toggle-widget-expanded.toggle-widget {
+    width: 30px;
+    height: 30px;
+    background-color: #000000;
+    color: white;
+    margin: 3px;
+    font-size: 18px;
+    text-align: center;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
     display: flex;
-    flex-direction: column;
-    flex-wrap: nowrap;
+    justify-content: center;
     align-items: center;
-    justify-content: flex-start;
-    height: auto;
-    min-height: 0;
-    gap: 0px !important;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    cursor: pointer;
+    position: absolute;
+
+}
+  .flowchart {
+    display: none !important;
   }
   .flowchart::-webkit-scrollbar {
     display: none;
   }
   .flowchart .flow-item, #pv-charging-arrow, #electrolyzer-charging-arrow, #fuelcell-charging-arrow, #electrolyzer-output-charging-arrow, #hydrogen-to-fuelcell-charging-arrow, #fuelcell-to-charging-charging-arrow {
-    width: 100%;
     margin-bottom: 0px;
     text-align: center;
     flex: 0 0 auto;
@@ -1379,17 +1552,16 @@ label {
     gap: 6px;
   }
   .trade-input, .trade-increment, .trade-reset {
-    margin-left: 0;
-    margin-top: 6px;
+    margin: 0 auto;
     width: 100%;
     max-width: 180px;
   }
   .trade-market-price {
-    margin-left: 0;
-    margin-top: 6px;
-    width: 100%;
+    margin-left: 0px;
+    margin-top: 0px;
     display: block;
     text-align: left;
+    padding: 0px 0px !important;
   }
   #button-container {
     display: flex;
@@ -1399,8 +1571,7 @@ label {
   }
   .start-btn, .stop-btn, .reset-btn, .button.buy, .button.sell, .trade-row button {
     width: 100%;
-    margin-bottom: 8px;
-    margin-left: 0;
+    margin: 0 auto;
   }
   canvas {
     max-width: 100vw;
@@ -1413,7 +1584,9 @@ label {
   #corner-content{
     min-width: 0;
     overflow-x: auto;
-    padding-bottom: 350px;
+  }
+  #code-expanded{
+    height: 600px !important;
   }
   #code-minimized{
 
@@ -1421,13 +1594,9 @@ label {
     overflow-x: auto;
     padding-bottom: 20px;
   }
-  #code-expanded{
-            min-width: 0;
-    overflow-x: auto;
-    padding-bottom: 2000px;
-  }
+/* Removed duplicate #code-expanded rules and unnecessary overflow/padding */
   .flowchart{
-        min-width: 0;
+    min-width: 0;
     overflow-x: auto;
     padding-bottom: 1250px;
 
@@ -1559,6 +1728,7 @@ label {
     font-size: 1.08em;
     padding: 3px 8px;
     border-radius: 7px;
+
   }
 }
 
@@ -1659,11 +1829,13 @@ label {
 #battery-storage-percentage.level-highlight {
   background: linear-gradient(90deg, #e8f5e9 0%, #c8e6c9 100%);
   color: #1b5e20;
+  margin: 0 auto;
 }
 
 #hydrogen-storage-percentage.hydrogen-highlight {
   background: linear-gradient(90deg, #e3f2fd 0%, #b3e5fc 100%);
   color: #1565c0;
+    margin: 0 auto;
 }
 
 .electrolyzer-controls button,
@@ -1699,3 +1871,22 @@ label {
   background: #1976d2;
   color: #fff;
 }
+
+#flowchart-container {
+  margin-bottom: 8px;
+  max-width: 1200px;
+  width: 100%;
+  display: none;
+}
+
+#flowchart-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  /* remains hidden by default, shown by JS */
+  /* display: none; */
+}
+
+
+

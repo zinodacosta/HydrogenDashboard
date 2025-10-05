@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "gsap": "^3.13.0",
     "nodemailer": "^7.0.6"
   }
 }

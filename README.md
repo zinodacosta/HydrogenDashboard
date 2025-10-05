@@ -1,3 +1,8 @@
+## Changelog
+
+- Visual overhaul: Major UI improvements, modernized gauge visuals, sticky bar and widget consistency, and enhanced layout responsiveness.
+- Performance fixes: Optimized DOM updates, improved SVG gauge rendering, and reduced unnecessary reflows for smoother simulation and UI interactions.
+
 Hydrogen Dashboard to get data for power creation and usage from SMARD API, display it graphically and analyze it to compare it with hydrogen as fuel source.
 
 Features Simulation with Charging Photovoltaik, Battery, Hydrogen Electrolyzer and Fuel Cell

@@ -3,6 +3,15 @@
 if (typeof window.money !== "number") {
   window.money = 0;
 }
+// --- Flowchart fuel cell arrow toggle logic ---
+function updateFuelCellArrow(isWorking) {
+  const staticArrow = document.getElementById("fuelcell-static-arrow");
+  const animatedArrow = document.getElementById("fuelcell-animated-arrow");
+  if (staticArrow && animatedArrow) {
+    staticArrow.style.display = isWorking ? "none" : "block";
+    animatedArrow.style.display = isWorking ? "block" : "none";
+  }
+}
 
 function sellHydrogen(amount, pricePerGram) {
   if (!window.hydro || typeof window.money === "undefined") {
@@ -81,6 +90,13 @@ document.addEventListener("DOMContentLoaded", function () {
   // Simulation speed slider logic
   const speedSlider = document.getElementById("simulation-speed-slider");
   const speedIndicator = document.getElementById("simulation-speed-indicator");
+  // Ensure only static fuel cell arrow is visible on page load
+  const fcStaticArrow = document.getElementById("fuelcell-static-arrow");
+  const fcAnimatedArrow = document.getElementById("fuelcell-animated-arrow");
+  if (fcStaticArrow && fcAnimatedArrow) {
+    fcStaticArrow.style.display = "block";
+    fcAnimatedArrow.style.display = "none";
+  }
   function updateSpeedIndicator() {
     if (speedSlider.value === "2") {
       speedIndicator.textContent = "Fastest";
@@ -365,8 +381,9 @@ export class battery {
     }
 
     //Update the battery level and gauge
-    document.getElementById("battery-level").innerHTML =
-      this.storage.toFixed(2) + " kWh";
+    const batteryLevelElem = document.getElementById("battery-level");
+    if (batteryLevelElem)
+      batteryLevelElem.innerHTML = this.storage.toFixed(2) + " kWh";
     const batteryLevelTop = document.getElementById("battery-level-top");
     if (batteryLevelTop)
       batteryLevelTop.innerHTML = this.storage.toFixed(2) + " kWh";
@@ -378,10 +395,41 @@ export class battery {
       batteryStoragePercent.textContent = percent.toFixed(1) + "%";
     }
     let batteryPercentage = (this.storage / this.capacity) * 100;
-    document.getElementById("battery-gauge-percentage").innerHTML =
-      batteryPercentage.toFixed(1) + " %";
-    document.getElementById("battery-gauge-level").style.width =
-      batteryPercentage.toFixed(1) + "%";
+    const batteryGaugePercentElem = document.getElementById(
+      "battery-gauge-percentage"
+    );
+    if (batteryGaugePercentElem) {
+      batteryGaugePercentElem.textContent = batteryPercentage.toFixed(1) + " %";
+      batteryGaugePercentElem.setAttribute("fill", "#222");
+      // Update sticky bar battery gauge percentage and fill (same logic as code-minimized)
+      const stickyBatteryGaugePercentElem = document.getElementById(
+        "sticky-battery-gauge-percentage"
+      );
+      if (stickyBatteryGaugePercentElem) {
+        stickyBatteryGaugePercentElem.textContent =
+          batteryPercentage.toFixed(1) + " %";
+      }
+      const stickyBatteryGaugeFill = document.getElementById(
+        "sticky-battery-gauge-fill"
+      );
+      if (stickyBatteryGaugeFill) {
+        const totalLength = 157;
+        const offset = totalLength * (1 - batteryPercentage / 100);
+        stickyBatteryGaugeFill.setAttribute("stroke-dashoffset", offset);
+      }
+    }
+    // Animate SVG half-circle gauge
+    const batteryGaugeFill = document.getElementById("battery-gauge-fill");
+    if (batteryGaugeFill) {
+      const totalLength = 157; // SVG path length for half-circle
+      const offset = totalLength * (1 - batteryPercentage / 100);
+      batteryGaugeFill.setAttribute("stroke-dashoffset", offset);
+    }
+    const batteryGaugeLevelElem = document.getElementById(
+      "battery-gauge-level"
+    );
+    if (batteryGaugeLevelElem)
+      batteryGaugeLevelElem.style.width = batteryPercentage.toFixed(1) + "%";
 
     // Electrolyzer arrow logic: animated only when electrolyzer is running
     const staticArrow = document.getElementById("electrolyzer-static-arrow");
@@ -458,6 +506,20 @@ export class fuelcell {
       charge.updateBatteryStorage(actualPowerProduced);
       hydro.storage -= actualPowerProduced;
 
+      // If hydrogen storage is now 0 or less, stop the fuel cell and show notification
+      if (hydro.storage <= 0) {
+        hydro.storage = 0;
+        if (
+          typeof fuelCellInterval !== "undefined" &&
+          fuelCellInterval !== null
+        ) {
+          clearInterval(fuelCellInterval);
+          fuelCellInterval = null;
+        }
+        updateFuelCellArrow(false);
+        showNotification("Fuel cell stopped: No hydrogen left.", "sell");
+      }
+
       document.getElementById("battery-level").innerHTML =
         charge.storage.toFixed(2) + " kWh";
       if (window.setHydrogenTopPanel)
@@ -525,42 +587,87 @@ export class electrolyzer {
         this.storage += actualHydrogenProduced;
         charge.updateBatteryStorage(-actualBatteryConsumption);
 
-        document.getElementById("hydrogen-level").innerHTML =
-          this.storage.toFixed(2) + " g";
+        const hydrogenLevelElem = document.getElementById("hydrogen-level");
+        if (hydrogenLevelElem)
+          hydrogenLevelElem.innerHTML = this.storage.toFixed(2) + " g";
         let hydrogenPercentage = (this.storage / this.capacity) * 100;
-        const hydrogenStoragePercent = document.getElementById(
-          "hydrogen-storage-percentage"
+        // Animate SVG half-circle hydrogen gauge
+        const hydrogenGaugeFill = document.getElementById(
+          "hydrogen-gauge-fill"
         );
-        if (hydrogenStoragePercent && this.capacity > 0) {
-          hydrogenStoragePercent.textContent =
-            hydrogenPercentage.toFixed(1) + "%";
+        if (hydrogenGaugeFill) {
+          const totalLength = 157; // SVG path length for half-circle
+          const offset = totalLength * (1 - hydrogenPercentage / 100);
+          hydrogenGaugeFill.setAttribute("stroke-dashoffset", offset);
         }
-
-        if (
-          document.getElementById("simulation-state").innerHTML ===
-          "Charge Mode"
-        ) {
-          document.getElementById("simulation-state").innerHTML =
-            "Charge Mode + Hydrogen Mode ";
-        } else {
-          document.getElementById("simulation-state").innerHTML =
-            "Hydrogen Mode ";
+        // Update sticky bar hydrogen gauge
+        const stickyHydrogenGaugeFill = document.getElementById(
+          "sticky-hydrogen-gauge-fill"
+        );
+        if (stickyHydrogenGaugeFill) {
+          const stickyTotalLength = 82; // Updated SVG path length for larger sticky bar gauge
+          const stickyOffset =
+            stickyTotalLength * (1 - hydrogenPercentage / 100);
+          stickyHydrogenGaugeFill.setAttribute(
+            "stroke-dashoffset",
+            stickyOffset
+          );
         }
-
-        document.getElementById("hydrogen-gauge-percentage").innerHTML =
-          hydrogenPercentage.toFixed(1) + " %";
-        document.getElementById("hydrogen-gauge-level").style.width =
-          hydrogenPercentage + "%";
+        const hydrogenGaugePercentElem = document.getElementById(
+          "hydrogen-gauge-percentage"
+        );
+        if (hydrogenGaugePercentElem) {
+          hydrogenGaugePercentElem.textContent =
+            hydrogenPercentage.toFixed(1) + " %";
+          hydrogenGaugePercentElem.setAttribute("fill", "#222");
+          // Update sticky bar hydrogen gauge percentage and fill (same logic as code-minimized)
+          const stickyHydrogenGaugePercentElem = document.getElementById(
+            "sticky-hydrogen-gauge-percentage"
+          );
+          if (stickyHydrogenGaugePercentElem) {
+            stickyHydrogenGaugePercentElem.textContent =
+              hydrogenPercentage.toFixed(1) + " %";
+          }
+          const stickyHydrogenGaugeFill = document.getElementById(
+            "sticky-hydrogen-gauge-fill"
+          );
+          if (stickyHydrogenGaugeFill) {
+            const totalLength = 157;
+            const offset = totalLength * (1 - hydrogenPercentage / 100);
+            stickyHydrogenGaugeFill.setAttribute("stroke-dashoffset", offset);
+          }
+        }
+        // Simulation state
+        const simStateElem = document.getElementById("simulation-state");
+        if (simStateElem) {
+          if (simStateElem.innerHTML === "Charge Mode") {
+            simStateElem.innerHTML = "Charge Mode + Hydrogen Mode ";
+          } else {
+            simStateElem.innerHTML = "Hydrogen Mode ";
+          }
+        }
         errorCheck();
       }
     } else {
-      document.getElementById("hydrogen-level").innerHTML =
-        this.storage.toFixed(2) + " g";
+      const hydrogenLevelElem = document.getElementById("hydrogen-level");
+      if (hydrogenLevelElem)
+        hydrogenLevelElem.innerHTML = this.storage.toFixed(2) + " g";
       let hydrogenPercentage = (this.storage / this.capacity) * 100;
-      document.getElementById("hydrogen-gauge-percentage").innerHTML =
-        hydrogenPercentage.toFixed(1) + " %";
-      document.getElementById("hydrogen-gauge-level").style.width =
-        hydrogenPercentage + "%";
+      // Animate SVG half-circle hydrogen gauge
+      const hydrogenGaugeFill = document.getElementById("hydrogen-gauge-fill");
+      if (hydrogenGaugeFill) {
+        const totalLength = 157;
+        const offset = totalLength * (1 - hydrogenPercentage / 100);
+        hydrogenGaugeFill.setAttribute("stroke-dashoffset", offset);
+      }
+      const hydrogenGaugePercentElem = document.getElementById(
+        "hydrogen-gauge-percentage"
+      );
+      if (hydrogenGaugePercentElem) {
+        hydrogenGaugePercentElem.textContent =
+          hydrogenPercentage.toFixed(1) + " %";
+        hydrogenGaugePercentElem.setAttribute("fill", "#222");
+      }
       errorCheck();
     }
   }
@@ -905,17 +1012,30 @@ function resetSimulation() {
     fuelCellInterval = null;
   }
 
-  document.getElementById("battery-level").innerText = " 0 kWh";
+  const batteryLevelElem = document.getElementById("battery-level");
+  if (batteryLevelElem) batteryLevelElem.innerText = " 0 kWh";
   const batteryLevelTop = document.getElementById("battery-level-top");
   if (batteryLevelTop) batteryLevelTop.innerText = " 0 kWh";
-  document.getElementById("battery-gauge-percentage").innerText = " 0 %";
-  document.getElementById("battery-gauge-level").style.width = 0;
+  const batteryGaugePercentElem = document.getElementById(
+    "battery-gauge-percentage"
+  );
+  if (batteryGaugePercentElem) batteryGaugePercentElem.innerText = " 0 %";
+  const batteryGaugeLevelElem = document.getElementById("battery-gauge-level");
+  if (batteryGaugeLevelElem) batteryGaugeLevelElem.style.width = 0;
 
-  document.getElementById("hydrogen-level").innerText = " 0 g";
+  const hydrogenLevelElem = document.getElementById("hydrogen-level");
+  if (hydrogenLevelElem) hydrogenLevelElem.innerText = " 0 g";
 
-  document.getElementById("hydrogen-gauge-percentage").innerText = " 0 %";
-  document.getElementById("hydrogen-gauge-level").style.width = 0;
-  document.getElementById("money").innerText = "  0 €";
+  const hydrogenGaugePercentElem = document.getElementById(
+    "hydrogen-gauge-percentage"
+  );
+  if (hydrogenGaugePercentElem) hydrogenGaugePercentElem.innerText = " 0 %";
+  const hydrogenGaugeLevelElem = document.getElementById(
+    "hydrogen-gauge-level"
+  );
+  if (hydrogenGaugeLevelElem) hydrogenGaugeLevelElem.style.width = 0;
+  const moneyElem = document.getElementById("money");
+  if (moneyElem) moneyElem.innerText = "  0 €";
 
   // Ensure Fuel Cell -> Charging Station arrow is static after reset
   const fc2cStatic = document.getElementById(
@@ -1308,9 +1428,7 @@ document
     if (hydro.storage > 0) {
       document.getElementById("simulation-state").innerHTML =
         " Fuel Cell Mode ";
-      document.getElementById("fuelcell-static-arrow").style.display = "none";
-      document.getElementById("fuelcell-animated-arrow").style.display =
-        "block";
+      updateFuelCellArrow(true);
       const h2fStatic = document.getElementById(
         "hydrogen-to-fuelcell-static-arrow"
       );
@@ -1379,8 +1497,7 @@ document
   .getElementById("convert-to-electricity-stop")
   .addEventListener("click", () => {
     document.getElementById("simulation-state").innerHTML = " ";
-    document.getElementById("fuelcell-static-arrow").style.display = "block";
-    document.getElementById("fuelcell-animated-arrow").style.display = "none";
+    updateFuelCellArrow(false);
     showNotification("Stopped Fuel Cell!", "sell");
     const h2fStatic = document.getElementById(
       "hydrogen-to-fuelcell-static-arrow"

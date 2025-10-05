@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -29,14 +30,64 @@
     <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.0.0"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/luxon"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 
     <!-- Load your modules after Chart.js -->
     <script type="module" defer src="/js/simulation.js"></script>
     <script type="module" defer src="/js/main.js"></script>
+
   </head>
   <body>
-
+    <div id="flowchart-panel">
+      <div class="flowchart">
+        <div class="flowchart-title"><span class="live-dot"></span>Live Simulation</div>
+        <div class="flow-item">
+          <img src="/icons/photovoltaik.webp" alt="Photovoltaik" />
+          <p>Photovoltaik</p>
+        </div>
+        <div id="pv-charging-arrow">
+          <img id="pv-static-arrow" src="/icons/arrow.webp" alt="Charging Arrow" />
+          <img id="pv-animated-arrow" src="/icons/arrowanim.gif" alt="Charging Animation" />
+        </div>
+        <div class="flow-item">
+          <img src="/icons/battery.webp" alt="Battery" />
+          <p>Battery</p>
+        </div>
+        <div id="electrolyzer-charging-arrow">
+          <img id="electrolyzer-static-arrow" src="/icons/arrow.webp" alt="Charging Arrow" />
+          <img id="electrolyzer-animated-arrow" src="/icons/arrowanim.gif" alt="Charging Animation" />
+        </div>
+        <div class="flow-item">
+          <img src="/icons/electrolyzer.webp" alt="Electrolyzer" />
+          <p>Electrolyzer</p>
+        </div>
+        <div id="electrolyzer-output-charging-arrow">
+          <img id="electrolyzer-output-static-arrow" src="/icons/arrow.webp" alt="Charging Arrow" />
+          <img id="electrolyzer-output-animated-arrow" src="/icons/arrowanim.gif" alt="Charging Animation" />
+        </div>
+        <div class="flow-item">
+          <img src="/icons/hydrogenstorage.webp" alt="Hydrogen Storage" />
+          <p>Hydrogen Storage</p>
+        </div>
+        <div id="fuelcell-charging-arrow">
+          <img id="fuelcell-static-arrow" src="/icons/arrow.webp" alt="Charging Arrow" />
+          <img id="fuelcell-animated-arrow" src="/icons/arrowanim.gif" alt="Charging Animation" />
+        </div>
+        <div class="flow-item">
+          <img src="/icons/fuelcell.webp" alt="Fuel Cell" />
+          <p>Fuel Cell</p>
+        </div>
+        <div id="fuelcell-to-charging-charging-arrow">
+          <img id="fuelcell-to-charging-static-arrow" src="/icons/arrow.webp" alt="Charging Arrow" />
+          <img id="fuelcell-to-charging-animated-arrow" src="/icons/arrowanim.gif" alt="Charging Animation" />
+        </div>
+        <div class="flow-item">
+          <img src="/icons/charging-station.webp" alt="Charging Station" />
+          <p>Charging Station</p>
+        </div>
+      </div>
+    </div>
     <div id="corner-widget" class="widget-card">
       <button id="toggle-widget">▲</button>
       <div id="code-minimized">
@@ -44,38 +95,32 @@
           <div class="gauge-container">
 
             <!-- Battery Level Gauge -->
-            <div id="battery-gauge-container">
-              <div class="wave-loader1"></div>
-              <div id="battery-gauge-background">
-                <div id="battery-gauge-level"class="gauge-level"></div>
-                <img
-                  src="/icons/battery.webp"
-                  alt="Battery"
-                  id="battery-gauge-image"
-                />
+            <div class="svg-gauge-wrapper" style="display: flex; flex-direction: column; align-items: center;">
+              <svg id="battery-gauge" width="140" height="80" viewBox="0 0 140 80" style="display: block;">
+                <!-- Background half-circle -->
+                <path d="M 20 70 A 50 50 0 0 1 120 70" fill="none" stroke="#e0e0e0" stroke-width="12" />
+                <!-- Foreground (green) half-circle, fill controlled by JS -->
+                <path id="battery-gauge-fill" d="M 20 70 A 50 50 0 0 1 120 70" fill="none" stroke="#2ecc40" stroke-width="12" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="157" />
+              </svg>
+              <div style="display: flex; flex-direction: column; align-items: center; margin-top: -40px;">
+                <img src="/icons/newbattery.webp" alt="Battery Icon" style="width:38px;height:38px;object-fit:contain;" />
+                <div id="battery-gauge-percentage" style="font-size: 18px; color: #222; font-weight: bold; text-align:center;">0 %</div>
               </div>
-              <div id="battery-gauge-label">
-                <span id="battery-gauge-percentage">0%</span>
-              </div>
-              <p class="gauge-text" id="header-battery">Battery</p>
+              <div style="margin-top: 2px; font-size: 15px; color: #222; font-weight: 500;">Battery</div>
             </div>
 
             <!-- Hydrogen Level Gauge -->
-            <div id="hydrogen-gauge-container">
-              <div class="wave-loader2"></div>
-              <div id="hydrogen-gauge-background">
-                <div id="hydrogen-gauge-level"class="gauge-level"> </div>
-                <img
-                  src="/icons/electrolyzer.webp"
-                  alt="Electrolyzer"
-                  id="hydrogen-gauge-image"
-                />
+              <div id="hydrogen-svg-gauge" class="svg-gauge-wrapper" style="display: flex; flex-direction: column; align-items: center;">
+                <svg width="140" height="80" viewBox="0 0 140 80" style="display: block;">
+                  <path id="hydrogen-gauge-bg" d="M 20 70 A 50 50 0 0 1 120 70" fill="none" stroke="#e0e0e0" stroke-width="12" />
+                  <path id="hydrogen-gauge-fill" d="M 20 70 A 50 50 0 0 1 120 70" fill="none" stroke="#00bcd4" stroke-width="12" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="157" />
+                </svg>
+                <div style="display: flex; flex-direction: column; align-items: center; margin-top: -40px;">
+                  <img src="/icons/newhydro.webp" alt="Hydrogen Icon" style="width:38px;height:38px;object-fit:contain;" />
+                  <div id="hydrogen-gauge-percentage" style="font-size: 18px; color: #222; font-weight: bold; text-align:center;">0 %</div>
+                </div>
+                <div style="margin-top: 2px; font-size: 15px; color: #222; font-weight: 500;">Hydrogen</div>
               </div>
-              <div id="hydrogen-gauge-label">
-                <span id="hydrogen-gauge-percentage">0%</span>
-              </div>
-              <p class="gauge-text" id="header-hydrogen">Hydrogen</p>
-            </div>
           </div>
           <div class="mode-container">
             <h3>Simulation Mode:</h3>
@@ -92,75 +137,43 @@
 
         </div>
       </div>
-
       <div id="code-expanded" style="display: none">
-        <div id="corner-content">
-          <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: 8px;">
+
+        <div class="sticky-bar" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; top: 0; z-index: 101;">
+          <div style="display: flex; align-items: center;">
+            <button id="toggle-widget-expanded" class="toggle-widget">▲</button>
+          </div>
+          <div class="sticky-bar-inner" style="display: flex; align-items: center; gap: 18px;">
+            <!-- Sticky Bar Battery Gauge -->
+            <div id="sticky-battery-gauge" style="display: flex; flex-direction: column; align-items: center; margin-right: 2px;">
+              <svg id="sticky-battery-gauge-svg" width="126" height="72" viewBox="0 0 140 80" style="display: block;">
+                <path d="M 20 70 A 50 50 0 0 1 120 70" fill="none" stroke="#e0e0e0" stroke-width="12" />
+                <path id="sticky-battery-gauge-fill" d="M 20 70 A 50 50 0 0 1 120 70" fill="none" stroke="#2ecc40" stroke-width="12" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="157" />
+              </svg>
+              <div style="display: flex; flex-direction: column; align-items: center; margin-top: -40px;">
+                <img src="/icons/newbattery.webp" alt="Battery Icon" style="width:34px;height:34px;object-fit:contain;" />
+                <div id="sticky-battery-gauge-percentage" style="font-size: 16px; color: #222; font-weight: bold; text-align:center;">0 %</div>
+              </div>
+              <div style="margin-top: 2px; font-size: 15px; color: #222; font-weight: 500;">Battery</div>
+            </div>
+            <!-- Sticky Bar Hydrogen Gauge -->
+            <div id="sticky-hydrogen-gauge" style="display: flex; flex-direction: column; align-items: center; margin-right: 2px;">
+              <svg id="sticky-hydrogen-gauge-svg" width="126" height="72" viewBox="0 0 140 80" style="display: block;">
+                <path id="sticky-hydrogen-gauge-bg" d="M 20 70 A 50 50 0 0 1 120 70" fill="none" stroke="#e0e0e0" stroke-width="12" />
+                <path id="sticky-hydrogen-gauge-fill" d="M 20 70 A 50 50 0 0 1 120 70" fill="none" stroke="#00bcd4" stroke-width="12" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="157" />
+              </svg>
+              <div style="display: flex; flex-direction: column; align-items: center; margin-top: -40px;">
+                <img src="/icons/newhydro.webp" alt="Hydrogen Icon" style="width:34px;height:34px;object-fit:contain;" />
+                <div id="sticky-hydrogen-gauge-percentage" style="font-size: 16px; color: #222; font-weight: bold; text-align:center;">0 %</div>
+              </div>
+              <div style="margin-top: 2px; font-size: 15px; color: #222; font-weight: 500;">Hydrogen</div>
+            </div>
             <button id="lang-de" class="lang-toggle lang-off">DE</button>
             <button id="lang-en" class="lang-toggle lang-on">EN</button>
             <button id="documentation-btn" style="background:#ffa000;color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:1em;font-weight:600;box-shadow:0 2px 8px rgba(255,160,0,0.10);cursor:pointer;transition:background 0.2s;">📖 Documentation</button>
-            <style>
-              .lang-toggle {
-                background: #e3e3e3;
-                color: #1976d2;
-                border: 2px solid #1976d2;
-                border-radius: 8px;
-                padding: 8px 18px;
-                font-size: 1em;
-                font-weight: 600;
-                cursor: pointer;
-                box-shadow: 0 2px 8px rgba(25,118,210,0.08);
-                transition: background 0.2s, color 0.2s;
-                outline: none;
-              }
-              .arrow-toggle {
-                width: 40px;
-                height: 40px;
-                position: relative;
-                cursor: pointer;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-              }
-              .arrow-line {
-                position: absolute;
-                width: 28px;
-                height: 4px;
-                background: #1976d2;
-                border-radius: 2px;
-                transition: all 0.3s cubic-bezier(.4,2,.3,1);
-                left: 6px;
-              }
-              .arrow-line:nth-child(1) {
-                top: 14px;
-              }
-              .arrow-line:nth-child(2) {
-                top: 22px;
-              }
-              .arrow-toggle:not(.open) .arrow-line:nth-child(1) {
-                transform: rotate(-45deg) translate(0, 0);
-              }
-              .arrow-toggle:not(.open) .arrow-line:nth-child(2) {
-                transform: rotate(45deg) translate(0, 0);
-              }
-              .arrow-toggle.open .arrow-line:nth-child(1) {
-                transform: rotate(45deg) translate(0, 0);
-              }
-              .arrow-toggle.open .arrow-line:nth-child(2) {
-                transform: rotate(-45deg) translate(0, 0);
-              }
-              .lang-on {
-                background: #1976d2;
-                color: #fff;
-                border: 2px solid #1976d2;
-              }
-              .lang-off {
-                background: #e3e3e3;
-                color: #1976d2;
-                border: 2px solid #1976d2;
-              }
-            </style>
           </div>
+        </div>
+        <div id="corner-content">
 
 
 
@@ -340,97 +353,7 @@
             </div>
             <div id="button-container">
             </div>
-            <div class="flowchart">
-              <div class="flow-item">
-                <img src="/icons/photovoltaik.webp" alt="Photovoltaik" />
-                <p>Photovoltaik</p>
-              </div>
-              <div id="pv-charging-arrow">
-                <img
-                  id="pv-static-arrow"
-                  src="/icons/arrow.webp"
-                  alt="Charging Arrow"
-                />
-                <img
-                  id="pv-animated-arrow"
-                  src="/icons/arrowanim.gif"
-                  alt="Charging Animation"
-                  style="display: none"
-                />
-              </div>
-              <div class="flow-item">
-                <img src="/icons/battery.webp" alt="Battery" />
-                <p>Battery</p>
-              </div>
-              <div id="electrolyzer-charging-arrow">
-                <img
-                  id="electrolyzer-static-arrow"
-                  src="/icons/arrow.webp"
-                  alt="Charging Arrow"
-                />
-                <img
-                  id="electrolyzer-animated-arrow"
-                  src="/icons/arrowanim.gif"
-                  alt="Charging Animation"
-                  style="display: none"
-                />
-              </div>
-              <div class="flow-item">
-                <img src="/icons/electrolyzer.webp" alt="Electrolyzer" />
-                <p>Electrolyzer</p>
-              </div>
-              <div id="electrolyzer-output-charging-arrow">
-                <img
-                  id="electrolyzer-output-static-arrow"
-                  src="/icons/arrow.webp"
-                  alt="Charging Arrow"
-                />
-                <img
-                  id="electrolyzer-output-animated-arrow"
-                  src="/icons/arrowanim.gif"
-                  alt="Charging Animation"
-                  style="display: none"
-                />
-              </div>
-              <div class="flow-item">
-                <img src="/icons/hydrogenstorage.webp" alt="Hydrogen Storage" />
-                <p>Hydrogen Storage</p>
-              </div>
-              <div id="fuelcell-charging-arrow">
-                <img
-                  id="fuelcell-static-arrow"
-                  src="/icons/arrow.webp"
-                  alt="Charging Arrow"
-                />
-                <img
-                  id="fuelcell-animated-arrow"
-                  src="/icons/arrowanim.gif"
-                  alt="Charging Animation"
-                  style="display: none"
-                />
-              </div>
-              <div class="flow-item">
-                <img src="/icons/fuelcell.webp" alt="Fuel Cell" />
-                <p>Fuel Cell</p>
-              </div>
-              <div id="fuelcell-to-charging-charging-arrow">
-                <img
-                  id="fuelcell-to-charging-static-arrow"
-                  src="/icons/arrow.webp"
-                  alt="Charging Arrow"
-                />
-                <img
-                  id="fuelcell-to-charging-animated-arrow"
-                  src="/icons/arrowanim.gif"
-                  alt="Charging Animation"
-                  style="display: none"
-                />
-              </div>
-              <div class="flow-item">
-                <img src="/icons/charging-station.webp" alt="Charging Station" />
-                <p>Charging Station</p>
-              </div>
-            </div>
+
             <div class="graph-row" style="display: flex; gap: 32px; align-items: flex-start; justify-content: center; margin-bottom: 24px;">
               <div style="flex: 1; min-width: 320px; max-width: 600px;">
                 <h2 class="pretty-header">Battery Storage</h2>
@@ -452,7 +375,6 @@
             <div class="trade-row" style="margin-bottom: 8px;">
               <button id="buy-button" class="button buy">Buy Electricity</button>
               <input type="number" id="buy-amount" min="0.1" step="0.1" placeholder="kWh" class="trade-input">
-              <span id="buy-amount-unit" style="margin-left:4px;">kWh</span>
               <button class="trade-increment" data-target="buy-amount" data-inc="1">+1</button>
               <button class="trade-increment" data-target="buy-amount" data-inc="10">+10</button>
               <button class="trade-increment" data-target="buy-amount" data-inc="100">+100</button>
@@ -461,7 +383,6 @@
             <div class="trade-row" style="margin-bottom: 8px;">
               <button id="sell-button" class="button sell">Sell Electricity</button>
               <input type="number" id="sell-amount" min="0.1" step="0.1" placeholder="kWh" class="trade-input">
-              <span id="sell-amount-unit" style="margin-left:4px;">kWh</span>
               <button class="trade-increment" data-target="sell-amount" data-inc="1">+1</button>
               <button class="trade-increment" data-target="sell-amount" data-inc="10">+10</button>
               <button class="trade-increment" data-target="sell-amount" data-inc="100">+100</button>
@@ -470,7 +391,6 @@
             <div class="trade-row" style="margin-bottom: 8px;">
               <button id="sell-hydrogen-button" class="button sell" style="background:#1976d2; color:#fff;">Sell Hydrogen</button>
               <input type="number" id="sell-hydrogen-amount" min="0.1" step="0.1" placeholder="g" class="trade-input">
-              <span id="sell-hydrogen-amount-unit" style="margin-left:4px;">g</span>
               <button class="trade-increment" data-target="sell-hydrogen-amount" data-inc="1">+1</button>
               <button class="trade-increment" data-target="sell-hydrogen-amount" data-inc="10">+10</button>
               <button class="trade-increment" data-target="sell-hydrogen-amount" data-inc="100">+100</button>
@@ -490,7 +410,7 @@
 
           <h2 class="pretty-header" id="wholesale-title" style="margin-top:32px;">Wholesale Price</h2>
           <div class="data-limitation">
-            <small><strong>Note:</strong> Analysis based on 1 week of data. For seasonal patterns and long-term trends, more historical data would be needed.</small>
+          
           </div>
           <!-- Canvas for Chart -->
           <canvas id="myChart" width="400" height="70"></canvas>
@@ -547,13 +467,25 @@
             <!-- Documentation Modal -->
             <div id="documentation-modal" class="dashboard-modal" style="display:none;">
               <h3 style="margin-top:0;color:#ffa000;">Documentation</h3>
-              <div>
+              <div style="max-height:60vh;overflow-y:auto;">
                 <strong>Hydrogen Dashboard</strong> is designed to retrieve and visualize power generation and consumption data from the SMARD API. The dashboard provides graphical analysis and enables direct comparison with hydrogen as a fuel source.
                 <br><br>
-                <strong>Features:</strong> Simulation of charging and discharging for Photovoltaics, Battery, Hydrogen Electrolyzer, and Fuel Cell systems.
-                <br><br>
-                <strong>Concept:</strong><br>
-                This simulation models the economic strategy of buying and selling electricity based on market price thresholds. Electricity can be converted into hydrogen and vice versa to maximize monetary gains. The simulation incorporates machinery efficiency and power ratings, while intentionally omitting losses such as machine start-up or transaction-related inefficiencies for simplicity at this stage.
+                <strong>Use Case Window:</strong><br>
+                The use case window lets you select different real-world scenarios (e.g., Off-Grid Home, Microgrid, EV Charging Station, Industrial Plant). Each use case changes the simulation parameters to reflect typical machinery and energy needs for that scenario.<br><br>
+                <strong>Simulation Overview:</strong><br>
+                The simulation models a renewable energy system using four main components:
+                <ul style="margin-top:4px;margin-bottom:4px;">
+                  <li><b>Photovoltaik</b> – Generates electricity from sunlight, charging the battery and powering other components.</li>
+                  <li><b>Battery</b> – Stores excess electricity for later use, balances supply and demand.</li>
+                  <li><b>Electrolyzer</b> – Converts surplus electricity into hydrogen, which can be stored for long-term energy needs.</li>
+                  <li><b>Fuel Cell</b> – Converts stored hydrogen back into electricity when needed, especially when prices are high or solar is unavailable.</li>
+                </ul>
+                <br>
+                <strong>Graphs:</strong><br>
+                The dashboard features interactive graphs that display power generation, consumption, storage levels, and market prices over time. These help you analyze system performance, track energy flows, and compare the impact of different use cases.<br><br>
+                <strong>Trading Panel:</strong><br>
+                The trading panel allows you to buy or sell electricity based on real-time or simulated market prices. You can manually execute trades, set thresholds for automated trading, and see the effect on your system's storage and finances.<br><br>
+                <strong>Tip:</strong> Adjust parameters and switch use cases to explore how different setups affect your energy system's efficiency and profitability.
               </div>
               <button onclick="document.getElementById('documentation-modal').style.display='none'" style="background:#ffa000;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:1em;cursor:pointer;">Close</button>
             </div>
@@ -561,11 +493,13 @@
               <h3 style="margin-top:0;color:#1976d2;">Changelogs</h3>
               <div style="margin-bottom:18px;">Latest updates and changes will be listed here.</div>
               <ul style="margin-bottom:18px;">
+             
                 <li><b>2025-09-08:</b> Added feedback modal and changelogs.</li>
                 <li><b>2025-09-10:</b> Added documentation.</li>
                 <li><b>2025-09-16:</b> Hydrogen is now sellable.</li>
                 <li><b>2025-09-18:</b> Added language support for German.</li>
                 <li><b>2025-09-22:</b> Added realtime hydrogen price updates with graph.</li>
+                <li><b>2025-10-04:</b> Visual overhaul of UI, improved gauge visuals, sticky bar/widget consistency, and performance fixes for smoother simulation.</li>
               </ul>
               <button onclick="document.getElementById('changelogs-modal').style.display='none'" style="background:#1976d2;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:1em;cursor:pointer;">Close</button>
             </div>

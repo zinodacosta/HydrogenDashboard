@@ -1,3 +1,147 @@
+// --- Flowchart GSAP animation and toggle logic (moved from index.html) ---
+document.addEventListener("DOMContentLoaded", function () {
+  // DOM element assignments (user request)
+  const codeExpanded = document.getElementById("code-expanded");
+  const codeMinimized = document.getElementById("code-minimized");
+  const content = document.getElementById("corner-content");
+  const toggleButton = document.getElementById("toggle-widget"); // minimized
+  const toggleButtonExpanded = document.getElementById(
+    "toggle-widget-expanded"
+  ); // expanded
+  const flowchartPanel = document.getElementById("flowchart-panel");
+
+  // GSAP animation for flowchart-panel
+  if (window.gsap && window.ScrollTrigger) {
+    gsap.registerPlugin(ScrollTrigger);
+    function animateFlowchartVanilla({
+      distance = 100,
+      direction = "vertical",
+      reverse = false,
+      duration = 0.8,
+      ease = "power3.out",
+      initialOpacity = 0,
+      animateOpacity = true,
+      scale = 1,
+      threshold = 0.1,
+      delay = 0,
+      onComplete,
+    } = {}) {
+      const el = document.querySelector("#flowchart-panel .flowchart");
+      if (!el) return;
+      const axis = direction === "horizontal" ? "x" : "y";
+      const offset = reverse ? -distance : distance;
+      const startPct = (1 - threshold) * 100;
+      gsap.set(el, {
+        [axis]: offset,
+        scale,
+        opacity: animateOpacity ? initialOpacity : 1,
+      });
+      gsap.to(el, {
+        [axis]: 0,
+        scale: 1,
+        opacity: 1,
+        duration,
+        ease,
+        delay,
+        onComplete,
+        scrollTrigger: {
+          trigger: el,
+          start: `top ${startPct}%`,
+          toggleActions: "play none none none",
+          once: true,
+        },
+      });
+    }
+    // Animate on load and when flowchart-panel is shown
+    animateFlowchartVanilla();
+    // Optionally, re-animate when panel is shown again
+    const flowchartPanel = document.getElementById("flowchart-panel");
+    if (flowchartPanel) {
+      const observer = new MutationObserver(() => {
+        if (flowchartPanel.style.display !== "none") {
+          animateFlowchartVanilla();
+        }
+      });
+      observer.observe(flowchartPanel, {
+        attributes: true,
+        attributeFilter: ["style"],
+      });
+    }
+  }
+  // Toggle flowchart-panel with code-expanded
+  function updateFlowchartPanelVisibility() {
+    if (!flowchartPanel || !codeExpanded) return;
+    if (window.getComputedStyle(codeExpanded).display !== "none") {
+      flowchartPanel.style.display = "block";
+      positionFlowchartPanel();
+    } else {
+      flowchartPanel.style.display = "none";
+    }
+  }
+  // Listen for widget toggle and DOM changes
+  if (toggleButton) {
+    toggleButton.addEventListener("click", function () {
+      setTimeout(updateFlowchartPanelVisibility, 20);
+    });
+  }
+  // Also observe codeExpanded for style changes (in case other code toggles it)
+  const observer = new MutationObserver(updateFlowchartPanelVisibility);
+  if (codeExpanded) {
+    observer.observe(codeExpanded, {
+      attributes: true,
+      attributeFilter: ["style"],
+    });
+  }
+  // On resize, reposition flowchart panel
+  window.addEventListener("resize", positionFlowchartPanel);
+  // Run on load
+  updateFlowchartPanelVisibility();
+});
+// (Removed duplicate flowchart animation logic)
+// --- Flowchart animation and scroll logic ---
+document.addEventListener("DOMContentLoaded", function () {
+  if (window.gsap && window.ScrollTrigger) {
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Hide flowchart when code-expanded is scrolled down, show (with animation) when at top
+    const codeExpanded = document.getElementById("code-expanded");
+    const flowchartContainer = document.getElementById("flowchart-container");
+    if (codeExpanded && flowchartContainer) {
+      function updateFlowchartOnScrollOrVisibility() {
+        // Hide if code-expanded is hidden
+        if (codeExpanded.style.display === "none") {
+          flowchartContainer.style.display = "none";
+          return;
+        }
+        // Hide if scrolled down
+        if (codeExpanded.scrollTop > 10) {
+          flowchartContainer.style.display = "none";
+        } else {
+          // Only animate if just becoming visible
+          if (flowchartContainer.style.display === "none") {
+            flowchartContainer.style.display = "";
+            animateFlowchart();
+          } else {
+            flowchartContainer.style.display = "";
+          }
+        }
+      }
+      codeExpanded.addEventListener(
+        "scroll",
+        updateFlowchartOnScrollOrVisibility
+      );
+      // Also update on widget toggle (in case code-expanded is shown/hidden)
+      const toggleWidgetBtn = document.getElementById("toggle-widget");
+      if (toggleWidgetBtn) {
+        toggleWidgetBtn.addEventListener("click", function () {
+          setTimeout(updateFlowchartOnScrollOrVisibility, 10);
+        });
+      }
+      // Initial check
+      updateFlowchartOnScrollOrVisibility();
+    }
+  }
+});
 // Language translation logic
 let currentLanguage = "en";
 const translations = {
@@ -158,7 +302,7 @@ const translations = {
     batteryEfficiency: "Batteriewirkungsgrad:",
     batteryCapacity: "Batteriekapazität:",
     batteryStorage: "Batteriespeicher",
-    accountBalance: "Kontostand:",
+    accountBalance: "Kontostand:<br>",
     electricityStored: "Gespeicherter Strom:",
     hydrogenStored: "Gespeicherter Wasserstoff:",
     currentMarketPrice: "Aktueller Marktpreis:",
@@ -530,13 +674,6 @@ function setLanguage(lang) {
     translations[lang].sellElectricity;
   document.getElementById("sell-hydrogen-button").textContent =
     translations[lang].sellHydrogen;
-  // Amount/unit labels
-  document.getElementById("buy-amount-unit").textContent =
-    translations[lang].kWh;
-  document.getElementById("sell-amount-unit").textContent =
-    translations[lang].kWh;
-  document.getElementById("sell-hydrogen-amount-unit").textContent =
-    translations[lang].g;
   // Account balance and market price
   document.querySelector(".money-row span").textContent =
     translations[lang].accountBalance;
@@ -631,6 +768,43 @@ function setLanguage(lang) {
   if (document.getElementById("reset"))
     document.getElementById("reset").textContent =
       translations[lang].resetSimulation;
+}
+
+// Position the flowchart panel above and aligned with the widget
+function positionFlowchartPanel() {
+  const panel = document.getElementById("flowchart-panel");
+  const widget = document.getElementById("corner-widget");
+  if (!panel || !widget) return;
+
+  // Temporarily ensure panel is measurable
+  const prevVisibility = panel.style.visibility;
+  const prevDisplay = panel.style.display;
+  panel.style.visibility = "hidden";
+  panel.style.display = "block";
+
+  const widgetRect = widget.getBoundingClientRect();
+  const spacing = 8; // gap around panel
+
+  // Vertical: squeeze between window top and top of widget
+  const top = spacing;
+  const availableHeight = Math.max(0, widgetRect.top - spacing * 2);
+
+  panel.style.position = "fixed";
+  panel.style.top = top + "px";
+  if (availableHeight > 0) {
+    panel.style.height = availableHeight + "px";
+  }
+
+  // Horizontal: align to the widget's right edge
+  const rightOffset = Math.max(spacing, window.innerWidth - widgetRect.right);
+  panel.style.right = rightOffset + "px";
+  panel.style.left = "auto";
+  // Width: match maximized widget width
+  panel.style.width = widgetRect.width + "px";
+
+  // Restore previous visibility
+  panel.style.visibility = prevVisibility || "visible";
+  panel.style.display = prevDisplay || "block";
 }
 
 document.getElementById("lang-de").addEventListener("click", function () {
@@ -1867,6 +2041,9 @@ document.addEventListener("DOMContentLoaded", function () {
   const codeMinimized = document.getElementById("code-minimized");
   const content = document.getElementById("corner-content");
   const toggleButton = document.getElementById("toggle-widget");
+  const toggleButtonExpanded = document.getElementById(
+    "toggle-widget-expanded"
+  );
 
   // Moving average configuration
   const movingAverageWindowSlider = document.getElementById(
@@ -1974,25 +2151,34 @@ document.addEventListener("DOMContentLoaded", function () {
   codeMinimized.style.backgroundColor = "#f8f9fa";
 
   //On Button press expand or minimize
-  toggleButton.addEventListener("click", function () {
+  function handleToggleWidget() {
     if (codeExpanded.style.display === "none") {
-      //If it's currently minimized, expand it
       codeExpanded.style.display = "block";
       codeMinimized.style.display = "none";
-
       codeExpanded.style.backgroundColor = "#f8f9fa";
       codeMinimized.style.backgroundColor = "#f8f9fa";
-      toggleButton.textContent = "▼";
+      if (toggleButtonExpanded && codeExpanded.style.display !== "none") {
+        toggleButtonExpanded.textContent = "▼";
+      }
+      if (toggleButton && codeExpanded.style.display === "none") {
+        toggleButton.textContent = "▲";
+      }
     } else {
-      //minimize
       codeExpanded.style.display = "none";
       codeMinimized.style.display = "block";
-
       codeExpanded.style.backgroundColor = "#f8f9fa";
       codeMinimized.style.backgroundColor = "#f8f9fa";
-      toggleButton.textContent = "▲";
+      if (toggleButtonExpanded && codeExpanded.style.display === "none") {
+        toggleButtonExpanded.textContent = "▲";
+      }
+      if (toggleButton && codeExpanded.style.display !== "none") {
+        toggleButton.textContent = "▼";
+      }
     }
-  });
+  }
+  if (toggleButton) toggleButton.addEventListener("click", handleToggleWidget);
+  if (toggleButtonExpanded)
+    toggleButtonExpanded.addEventListener("click", handleToggleWidget);
 
   // Quick Manual button interactivity
   const quickManualBtn = document.getElementById("quick-manual-btn");
