@@ -1,69 +1,4 @@
-@media (max-width: 700px) {
-  /* Only stack the language and documentation buttons vertically in sticky bar */
-  .sticky-bar .sticky-bar-buttons {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-end !important;
-    gap: 8px !important;
-    height: auto !important;
-  }
-  #documentation-btn{
-    margin-right: 20px;
-    margin-top: 10px;
-  }
-  .sticky-bar-buttons .lang-toggle,
-  .sticky-bar-buttons {
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 180px !important;
-    margin: 0 !important;
-    margin-bottom: 4px !important;
-    text-align: right !important;
-    border-radius: 8px !important;
-    font-size: 1em !important;
-    box-sizing: border-box;
-  }
-  .sticky-bar-buttons #documentation-btn {
-    margin-bottom: 0 !important;
-  }
-}
-@media (max-width: 700px) {
-  /* Sticky bar gauge containers and SVGs for mobile */
-  #sticky-battery-gauge,
-  #sticky-hydrogen-gauge {
-    margin-right: 0 !important;
-    padding: 0 !important;
-    width: 85px !important;
-    min-width: 0 !important;
-    max-width: 110px !important;
-    align-items: center !important;
-  }
-  #sticky-battery-gauge-svg,
-  #sticky-hydrogen-gauge-svg {
-    width: 90px !important;
-    height: 48px !important;
-    min-width: 0 !important;
-    max-width: 100px !important;
-    display: block;
-  }
-  #sticky-battery-gauge-percentage,
-  #sticky-hydrogen-gauge-percentage {
-    font-size: 13px !important;
-    margin-top: 0 !important;
-  }
-  #sticky-battery-gauge img,
-  #sticky-hydrogen-gauge img {
-    width: 28px !important;
-    height: 28px !important;
-    margin-top: -20px !important;
-    object-fit: contain;
-  }
-  #sticky-battery-gauge > div,
-  #sticky-hydrogen-gauge > div {
-    margin-top: 0 !important;
-    font-size: 13px !important;
-  }
-}
+
 .sticky-bar {
   position: sticky;
   top: 0;              
@@ -101,7 +36,7 @@
   0% { opacity: 1; }
   100% { opacity: 0.3; }
 }
-/* --- Moved from index.html inline <style> --- */
+
 .lang-toggle {
   background: #e3e3e3;
   color: #1976d2;
@@ -174,11 +109,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%; /* Fixed width for language consistency */
+  width: 100%; 
   min-width: 0;
   max-width: 1200px;
 }
-/* Shared modal styles for dashboard windows */
+
 .dashboard-modal {
   position: fixed;
   left: 0;
@@ -195,11 +130,11 @@
   width: 600px;
   margin-right: 32px;
 }
-/* Add spacing between bullet points in the how-it-works-panel */
+
 .how-it-works-panel ul li {
   margin-bottom: 5px;
 }
-/* General styles */
+
 body {
     font-family: 'Roboto', sans-serif;
     font-size: 18px;
@@ -248,7 +183,7 @@ body {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* EMA styling */
+
 .ema-legend {
     color: rgb(255, 0, 0);
     font-weight: bold;
@@ -277,28 +212,7 @@ body {
     flex-wrap: wrap;
 }
 
-@media (max-width: 768px) {
 
-  .sticky-bar-inner {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-content: stretch;
-    justify-content: space-evenly;
-    align-items: baseline;
-    gap: 1px !important;
-    margin-left: 15px;
-  }
-    .ema-config {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-    }
-    
-    .ema-config input[type="range"] {
-        width: 150px;
-    }
-}
 
 .ema-config label {
     font-weight: 500;
@@ -437,18 +351,7 @@ body {
     transform: scale(0.95);
 }
 
-@media (max-width: 768px) {
-    .indicator-checkboxes {
-        flex-direction: column;
-        gap: 10px;
-    }
 
-    
-    .indicator-checkbox {
-        width: 100%;
-        justify-content: flex-start;
-    }
-}
 
 .checkbox-container {
     display: flex;
@@ -471,7 +374,7 @@ body {
     background-color: #f8f9fa;
   }
 
-/* Title and Header */
+
 h1 {
     text-align: center;
     color: #1b1b1b;
@@ -486,7 +389,7 @@ h2 {
     font-size: 24px;
 }
 
-/* Checkbox container */
+
 .checkbox-container {
     display: flex;
     justify-content: center;
@@ -504,7 +407,7 @@ h2 {
     margin-right: 5px;
 }
 
-/* Realism checkbox styling */
+
 .realism-row {
     display: flex;
     align-items: center;
@@ -527,7 +430,7 @@ h2 {
     margin: 0;
 }
 
-/* Footer */
+
 footer {
     background-color: #343a40;
     color: #ffffff;
@@ -541,7 +444,7 @@ footer {
 
 
 
-/* Chart options for labels and legends */
+
 .chart-container .chart-legend {
     display: flex;
     justify-content: center;
@@ -574,188 +477,21 @@ footer {
     width: 100%;
     top: 0;
     left: 0;
-    overflow: hidden; /* Prevent content overflow */
-    transition: transform 3s ease-in-out; /* Smooth transition for both */
+    overflow: hidden; 
+    transition: transform 3s ease-in-out; 
 }
 
-/* Ensure initial positioning */
+
 #price-container {
-    transform: translateX(0); /* Price container starts in view */
+    transform: translateX(0); 
 }
 
 #co2-container {
-    transform: translateX(100%); /* CO2 container starts off-screen */
-}
-
-/* Media query for smaller screens */
-@media (max-width: 768px) {
-
-    body {
-        font-size: 16px;
-        overflow-y: auto;
-    }
-
-    .chart-container {
-        margin: 10px;
-    }
-
-    #myChart, #myChart2, #batteryChart, #hydrogenChart {
-        max-height: 300px;
-        height: 20vh;
-    }
-
-    .checkbox-container {
-       display: none;
-    }
-
-    .button {
-        flex: 0 2 100%;
-        max-width: 30%;
-        font-size: 15px !important;
-    }
-
-    .start{
-        flex: 0 2 100%;
-        max-width: 30%;
-        padding: 10px 10px!important;
-        font-size: 15px !important;;
-    }
-    .stop{
-        flex: 0 2 100%;
-        max-width: 30%;
-        font-size: 15px !important;
-    }
-
-    #corner-widget {
-        bottom: 10px;
-        right: 10px;
-        width: 90%; 
-        max-height: 70vh !important; 
-    }
-    #code-minimized{
-        max-height: 30vh !important;
-    }
-    #corner-content {
-      
-        padding: 5px; 
-}
-
-.dropdown-container{
-    display: block;
-    text-align: center;
-    margin-top: 10px;
-    border-radius: 30px;
-    margin-bottom: 10px;
-}
-
-
-.dropdown-container select {
-    width: 80%;
-    padding: 10px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    text-align: center;
-    margin-top: 10px;
-    border-radius: 30px;
-}
-
-.eco-item {
-    flex: 1; 
-    padding: 10px !important;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background-color: #fff;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin-top: 10px !important;
-}
-
-.eco-system-container {
-    display: block !important;
-    gap: 20px !important; /* Ensure this property applies */
-    margin-top: -30px !important;
-}
-
-
-.button-container {
-    display: block;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-
-.flowchart {
-    display: flex;
-    flex: 0 2 100%;
-    align-items: center;
-    flex-direction: column;
-    align-content: stretch;
-    justify-content: space-evenly;
-    gap: 5px !important;
-    margin: 4px 0 !important;
+    transform: translateX(100%); 
 }
 
 
 
-
-#pv-static-arrow,
-#electrolyzer-static-arrow,
-#fuelcell-static-arrow,
-#electrolyzer-output-static-arrow,
-#hydrogen-to-fuelcell-static-arrow,
-#fuelcell-to-charging-static-arrow {
-  width: 120px !important;
-  height: 40px !important;
-  max-height: 40px !important;
-  min-height: 40px !important;
-  object-fit: contain !important;
-  transform: none !important;
-}
-
-#pv-animated-arrow,
-#electrolyzer-animated-arrow,
-#fuelcell-animated-arrow,
-#electrolyzer-output-animated-arrow,
-#hydrogen-to-fuelcell-animated-arrow,
-#fuelcell-to-charging-animated-arrow {
-  width: 120px !important;
-  height: 40px !important;
-  max-height: 40px !important;
-  min-height: 40px !important;
-  object-fit: contain !important;
-  transform: none !important;
-}
-
-.use-case{
-    width: 80%;
-    margin-left: 30px;
-    font-size: 16px;
-    border: 1px solid #ccc !important;
-    text-align: center;
-    margin-top: 10px;
-    border-radius: 30px !important;
-}
-/* media end */
-.notification {
-    position: fixed;
-    bottom: 20px !important;
-    right: 22px !important;
-    background-color: green; /* Default color */
-    color: white;
-    padding: 15px 110px !important;
-    border-radius: 10px !important;
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
-    font-size: 16px;
-    display: none; /* Initially hidden */
-    opacity: 0; /* Start fully transparent */
-    transition: opacity 1s ease-in-out;
-    z-index: 1000;
-}
-
-
-
-}
 
 .notification {
     position: fixed;
@@ -1129,13 +865,12 @@ label {
     gap: 15px;
     padding: 15px;
     height: auto;
-  /* transition removed to prevent delayed scaling */
     overflow-y: auto;
 }
 
 #corner-content {
     background-color: #f8f9fa;
-  /* transition removed to prevent delayed scaling */
+
 }
 
 
@@ -1465,143 +1200,7 @@ label {
   100% { box-shadow: 0 0 18px 6px #00e67699; }
 }
 
-@media (max-width: 700px) {
 
-.dashboard-modal{
-  width: 20%;
-}
-  #toggle-widget, #toggle-widget-expanded.toggle-widget {
-    width: 30px;
-    height: 30px;
-    background-color: #000000;
-    color: white;
-    margin: 3px;
-    font-size: 18px;
-    text-align: center;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    position: absolute;
-
-}
-  .flowchart {
-    display: none !important;
-  }
-  .flowchart::-webkit-scrollbar {
-    display: none;
-  }
-  .flowchart .flow-item, #pv-charging-arrow, #electrolyzer-charging-arrow, #fuelcell-charging-arrow, #electrolyzer-output-charging-arrow, #hydrogen-to-fuelcell-charging-arrow, #fuelcell-to-charging-charging-arrow {
-    margin-bottom: 0px;
-    text-align: center;
-    flex: 0 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 10px;
-    padding-top: 0px;
-    padding-bottom: 0px;
-    min-width: 0;
-    gap: 0px !important;
-  }
-  .flowchart .flow-item, #pv-charging-arrow, #electrolyzer-charging-arrow, #fuelcell-charging-arrow, #electrolyzer-output-charging-arrow, #hydrogen-to-fuelcell-charging-arrow, #fuelcell-to-charging-charging-arrow {
-    width: 100%;
-    margin-bottom: 0px;
-    text-align: center;
-    flex: 0 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100px;
-    padding-top: 3px;
-    padding-bottom: 3px;
-    min-width: 0;
-  }
-  .flowchart .flow-item:last-child, #fuelcell-charging-arrow:last-child {
-    margin-bottom: 0;
-  }
-  .flowchart img, .flowchart .flow-item img {
-    max-height: 72px;
-    height: 72px;
-    width: auto;
-    display: block;
-    margin: 0 auto 4px auto;
-  }
-  .eco-system-container {
-    padding: 8px 2vw 8px 2vw;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .eco-item {
-    background: #fff;
-    border: 1.5px solid #e0e0e0;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(30, 98, 208, 0.07);
-    padding: 16px 12px 12px 12px;
-    margin-bottom: 14px;
-  }
-  .trade-row {
-    flex-wrap: wrap;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
-  .trade-input, .trade-increment, .trade-reset {
-    margin: 0 auto;
-    width: 100%;
-    max-width: 180px;
-  }
-  .trade-market-price {
-    margin-left: 0px;
-    margin-top: 0px;
-    display: block;
-    text-align: left;
-    padding: 0px 0px !important;
-  }
-  #button-container {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-  .start-btn, .stop-btn, .reset-btn, .button.buy, .button.sell, .trade-row button {
-    width: 100%;
-    margin: 0 auto;
-  }
-  canvas {
-    max-width: 100vw;
-    width: 100%;
-    min-width: 0;
-    display: block;
-    margin-bottom: 18px;
-    box-sizing: border-box;
-  }
-  #corner-content{
-    min-width: 0;
-    overflow-x: auto;
-  }
-  #code-expanded{
-    height: 600px !important;
-  }
-  #code-minimized{
-
-        min-width: 0;
-    overflow-x: auto;
-    padding-bottom: 20px;
-  }
-/* Removed duplicate #code-expanded rules and unnecessary overflow/padding */
-  .flowchart{
-    min-width: 0;
-    overflow-x: auto;
-    padding-bottom: 1250px;
-
-  }
-}
 
 .money-highlight {
   display: inline-block;
@@ -1615,13 +1214,7 @@ label {
   box-shadow: 0 2px 8px rgba(76, 175, 80, 0.08);
   letter-spacing: 0.02em;
 }
-@media (max-width: 700px) {
-  .money-highlight {
-    font-size: 1.1em;
-    padding: 6px 10px;
-    border-radius: 8px;
-  }
-}
+
 
 .money-pop {
   animation: money-pop-anim 0.7s cubic-bezier(0.4,1.4,0.4,1) 1;
@@ -1890,3 +1483,415 @@ label {
 
 
 
+@media (max-width: 700px) {
+
+.dashboard-modal{
+  width: 20%;
+}
+  #toggle-widget, #toggle-widget-expanded.toggle-widget {
+    width: 30px;
+    height: 30px;
+    background-color: #000000;
+    color: white;
+    margin: 3px;
+    font-size: 18px;
+    text-align: center;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    position: absolute;
+
+}
+  .flowchart {
+    display: none !important;
+  }
+  .flowchart::-webkit-scrollbar {
+    display: none;
+  }
+  .flowchart .flow-item, #pv-charging-arrow, #electrolyzer-charging-arrow, #fuelcell-charging-arrow, #electrolyzer-output-charging-arrow, #hydrogen-to-fuelcell-charging-arrow, #fuelcell-to-charging-charging-arrow {
+    margin-bottom: 0px;
+    text-align: center;
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 10px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    min-width: 0;
+    gap: 0px !important;
+  }
+  .flowchart .flow-item, #pv-charging-arrow, #electrolyzer-charging-arrow, #fuelcell-charging-arrow, #electrolyzer-output-charging-arrow, #hydrogen-to-fuelcell-charging-arrow, #fuelcell-to-charging-charging-arrow {
+    width: 100%;
+    margin-bottom: 0px;
+    text-align: center;
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    min-width: 0;
+  }
+  .flowchart .flow-item:last-child, #fuelcell-charging-arrow:last-child {
+    margin-bottom: 0;
+  }
+  .flowchart img, .flowchart .flow-item img {
+    max-height: 72px;
+    height: 72px;
+    width: auto;
+    display: block;
+    margin: 0 auto 4px auto;
+  }
+  .eco-system-container {
+    padding: 8px 2vw 8px 2vw;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .eco-item {
+    background: #fff;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(30, 98, 208, 0.07);
+    padding: 16px 12px 12px 12px;
+    margin-bottom: 14px;
+  }
+  .trade-row {
+    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .trade-input, .trade-increment, .trade-reset {
+    margin: 0 auto;
+    width: 100%;
+    max-width: 180px;
+  }
+  .trade-market-price {
+    margin-left: 0px;
+    margin-top: 0px;
+    display: block;
+    text-align: left;
+    padding: 0px 0px !important;
+  }
+  #button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .start-btn, .stop-btn, .reset-btn, .button.buy, .button.sell, .trade-row button {
+    width: 100%;
+    margin: 0 auto;
+  }
+  canvas {
+    max-width: 100vw;
+    width: 100%;
+    min-width: 0;
+    display: block;
+    margin-bottom: 18px;
+    box-sizing: border-box;
+  }
+  #corner-content{
+    min-width: 0;
+    overflow-x: auto;
+  }
+  #code-expanded{
+    height: 600px !important;
+  }
+  #code-minimized{
+
+        min-width: 0;
+    overflow-x: auto;
+    padding-bottom: 20px;
+  }
+
+  .flowchart{
+    min-width: 0;
+    overflow-x: auto;
+    padding-bottom: 1250px;
+
+  }
+}
+@media (max-width: 700px) {
+  .sticky-bar .sticky-bar-buttons {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    gap: 8px !important;
+    height: auto !important;
+  }
+  #documentation-btn{
+    margin-right: 20px;
+    margin-top: 10px;
+  }
+  .sticky-bar-buttons .lang-toggle,
+  .sticky-bar-buttons {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 180px !important;
+    margin: 0 !important;
+    margin-bottom: 4px !important;
+    text-align: right !important;
+    border-radius: 8px !important;
+    font-size: 1em !important;
+    box-sizing: border-box;
+  }
+  .sticky-bar-buttons #documentation-btn {
+    margin-bottom: 0 !important;
+  }
+}
+@media (max-width: 700px) {
+  #sticky-battery-gauge,
+  #sticky-hydrogen-gauge {
+    margin-right: 0 !important;
+    padding: 0 !important;
+    width: 85px !important;
+    min-width: 0 !important;
+    max-width: 110px !important;
+    align-items: center !important;
+  }
+  #sticky-battery-gauge-svg,
+  #sticky-hydrogen-gauge-svg {
+    width: 90px !important;
+    height: 48px !important;
+    min-width: 0 !important;
+    max-width: 100px !important;
+    display: block;
+  }
+  #sticky-battery-gauge-percentage,
+  #sticky-hydrogen-gauge-percentage {
+    font-size: 13px !important;
+    margin-top: 0 !important;
+  }
+  #sticky-battery-gauge img,
+  #sticky-hydrogen-gauge img {
+    width: 28px !important;
+    height: 28px !important;
+    margin-top: -20px !important;
+    object-fit: contain;
+  }
+  #sticky-battery-gauge > div,
+  #sticky-hydrogen-gauge > div {
+    margin-top: 0 !important;
+    font-size: 13px !important;
+  }
+}
+@media (max-width: 768px) {
+
+  .sticky-bar-inner {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: stretch;
+    justify-content: space-evenly;
+    align-items: baseline;
+    gap: 1px !important;
+    margin-left: 15px;
+  }
+    .ema-config {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .ema-config input[type="range"] {
+        width: 150px;
+    }
+}
+@media (max-width: 768px) {
+    .indicator-checkboxes {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    
+    .indicator-checkbox {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 768px) {
+
+    body {
+        font-size: 16px;
+        overflow-y: auto;
+    }
+
+    .chart-container {
+        margin: 10px;
+    }
+
+    #myChart, #myChart2, #batteryChart, #hydrogenChart {
+        max-height: 300px;
+        height: 20vh;
+    }
+
+    .checkbox-container {
+       display: none;
+    }
+
+    .button {
+        flex: 0 2 100%;
+        max-width: 30%;
+        font-size: 15px !important;
+    }
+
+    .start{
+        flex: 0 2 100%;
+        max-width: 30%;
+        padding: 10px 10px!important;
+        font-size: 15px !important;;
+    }
+    .stop{
+        flex: 0 2 100%;
+        max-width: 30%;
+        font-size: 15px !important;
+    }
+
+    #corner-widget {
+        bottom: 10px;
+        right: 10px;
+        width: 90%; 
+        max-height: 70vh !important; 
+    }
+    #code-minimized{
+        max-height: 30vh !important;
+    }
+    #corner-content {
+      
+        padding: 5px; 
+}
+
+.dropdown-container{
+    display: block;
+    text-align: center;
+    margin-top: 10px;
+    border-radius: 30px;
+    margin-bottom: 10px;
+}
+
+
+.dropdown-container select {
+    width: 80%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    text-align: center;
+    margin-top: 10px;
+    border-radius: 30px;
+}
+
+.eco-item {
+    flex: 1; 
+    padding: 10px !important;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 10px !important;
+}
+
+.eco-system-container {
+    display: block !important;
+    gap: 20px !important; 
+    margin-top: -30px !important;
+}
+
+
+.button-container {
+    display: block;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+
+.flowchart {
+    display: flex;
+    flex: 0 2 100%;
+    align-items: center;
+    flex-direction: column;
+    align-content: stretch;
+    justify-content: space-evenly;
+    gap: 5px !important;
+    margin: 4px 0 !important;
+}
+
+
+
+
+#pv-static-arrow,
+#electrolyzer-static-arrow,
+#fuelcell-static-arrow,
+#electrolyzer-output-static-arrow,
+#hydrogen-to-fuelcell-static-arrow,
+#fuelcell-to-charging-static-arrow {
+  width: 120px !important;
+  height: 40px !important;
+  max-height: 40px !important;
+  min-height: 40px !important;
+  object-fit: contain !important;
+  transform: none !important;
+}
+
+#pv-animated-arrow,
+#electrolyzer-animated-arrow,
+#fuelcell-animated-arrow,
+#electrolyzer-output-animated-arrow,
+#hydrogen-to-fuelcell-animated-arrow,
+#fuelcell-to-charging-animated-arrow {
+  width: 120px !important;
+  height: 40px !important;
+  max-height: 40px !important;
+  min-height: 40px !important;
+  object-fit: contain !important;
+  transform: none !important;
+}
+
+.use-case{
+    width: 80%;
+    margin-left: 30px;
+    font-size: 16px;
+    border: 1px solid #ccc !important;
+    text-align: center;
+    margin-top: 10px;
+    border-radius: 30px !important;
+}
+/* media end */
+.notification {
+    position: fixed;
+    bottom: 20px !important;
+    right: 22px !important;
+    background-color: green; /* Default color */
+    color: white;
+    padding: 15px 110px !important;
+    border-radius: 10px !important;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+    font-size: 16px;
+    display: none; /* Initially hidden */
+    opacity: 0; /* Start fully transparent */
+    transition: opacity 1s ease-in-out;
+    z-index: 1000;
+}
+
+
+
+}
+
+@media (max-width: 700px) {
+  .money-highlight {
+    font-size: 1.1em;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+}

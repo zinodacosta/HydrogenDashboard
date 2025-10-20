@@ -233,6 +233,40 @@ document.addEventListener("DOMContentLoaded", function () {
   pv.checkforSun();
 });
 
+// Unified UI updater for battery so other modules can call it safely
+window.setBatteryTopPanel = function (storage_kwh, capacity_kwh) {
+  try {
+    const batteryLevelElem = document.getElementById("battery-level");
+    if (batteryLevelElem)
+      batteryLevelElem.innerHTML = storage_kwh.toFixed(2) + " kWh";
+    const batteryLevelTop = document.getElementById("battery-level-top");
+    if (batteryLevelTop)
+      batteryLevelTop.innerHTML = storage_kwh.toFixed(2) + " kWh";
+    const batteryStoragePercent = document.getElementById(
+      "battery-storage-percentage"
+    );
+    if (batteryStoragePercent && capacity_kwh > 0) {
+      const percent = (storage_kwh / capacity_kwh) * 100;
+      batteryStoragePercent.textContent = percent.toFixed(1) + "%";
+    }
+    // Update small gauges if present
+    const batteryGaugePercentage = document.getElementById(
+      "battery-gauge-percentage"
+    );
+    if (batteryGaugePercentage && capacity_kwh > 0)
+      batteryGaugePercentage.innerHTML =
+        ((storage_kwh / capacity_kwh) * 100).toFixed(1) + " %";
+    const stickyBatteryGaugePercentage = document.getElementById(
+      "sticky-battery-gauge-percentage"
+    );
+    if (stickyBatteryGaugePercentage && capacity_kwh > 0)
+      stickyBatteryGaugePercentage.innerHTML =
+        ((storage_kwh / capacity_kwh) * 100).toFixed(1) + " %";
+  } catch (e) {
+    console.error("setBatteryTopPanel error", e);
+  }
+};
+
 let isNotificationVisible = false;
 //fade in notification signalizing trade of electricity
 function showNotification(message, type) {
@@ -380,19 +414,23 @@ export class battery {
       this.storage += amount;
     }
 
-    //Update the battery level and gauge
-    const batteryLevelElem = document.getElementById("battery-level");
-    if (batteryLevelElem)
-      batteryLevelElem.innerHTML = this.storage.toFixed(2) + " kWh";
-    const batteryLevelTop = document.getElementById("battery-level-top");
-    if (batteryLevelTop)
-      batteryLevelTop.innerHTML = this.storage.toFixed(2) + " kWh";
-    const batteryStoragePercent = document.getElementById(
-      "battery-storage-percentage"
-    );
-    if (batteryStoragePercent && this.capacity > 0) {
-      const percent = (this.storage / this.capacity) * 100;
-      batteryStoragePercent.textContent = percent.toFixed(1) + "%";
+    // Update the battery UI through the unified helper to avoid conflicting writes
+    if (typeof window.setBatteryTopPanel === "function") {
+      window.setBatteryTopPanel(this.storage, this.capacity);
+    } else {
+      const batteryLevelElem = document.getElementById("battery-level");
+      if (batteryLevelElem)
+        batteryLevelElem.innerHTML = this.storage.toFixed(2) + " kWh";
+      const batteryLevelTop = document.getElementById("battery-level-top");
+      if (batteryLevelTop)
+        batteryLevelTop.innerHTML = this.storage.toFixed(2) + " kWh";
+      const batteryStoragePercent = document.getElementById(
+        "battery-storage-percentage"
+      );
+      if (batteryStoragePercent && this.capacity > 0) {
+        const percent = (this.storage / this.capacity) * 100;
+        batteryStoragePercent.textContent = percent.toFixed(1) + "%";
+      }
     }
     let batteryPercentage = (this.storage / this.capacity) * 100;
     const batteryGaugePercentElem = document.getElementById(
@@ -520,18 +558,15 @@ export class fuelcell {
         showNotification("Fuel cell stopped: No hydrogen left.", "sell");
       }
 
-      document.getElementById("battery-level").innerHTML =
-        charge.storage.toFixed(2) + " kWh";
+      if (typeof window.setBatteryTopPanel === "function") {
+        window.setBatteryTopPanel(charge.storage, charge.capacity);
+      }
       if (window.setHydrogenTopPanel)
         window.setHydrogenTopPanel(hydro.storage.toFixed(2));
-      const batteryLevelTop = document.getElementById("battery-level-top");
-      if (batteryLevelTop)
-        batteryLevelTop.innerHTML = charge.storage.toFixed(2) + " kWh";
       let batteryPercentage = (charge.storage / charge.capacity) * 100;
-      document.getElementById("battery-gauge-percentage").innerHTML =
-        batteryPercentage.toFixed(1) + " %";
-      document.getElementById("battery-gauge-level").style.width =
-        batteryPercentage.toFixed(1) + "%";
+      const batteryGaugeLevel = document.getElementById("battery-gauge-level");
+      if (batteryGaugeLevel)
+        batteryGaugeLevel.style.width = batteryPercentage.toFixed(1) + "%";
       document.getElementById("hydrogen-level").innerHTML =
         hydro.storage.toFixed(2) + " g";
     }
@@ -579,6 +614,8 @@ export class electrolyzer {
 
       let actualBatteryConsumption =
         actualHydrogenProduced * (1 / (this.efficiency / 100));
+
+
 
       if (
         charge.storage >= actualBatteryConsumption &&
@@ -675,27 +712,294 @@ export class electrolyzer {
 
 export class heater {
   constructor() {
-    this.efficiency = 55;
-    this.power = 200;
-    this.temperature = 18;
-    this.ambientTemperature = 18;
+    // sensible defaults (fractions are unitless, efficiencies 0..1)
+    this.config = {
+      electrolyzerRecoverableFraction: 0.2, // fraction of waste heat that can be recovered
+      electrolyzerExchangerEff: 0.8, // heat exchanger efficiency
+      fuelcellRecoverableFraction: 0.85,
+      fuelcellExchangerEff: 0.9,
+    };
+  }
+
+  /**
+   * Compute recoverable heat from a device given input power and electrical efficiency.
+   * @param {number} inputPowerW - input electrical power in Watts (W)
+   * @param {number} elecEffPct - electrical efficiency in percent (e.g. 70 for 70%)
+   * @param {number} recoverableFraction - fraction of raw heat that is captureable (0..1)
+   * @param {number} exchangerEff - heat exchanger efficiency (0..1)
+   * @param {number} dtSeconds - timestep in seconds (optional, default 1s)
+   * @returns {object} { rawHeat_kW, recoverable_kW, recoverable_kWh }
+   */
+  computeRecoverableHeat(
+    inputPowerW,
+    elecEffPct,
+    recoverableFraction,
+    exchangerEff,
+    dtSeconds = 1
+  ) {
+    const input_kW = ((Number(inputPowerW) || 0) / 1000) * speedfactor;
+    const elecEff = (Number(elecEffPct) || 0) / 100;
+    const rawHeat_kW = input_kW * Math.max(0, 1 - elecEff);
+    const recoverable_kW =
+      rawHeat_kW * (recoverableFraction || 0) * (exchangerEff || 1);
+    const recoverable_kWh = recoverable_kW * (dtSeconds / 3600);
+    return {
+      rawHeat_kW,
+      recoverable_kW,
+      recoverable_kWh,
+    };
+  }
+
+  /**
+   * Extract recoverable heat from an electrolyzer instance or explicit values.
+   * @param {object} el - electrolyzer instance (optional if passing power/eff)
+   * @param {number} options.currentPowerW - current electrical input power in W (optional)
+   * @param {number} options.efficiencyPct - electrolyzer electrical efficiency in % (optional)
+   * @param {number} options.dtSeconds - timestep in seconds (optional)
+   */
+  extractElectrolyzerHeat(
+    el,
+    { currentPowerW = null, efficiencyPct = null, dtSeconds = 1 } = {}
+  ) {
+    const device = el || window.hydro;
+    const powerW =
+      currentPowerW !== null ? currentPowerW : (device && device.power) || 0;
+    const eff =
+      efficiencyPct !== null
+        ? efficiencyPct
+        : (device && device.efficiency) || 0;
+    return this.computeRecoverableHeat(
+      powerW,
+      eff,
+      this.config.electrolyzerRecoverableFraction,
+      this.config.electrolyzerExchangerEff,
+      dtSeconds
+    );
+  }
+
+  /**
+   * Extract recoverable heat from a fuel cell instance or explicit values.
+   * @param {object} fc - fuel cell instance (optional if passing power/eff)
+   * @param {number} options.currentPowerW - current electrical output power in W (optional)
+   * @param {number} options.efficiencyPct - fuel cell electrical efficiency in % (optional)
+   * @param {number} options.dtSeconds - timestep in seconds (optional)
+   */
+  extractFuelcellHeat(
+    fc,
+    { currentPowerW = null, efficiencyPct = null, dtSeconds = 1 } = {}
+  ) {
+    const device = fc || (typeof window !== "undefined" && window.fc) || null;
+    const powerW =
+      currentPowerW !== null ? currentPowerW : (device && device.power) || 0;
+    const eff =
+      efficiencyPct !== null
+        ? efficiencyPct
+        : (device && device.efficiency) || 0;
+    return this.computeRecoverableHeat(
+      powerW,
+      eff,
+      this.config.fuelcellRecoverableFraction,
+      this.config.fuelcellExchangerEff,
+      dtSeconds
+    );
   }
 
   produceHeat() {
-    if (hydro.storage > 0.1) {
-      let heatProduced =
-        (((this.power * (1 / (this.efficiency / 100) - 1)) / 1005) *
-          50 *
-          speedfactor) /
-        10000; //Q = Pel*(1/Wirkungsgrad - 1) / Wärmekapazität Luft * Volumen Luft
-    }
+    return {
+      electrolyzer: this.extractElectrolyzerHeat(),
+      fuelcell: this.extractFuelcellHeat(),
+    };
   }
 }
+// --- Thermal storage model ---
+const thermalStorage = {
+  capacity_kWh: 50, // default capacity
+  level_kWh: 0,
+  lossFractionPerHour: 0.01, // 1% per hour
+};
+
+function routeRecoveredHeat_kWh(recovered_kWh, dtHours = 1 / 3600) {
+  // recovered_kWh is kWh for the dt passed (caller should pass dtSeconds/3600)
+  // First: store as much as possible
+  const free = Math.max(
+    0,
+    thermalStorage.capacity_kWh - thermalStorage.level_kWh
+  );
+  const toStore = Math.min(recovered_kWh, free);
+  thermalStorage.level_kWh += toStore;
+  const dumped = Math.max(0, recovered_kWh - toStore);
+  // Apply storage losses for this dt (fraction per hour)
+  const loss =
+    thermalStorage.level_kWh * (thermalStorage.lossFractionPerHour * dtHours);
+  thermalStorage.level_kWh = Math.max(0, thermalStorage.level_kWh - loss);
+  return { stored_kWh: toStore, dumped_kWh: dumped, loss_kWh: loss };
+}
+
+function formatKWh(v) {
+  return Number(v || 0).toFixed(3) + " kWh";
+}
+
+// ensureThermalGaugeDOM removed: thermal gauge exists only in the sticky bar now
+
+// update thermal gauge UI
+function updateThermalGaugeUI() {
+  // Only update the sticky bar thermal gauge (UI exists in sticky bar)
+  const percent = Math.min(
+    100,
+    (thermalStorage.level_kWh / Math.max(1, thermalStorage.capacity_kWh)) * 100
+  );
+  const stickyThermalPercentageElem = document.getElementById(
+    "sticky-thermal-gauge-percentage"
+  );
+  // display current storage in kWh (not capacity) while the SVG fill still represents level/capacity
+  if (stickyThermalPercentageElem)
+    stickyThermalPercentageElem.textContent = formatKWh(
+      thermalStorage.level_kWh
+    );
+  const stickyThermalGaugeFill = document.getElementById(
+    "sticky-thermal-gauge-fill"
+  );
+  if (stickyThermalGaugeFill) {
+    const totalLengthSticky = 157;
+    const offsetSticky = totalLengthSticky * (1 - percent / 100);
+    stickyThermalGaugeFill.setAttribute("stroke-dashoffset", offsetSticky);
+  }
+}
+
+// --- Thermal capacity recommendation & sticky UI wiring ---
+// Compute recoverable heat at rated power (kW) from electrolyzer and fuel cell
+function computeRecoverableAtRated_kW({
+  electrolyzerPower_kW = 5,
+  electrolyzerEff_pct = 60,
+  fuelcellPower_kW = 3,
+  fuelcellEff_pct = 50,
+} = {}) {
+  const elEff = Math.max(0.01, Math.min(1, Number(electrolyzerEff_pct) / 100));
+  const fcEff = Math.max(0.01, Math.min(1, Number(fuelcellEff_pct) / 100));
+
+  // conservative defaults for recoverable fractions and exchanger efficiency
+  const elRecoverableFraction = 0.2;
+  const elExchangerEff = 0.8;
+  const fcRecoverableFraction = 0.85;
+  const fcExchangerEff = 0.9;
+
+  const raw_el_kW = electrolyzerPower_kW * Math.max(0, 1 - elEff);
+  const recoverable_el_kW = raw_el_kW * elRecoverableFraction * elExchangerEff;
+
+  const raw_fc_kW = fuelcellPower_kW * (1 / fcEff - 1);
+  const recoverable_fc_kW = raw_fc_kW * fcRecoverableFraction * fcExchangerEff;
+
+  const totalRecoverable_kW = Math.max(
+    0,
+    recoverable_el_kW + recoverable_fc_kW
+  );
+  // scale recommendation by speedfactor to match simulation time scaling
+  const sf = typeof speedfactor !== "undefined" ? Number(speedfactor) : 1;
+  return {
+    recoverable_el_kW: recoverable_el_kW * sf,
+    recoverable_fc_kW: recoverable_fc_kW * sf,
+    totalRecoverable_kW: totalRecoverable_kW * sf,
+  };
+}
+
+function clamp(v, lo, hi) {
+  return Math.max(lo, Math.min(hi, v));
+}
+
+function toKWFromInput(value) {
+  const n = Number(value) || 0;
+  // if value appears to be in W (>10) convert to kW
+  return n > 10 ? n / 1000 : n;
+}
+
+function computeRecommendedThermalCapacity_kWh() {
+  // read UI controls if present, else use sensible defaults matching your use case
+  const pvRaw = document.getElementById("PV-power")
+    ? document.getElementById("PV-power").value
+    : 10;
+  const batteryRaw = document.getElementById("battery-capacity")
+    ? document.getElementById("battery-capacity").value
+    : 20;
+  const elPowerRaw = document.getElementById("electrolyzer-power")
+    ? document.getElementById("electrolyzer-power").value
+    : 5000;
+  const elEffRaw = document.getElementById("electrolyzer-efficiency")
+    ? document.getElementById("electrolyzer-efficiency").value
+    : 60;
+  const fcPowerRaw = document.getElementById("fuelcell-power")
+    ? document.getElementById("fuelcell-power").value
+    : 3000;
+  const fcEffRaw = document.getElementById("fuelcell-efficiency")
+    ? document.getElementById("fuelcell-efficiency").value
+    : 50;
+
+  const pv_kW = toKWFromInput(pvRaw);
+  const battery_kWh = Number(batteryRaw) || 0;
+  const el_kW = toKWFromInput(elPowerRaw);
+  const fc_kW = toKWFromInput(fcPowerRaw);
+
+  const rec = computeRecoverableAtRated_kW({
+    electrolyzerPower_kW: el_kW,
+    electrolyzerEff_pct: elEffRaw,
+    fuelcellPower_kW: fc_kW,
+    fuelcellEff_pct: fcEffRaw,
+  });
+
+  // Heuristic target buffering hours based on battery size: larger battery -> larger thermal buffer
+  const baseHours = clamp(Math.round(battery_kWh / 5), 6, 48); // between 6 and 48 hours
+
+  const safeRecoverable = Math.max(rec.totalRecoverable_kW, 0.25); // avoid tiny denominators
+  let recommended_kWh = Math.round(safeRecoverable * baseHours);
+  recommended_kWh = clamp(recommended_kWh, 10, 200);
+  return {
+    recommended_kWh,
+    totalRecoverable_kW: rec.totalRecoverable_kW,
+    baseHours,
+  };
+}
+
+function updateStickyThermalCapacityUI() {
+  const el = document.getElementById("sticky-thermal-gauge-percentage");
+  // Do not overwrite the sticky storage label here. Only update internal capacity value.
+  const { recommended_kWh } = computeRecommendedThermalCapacity_kWh();
+  thermalStorage.capacity_kWh = recommended_kWh;
+}
+
+function attachThermalRecommendationListeners() {
+  const ids = [
+    "PV-power",
+    "battery-capacity",
+    "electrolyzer-power",
+    "electrolyzer-efficiency",
+    "fuelcell-power",
+    "fuelcell-efficiency",
+  ];
+  ids.forEach((id) => {
+    const node = document.getElementById(id);
+    if (!node) return;
+    node.addEventListener("input", updateStickyThermalCapacityUI);
+    node.addEventListener("change", updateStickyThermalCapacityUI);
+  });
+}
+
+// initialize when DOM is ready
+document.addEventListener("DOMContentLoaded", function () {
+  try {
+    attachThermalRecommendationListeners();
+    updateStickyThermalCapacityUI();
+  } catch (e) {
+    console.warn("thermal recommendation init failed", e);
+  }
+});
 const pv = new photovoltaik();
 const charge = new battery();
 const hydro = new electrolyzer();
 window.hydro = hydro;
 const fc = new fuelcell();
+window.fc = fc;
+// heater instance
+const heaterInstance = new heater();
+window.heaterInstance = heaterInstance;
 
 async function fetchHydrogenLevel() {
   //database fetch might get discontinued
@@ -769,17 +1073,13 @@ async function fetchBatteryLevel() {
 
     if (data.level !== undefined) {
       charge.storage = data.level; //Batterie-Speicher synchronisieren
-      document.getElementById(
-        "battery-level"
-      ).innerText = ` ${data.level.toFixed(2)} kWh`;
-      const batteryLevelTop = document.getElementById("battery-level-top");
-      if (batteryLevelTop)
-        batteryLevelTop.innerText = ` ${data.level.toFixed(2)} kWh`;
+      if (typeof window.setBatteryTopPanel === "function") {
+        window.setBatteryTopPanel(data.level, charge.capacity);
+      }
       let batteryPercentage = (charge.storage / charge.capacity) * 100;
-      document.getElementById("battery-gauge-percentage").innerHTML =
-        batteryPercentage.toFixed(1) + " %";
-      document.getElementById("battery-gauge-level").style.width =
-        batteryPercentage + "%";
+      const batteryGaugeLevel = document.getElementById("battery-gauge-level");
+      if (batteryGaugeLevel)
+        batteryGaugeLevel.style.width = batteryPercentage + "%";
     }
   } catch (error) {
     console.error("error:", error);
@@ -948,19 +1248,40 @@ function scheduleHourlyPriceUpdate() {
 scheduleHourlyPriceUpdate();
 
 async function updateSimulation() {
+  console.log(charge.storage);
   // Use the cached sun status instead of checking every second
   let sun = pv.lastSunStatus || false;
-  if (sun && charge.storage < charge.capacity) {
-    let powergenerated =
-      ((pv.efficiency / 100) *
-        pv.power *
-        (charge.efficiency / 100) *
-        speedfactor) /
-      1000;
-    //PV Leistung * PV Wirkungsgrad * Batterie Wirkungsgrad / 1000
+  // NOTE: removed PV fallback; use explicit use-case wiring to set sun where appropriate
+  // Debug: top-level tick info to diagnose charging issues
+  try {
 
-    if (powergenerated + charge.storage <= charge.capacity) {
-      charge.updateBatteryStorage(powergenerated);
+  } catch (e) {
+    // silent
+  }
+  if (sun) {
+    try {
+      // defensive debug info to diagnose charging issues
+      const pvPower = Number(pv.power) || 0;
+      const pvEff = Number(pv.efficiency) || 0;
+      const battEff = Number(charge.efficiency) || 0;
+      const cap = Number(charge.capacity) || 0;
+      const stored = Number(charge.storage) || 0;
+      const sf = typeof speedfactor !== "undefined" ? Number(speedfactor) : 1;
+      const powergenerated =
+        ((pvEff / 100) * pvPower * (battEff / 100) * sf) / 1000;
+
+      // Only add if it doesn't overfill battery
+      if (powergenerated > 0 && powergenerated + stored <= cap) {
+        charge.updateBatteryStorage(powergenerated);
+      } else if (powergenerated > 0 && stored < cap) {
+        // partial fill if small difference
+        const free = Math.max(0, cap - stored);
+        charge.updateBatteryStorage(Math.min(powergenerated, free));
+      }
+      // Update on-page debug overlay for quick inspection (created once)
+
+    } catch (err) {
+      console.error("Error in PV charging block", err);
     }
   }
   const waveLoader1 = document.querySelector(".wave-loader1");
@@ -994,6 +1315,27 @@ async function updateSimulation() {
   ) {
     hydro.produceHydrogen();
   }
+
+  // Heat recovery: run heater produceHeat every tick (1s) and store recovered heat
+  try {
+    // ensureThermalGaugeDOM removed - sticky bar element exists statically in index.html
+    const dtSeconds = 1; // updateSimulation called every 1s
+    const dtHours = dtSeconds / 3600;
+    const heat = heaterInstance ? heaterInstance.produceHeat() : null;
+    if (heat) {
+      let totalRecovered_kWh = 0;
+      if (heat.electrolyzer && heat.electrolyzer.recoverable_kWh)
+        totalRecovered_kWh += heat.electrolyzer.recoverable_kWh;
+      if (heat.fuelcell && heat.fuelcell.recoverable_kWh)
+        totalRecovered_kWh += heat.fuelcell.recoverable_kWh;
+      if (totalRecovered_kWh > 0) {
+        routeRecoveredHeat_kWh(totalRecovered_kWh, dtHours);
+        updateThermalGaugeUI();
+      }
+    }
+  } catch (e) {
+    console.error("Thermal recovery error", e);
+  }
 }
 
 function resetSimulation() {
@@ -1012,16 +1354,12 @@ function resetSimulation() {
     fuelCellInterval = null;
   }
 
-  const batteryLevelElem = document.getElementById("battery-level");
-  if (batteryLevelElem) batteryLevelElem.innerText = " 0 kWh";
-  const batteryLevelTop = document.getElementById("battery-level-top");
-  if (batteryLevelTop) batteryLevelTop.innerText = " 0 kWh";
-  const batteryGaugePercentElem = document.getElementById(
-    "battery-gauge-percentage"
-  );
-  if (batteryGaugePercentElem) batteryGaugePercentElem.innerText = " 0 %";
-  const batteryGaugeLevelElem = document.getElementById("battery-gauge-level");
-  if (batteryGaugeLevelElem) batteryGaugeLevelElem.style.width = 0;
+  if (typeof window.setBatteryTopPanel === "function") {
+    window.setBatteryTopPanel(0, charge.capacity);
+  } else {
+    const batteryLevelElem = document.getElementById("battery-level");
+    if (batteryLevelElem) batteryLevelElem.innerText = " 0 kWh";
+  }
 
   const hydrogenLevelElem = document.getElementById("hydrogen-level");
   if (hydrogenLevelElem) hydrogenLevelElem.innerText = " 0 g";
@@ -1229,6 +1567,14 @@ document.addEventListener("DOMContentLoaded", function () {
       pv.updatePVEfficiency(22);
       PVEfficiencyValueDisplay.textContent = 22 + "%";
       PVEfficiencySlider.value = 22;
+
+      // Ensure PV is treated as sunny for the industrial use case so charging runs
+      pv.lastSunStatus = true;
+      const sunElem = document.getElementById("sun");
+      if (sunElem)
+        sunElem.innerHTML =
+          '<span class="pv-sun-highlight">Sun is shining</span>';
+      document.getElementById("simulation-state").innerHTML = "Charge Mode";
 
       charge.updateBatteryEfficiency(95);
       batteryEfficiencyValueDisplay.textContent = 95 + "%";

@@ -6,25 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Protonik Hydrogen Dashboard</title>
     
-
     <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
-    
-    <!-- Preconnect to external domains for faster loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://api.weatherapi.com" />
     <link rel="preconnect" href="https://159.69.192.158" />
     
-    <!-- Load critical CSS first -->
+
     <link rel="stylesheet" href="css/styles.css" />
     
-    <!-- Load fonts with display=swap for better performance -->
+
     <link
       href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
       rel="stylesheet"
     />
 
-    <!-- Load Chart.js and dependencies with defer for better performance -->
     <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.0.0"></script>
@@ -33,7 +29,7 @@
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 
-    <!-- Load your modules after Chart.js -->
+
     <script type="module" defer src="/js/simulation.js"></script>
     <script type="module" defer src="/js/main.js"></script>
 
@@ -97,9 +93,7 @@
             <!-- Battery Level Gauge -->
             <div class="svg-gauge-wrapper" style="display: flex; flex-direction: column; align-items: center;">
               <svg id="battery-gauge" width="140" height="80" viewBox="0 0 140 80" style="display: block;">
-                <!-- Background half-circle -->
                 <path d="M 20 70 A 50 50 0 0 1 120 70" fill="none" stroke="#e0e0e0" stroke-width="12" />
-                <!-- Foreground (green) half-circle, fill controlled by JS -->
                 <path id="battery-gauge-fill" d="M 20 70 A 50 50 0 0 1 120 70" fill="none" stroke="#2ecc40" stroke-width="12" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="157" />
               </svg>
               <div style="display: flex; flex-direction: column; align-items: center; margin-top: -40px;">
@@ -121,6 +115,7 @@
                 </div>
                 <div style="margin-top: 2px; font-size: 15px; color: #222; font-weight: 500;">Hydrogen</div>
               </div>
+              <!-- Thermal Storage Gauge removed from code-minimized (now only in sticky bar) -->
           </div>
           <div class="mode-container">
             <h3>Simulation Mode:</h3>
@@ -167,6 +162,18 @@
                 <div id="sticky-hydrogen-gauge-percentage" style="font-size: 16px; color: #222; font-weight: bold; text-align:center;">0 %</div>
               </div>
               <div style="margin-top: 2px; font-size: 15px; color: #222; font-weight: 500;">Hydrogen</div>
+            </div>
+            <!-- Sticky Bar Thermal Gauge -->
+            <div id="sticky-thermal-gauge" style="display: flex; flex-direction: column; align-items: center; margin-right: 2px;">
+              <svg id="sticky-thermal-gauge-svg" width="126" height="72" viewBox="0 0 140 80" style="display: block;">
+                <path id="sticky-thermal-gauge-bg" d="M 20 70 A 50 50 0 0 1 120 70" fill="none" stroke="#e0e0e0" stroke-width="12" />
+                <path id="sticky-thermal-gauge-fill" d="M 20 70 A 50 50 0 0 1 120 70" fill="none" stroke="#ff7f50" stroke-width="12" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="157" />
+              </svg>
+              <div style="display: flex; flex-direction: column; align-items: center; margin-top: -40px;">
+                <img src="/icons/thermometer.webp" alt="Thermal Icon" style="width:34px;height:34px;object-fit:contain;" />
+                <div id="sticky-thermal-gauge-percentage" style="font-size: 16px; color: #222; font-weight: bold; text-align:center;">0 kWh</div>
+              </div>
+              <div style="margin-top: 2px; font-size: 15px; color: #222; font-weight: 500;">Thermal</div>
             </div>
             <button id="lang-de" class="lang-toggle lang-off">DE</button>
             <button id="lang-en" class="lang-toggle lang-on">EN</button>
@@ -481,6 +488,21 @@
                   <li><b>Fuel Cell</b> – Converts stored hydrogen back into electricity when needed, especially when prices are high or solar is unavailable.</li>
                 </ul>
                 <br>
+                <strong>Thermal energy extraction:</strong><br>
+                The simulation can recover heat produced as a by‑product from the electrochemical machinery — primarily the <b>electrolyzer</b> and the <b>fuel cell</b>. Recoverable heat is derived from each machine's instantaneous throughput and inefficiency: the model computes the machine's energy flow over the current tick, applies its conversion efficiency, and treats the remainder (multiplied by a configurable recoverable fraction and heat‑exchanger efficiency) as recoverable thermal energy. That energy is accumulated in a small thermal storage object (shown in the UI in kWh) up to the configured capacity; the storage also experiences passive losses over time.
+                <br>
+                <strong>Per‑use‑case thermal capacity & losses:</strong><br>
+                By default the thermal storage is initialized to <b>50 kWh</b> and the model applies passive losses configured as <b>1% per hour</b> (the loss fraction is applied proportional to the simulation time step). The UI also provides a computed recommendation for thermal capacity based on the configured machines; that recommendation is clamped to <b>10–200 kWh</b> so suggestions stay within the app's UI range.
+                <br>
+                Suggested guidance for the built‑in use cases:
+                <ul>
+                  <li><b>Off‑Grid Home</b> — typical battery setting: ~20 kWh. Practical thermal capacity: <b>10–50 kWh</b>. A 50 kWh tank can provide domestic hot water for a small household for multiple days or run a 2.2 kW kettle for ~22 hours.</li>
+                  <li><b>Microgrid (remote village)</b> — battery example: ~500 kWh. Practical thermal capacity: <b>50–200 kWh</b>. 200 kWh can cover community heating spikes or provide multi‑home short‑term heating.</li>
+                  <li><b>EV Charging Station</b> — station example: ~1,000 kWh battery. Useful thermal capacity: <b>50–200 kWh</b>. 200 kWh offsets many small heating loads or service heating events.</li>
+                  <li><b>Industrial Plant</b> — plant scale is multi‑MW and battery examples in the app are very large (multi‑MWh). The in‑app recommendation is capped at 200 kWh for UI safety; industrial sites often require MWh‑scale thermal stores. You can manually increase `thermalStorage.capacity_kWh` for industrial scenarios but expect passive losses to scale with stored energy.</li>
+                </ul>
+                <br>
+                <br>
                 <strong>Graphs:</strong><br>
                 The dashboard features interactive graphs that display power generation, consumption, storage levels, and market prices over time. These help you analyze system performance, track energy flows, and compare the impact of different use cases.<br><br>
                 <strong>Trading Panel:</strong><br>
@@ -524,7 +546,7 @@
       </div>
     </div>
 
-    <script type="module" src="/js/main.js"></script>
+  <!-- main.js already loaded as a deferred module in the <head>; removed duplicate include -->
   <!-- Removed obsolete language button JS code -->
   <!-- Footer removed, text moved to header -->
   </body>
