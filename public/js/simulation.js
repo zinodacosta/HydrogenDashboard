@@ -615,8 +615,6 @@ export class electrolyzer {
       let actualBatteryConsumption =
         actualHydrogenProduced * (1 / (this.efficiency / 100));
 
-
-
       if (
         charge.storage >= actualBatteryConsumption &&
         actualHydrogenProduced > 0
@@ -866,6 +864,800 @@ function updateThermalGaugeUI() {
   }
 }
 
+// --- Machinery heat breakdown UI and heat consumers ---
+// Show raw vs recoverable heat and allow consuming stored heat (shower/radiator)
+
+function updateHeatBreakdownUI(heat) {
+  // Machine heat info is intentionally not shown in the thermal panel.
+  // The simulation still computes recoverable_kWh and stores it in the thermal storage.
+  return;
+}
+
+// Heat consumer class and UI
+class HeatConsumer {
+  constructor(id, name, type = "constant", power_kW = 1, options = {}) {
+    this.id = id;
+    this.name = name;
+    this.type = type;
+    this.power_kW = Number(power_kW) || 0;
+    this.enabled = options.enabled !== false;
+    this.delivered_kWh = 0;
+    this.currentTemp = options.currentTemp || 20;
+    this.targetTemp = options.targetTemp || 21;
+    this.thermalMass_kWhPerDeg = options.thermalMass_kWhPerDeg || 0.25;
+    this.priority = options.priority || 1;
+    // shower-specific: track liters used; default deltaT for heating incoming water (°C)
+    this.waterLiters = 0;
+    this.showerDeltaT = options.showerDeltaT || 35; // typical rise from cold to shower temp
+    // radiator/shower UI temperature state (supply/outlet temp in °C)
+    this.supplyTemp =
+      options.supplyTemp ||
+      (this.id === "radiator" ? 45 : this.id === "shower" ? 45 : undefined);
+  }
+
+  consume(dtHours = 1 / 3600) {
+    if (!this.enabled || dtHours <= 0) return 0;
+    if (this.type === "constant") {
+      const need = this.power_kW * dtHours;
+      const provided = Math.min(thermalStorage.level_kWh, need);
+      thermalStorage.level_kWh = Math.max(
+        0,
+        thermalStorage.level_kWh - provided
+      );
+      this.delivered_kWh += provided;
+      // If this consumer is the radiator, apply delivered heat to room temperature
+      if (this.id === "radiator" && provided > 0) {
+        // Find the thermostat consumer (living room)
+        const room = getHeatConsumers().find((x) => x.id === "room");
+        if (room) {
+          // Increase room.currentTemp by equivalent degrees: provided_kWh / thermalMass_kWhPerDeg
+          const degIncrease = provided / (room.thermalMass_kWhPerDeg || 0.25);
+          room.currentTemp = Number(
+            (room.currentTemp + degIncrease).toFixed(3)
+          );
+        }
+      }
+      // If this consumer is the shower, compute water liters used based on energy delivered
+      if (this.id === "shower" && provided > 0) {
+        // specific heat: 4.186 kJ/kg/°C => 0.00116278 kWh/kg/°C
+        const kWhPerLPerDeg = 0.00116278;
+        const deltaT = this.showerDeltaT || 35;
+        const liters = provided / (kWhPerLPerDeg * deltaT);
+        this.waterLiters = Number((this.waterLiters + liters).toFixed(3));
+      }
+      return provided;
+    }
+    if (this.type === "thermostat") {
+      const delta = this.targetTemp - this.currentTemp;
+      if (delta <= 0) return 0;
+      const need = delta * this.thermalMass_kWhPerDeg;
+      const provided = Math.min(thermalStorage.level_kWh, need);
+      thermalStorage.level_kWh = Math.max(
+        0,
+        thermalStorage.level_kWh - provided
+      );
+      this.currentTemp += provided / this.thermalMass_kWhPerDeg;
+      this.delivered_kWh += provided;
+      return provided;
+    }
+    return 0;
+  }
+
+  setEnabled(v) {
+    this.enabled = !!v;
+  }
+
+  status() {
+    return {
+      id: this.id,
+      name: this.name,
+      type: this.type,
+      enabled: this.enabled,
+      delivered_kWh: Number(this.delivered_kWh || 0),
+      currentTemp: Number(this.currentTemp || 0),
+      targetTemp: Number(this.targetTemp || 0),
+      power_kW: Number(this.power_kW || 0),
+      waterLiters: Number(this.waterLiters || 0),
+    };
+  }
+}
+
+// Manager for multiple consumers (heat, charging stations, etc.)
+class Consumers {
+  constructor() {
+    this.map = new Map();
+  }
+
+  add(consumer) {
+    if (!consumer || !consumer.id) return null;
+    this.map.set(consumer.id, consumer);
+    return consumer;
+  }
+
+  get(id) {
+    return this.map.get(id);
+  }
+
+  list() {
+    return Array.from(this.map.values());
+  }
+
+  statusAll() {
+    return this.list().map((c) =>
+      typeof c.status === "function"
+        ? c.status()
+        : Object.assign({ id: c.id, name: c.name }, c)
+    );
+  }
+
+  // helper to update any top-panel UI elements if present
+  updateTopPanels() {
+    try {
+      const ev = this.get("charging_electric");
+      if (
+        ev &&
+        typeof window.setChargingStationElectricTopPanel === "function"
+      ) {
+        const level = ev.level_kWh || 0;
+        const cap = ev.capacity_kWh || 1;
+        window.setChargingStationElectricTopPanel(level, cap);
+      }
+      const hydroSt = this.get("charging_hydrogen");
+      if (
+        hydroSt &&
+        typeof window.setChargingStationHydrogenTopPanel === "function"
+      ) {
+        const level = hydroSt.level_g || 0;
+        const cap = hydroSt.capacity_g || 1;
+        window.setChargingStationHydrogenTopPanel(level, cap);
+      }
+    } catch (e) {
+      console.warn("Consumers.updateTopPanels failed", e);
+    }
+  }
+}
+
+// default consumers
+// Compact plain-object consumer state (simpler for this small app)
+window.consumerState = {
+  room: {
+    id: "room",
+    name: "Living room",
+    type: "thermostat",
+    currentTemp: 18,
+    targetTemp: 21,
+    thermalMass_kWhPerDeg: 0.25,
+    delivered_kWh: 0,
+    priority: 1,
+  },
+  shower: {
+    id: "shower",
+    name: "Shower",
+    type: "constant",
+    enabled: false,
+    supplyTemp: 45,
+    showerDeltaT: 35,
+    flow_l_per_s: 0.12,
+    power_kW: 6,
+    delivered_kWh: 0,
+    waterLiters: 0,
+    priority: 0,
+  },
+  radiator: {
+    id: "radiator",
+    name: "Radiator",
+    type: "constant",
+    enabled: false,
+    supplyTemp: 45,
+    power_kW: 2,
+    delivered_kWh: 0,
+    priority: 2,
+  },
+  // charging stations kept here too for simplicity
+  charging_electric: {
+    id: "charging_electric",
+    name: "EV Charging Station",
+    level_kWh: 0,
+    capacity_kWh: 100,
+  },
+  charging_hydrogen: {
+    id: "charging_hydrogen",
+    name: "H2 Charging Station",
+    level_g: 0,
+    capacity_g: 10000,
+  },
+};
+
+// For backwards compatibility: export a small array view used by some code paths
+// Helper to return the current heat consumer objects as an array (single source-of-truth)
+function getHeatConsumers() {
+  if (window.consumerState)
+    return [
+      window.consumerState.room,
+      window.consumerState.shower,
+      window.consumerState.radiator,
+    ];
+  return Array.isArray(window.heatConsumers) ? window.heatConsumers : [];
+}
+
+// Backwards-compatible snapshot (some legacy code reads this). Prefer getHeatConsumers() in new code.
+window.heatConsumers = getHeatConsumers();
+
+// Consumation helper for plain-object consumers (mirrors HeatConsumer.consume behaviour)
+function consumePlainConsumer(c, dtHours = 1 / 3600) {
+  if (!c) return 0;
+  if (c.enabled === false || dtHours <= 0) return 0;
+  const type = c.type || "constant";
+  if (type === "constant") {
+    const power_kW = Number(c.power_kW) || 0;
+    const need = power_kW * dtHours;
+    const provided = Math.min(thermalStorage.level_kWh, need);
+    thermalStorage.level_kWh = Math.max(0, thermalStorage.level_kWh - provided);
+    c.delivered_kWh = Number(((c.delivered_kWh || 0) + provided).toFixed(6));
+    // radiator warms room
+    if (c.id === "radiator" && provided > 0) {
+      const room = getHeatConsumers().find((x) => x.id === "room");
+      if (room) {
+        const degIncrease = provided / (room.thermalMass_kWhPerDeg || 0.25);
+        room.currentTemp = Number((room.currentTemp + degIncrease).toFixed(3));
+      }
+    }
+    // shower: compute water liters
+    if (c.id === "shower" && provided > 0) {
+      const kWhPerLPerDeg = 0.00116278;
+      const deltaT = c.showerDeltaT || 35;
+      const liters = provided / (kWhPerLPerDeg * deltaT);
+      c.waterLiters = Number(((c.waterLiters || 0) + liters).toFixed(3));
+    }
+    return provided;
+  }
+  if (type === "thermostat") {
+    const delta = (c.targetTemp || 0) - (c.currentTemp || 0);
+    if (delta <= 0) return 0;
+    const thermalMass = c.thermalMass_kWhPerDeg || 0.25;
+    const need = delta * thermalMass;
+    const provided = Math.min(thermalStorage.level_kWh, need);
+    thermalStorage.level_kWh = Math.max(0, thermalStorage.level_kWh - provided);
+    c.currentTemp = Number(
+      ((c.currentTemp || 0) + provided / thermalMass).toFixed(6)
+    );
+    c.delivered_kWh = Number(((c.delivered_kWh || 0) + provided).toFixed(6));
+    return provided;
+  }
+  return 0;
+}
+
+// Create consumers manager and register charging stations (and keep references to same objects)
+window.consumers = new Consumers();
+window.consumers.add(window.consumerState.charging_electric);
+window.consumers.add(window.consumerState.charging_hydrogen);
+
+// Charging station (electric) - simple storage-like consumer object
+const chargingElectric = {
+  id: "charging_electric",
+  name: "EV Charging Station",
+  level_kWh: 0,
+  capacity_kWh: 100,
+};
+window.consumers.add(chargingElectric);
+
+// Charging station (hydrogen) - simple storage-like consumer object
+const chargingHydrogen = {
+  id: "charging_hydrogen",
+  name: "H2 Charging Station",
+  level_g: 0,
+  capacity_g: 10000,
+};
+window.consumers.add(chargingHydrogen);
+
+// Top-panel helpers for new charging stations (mimic battery/hydrogen top-panel setters)
+window.setChargingStationElectricTopPanel = function (level_kWh, capacity_kWh) {
+  const elem = document.getElementById("charging-electric-level");
+  if (elem) elem.innerText = `${Number(level_kWh || 0).toFixed(2)} kWh`;
+};
+
+window.setChargingStationHydrogenTopPanel = function (level_g, capacity_g) {
+  const elem = document.getElementById("charging-hydrogen-level");
+  if (elem) elem.innerText = `${Number(level_g || 0).toFixed(2)} g`;
+};
+
+function updateHeatConsumersUI() {
+  let container = document.getElementById("heat-consumers");
+  const preferred = document.getElementById("consumer-panel-content");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "heat-consumers";
+    container.style.fontSize = "14px";
+    container.style.marginTop = "6px";
+    container.style.color = "#222";
+    // append to thermal panel when available to inherit panel styling
+    if (preferred) {
+      preferred.appendChild(container);
+    } else {
+      const sticky = document.getElementById("sticky-thermal-gauge-percentage");
+      (sticky && sticky.parentNode
+        ? sticky.parentNode
+        : document.body
+      ).appendChild(container);
+    }
+  }
+
+  // If the user is interacting with a slider, only update the stats text to avoid DOM replacement flicker
+  if (window.heatConsumerInteracting) {
+    try {
+      for (const c of getHeatConsumers()) {
+        const stats = document.getElementById(`heat-stats-${c.id}`);
+        if (stats) {
+          if (c.id === "shower") {
+            stats.textContent = `${c.name}: temp ${Number(
+              c.supplyTemp || 0
+            )}°C | power ${Number(c.power_kW || 0).toFixed(
+              3
+            )} kW | delivered ${Number(c.delivered_kWh || 0).toFixed(
+              3
+            )} kWh | water ${Number(c.waterLiters || 0).toFixed(3)} L`;
+          } else if (c.id === "radiator") {
+            stats.textContent = `${c.name}: temp ${Number(
+              c.supplyTemp || 0
+            )}°C | power ${Number(c.power_kW || 0).toFixed(
+              3
+            )} kW | delivered ${Number(c.delivered_kWh || 0).toFixed(3)} kWh`;
+          }
+        }
+      }
+      // update footer and sticky gauge
+      const footer = document.getElementById("heat-consumers-footer");
+      if (footer)
+        footer.textContent = `Thermal store: ${formatKWh(
+          thermalStorage.level_kWh
+        )} / ${thermalStorage.capacity_kWh} kWh`;
+      // update EV/H2 top values as well
+      if (
+        window.consumers &&
+        typeof window.consumers.updateTopPanels === "function"
+      )
+        window.consumers.updateTopPanels();
+    } catch (e) {
+      console.warn("partial heat UI update failed", e);
+    }
+    return;
+  }
+
+  // Clear and rebuild DOM content for predictable button wiring
+  container.innerHTML = "";
+
+  // EV / H2 quick controls area (rendered at the top of the Consumers panel)
+  const stationControls = document.createElement("div");
+  stationControls.style.display = "flex";
+  stationControls.style.gap = "12px";
+  stationControls.style.marginTop = "8px";
+
+  const ev = window.consumers
+    ? window.consumers.get("charging_electric")
+    : null;
+  const h2 = window.consumers
+    ? window.consumers.get("charging_hydrogen")
+    : null;
+
+  if (ev) {
+    const evBox = document.createElement("div");
+    evBox.style.display = "flex";
+    evBox.style.flexDirection = "column";
+    evBox.style.alignItems = "center";
+    evBox.style.padding = "8px";
+    evBox.style.border = "1px solid #eee";
+    evBox.style.borderRadius = "8px";
+    const evLabel = document.createElement("div");
+    evLabel.textContent = `${ev.name}`;
+    evLabel.style.fontWeight = "700";
+    const evLevel = document.createElement("div");
+    evLevel.id = "consumer-ev-level";
+    evLevel.textContent = `${Number(ev.level_kWh || 0).toFixed(2)} kWh`;
+    evLevel.style.margin = "6px 0";
+    const evChargeBtn = document.createElement("button");
+    evChargeBtn.textContent = "Charge EV +1 kWh";
+    evChargeBtn.className = "start-btn";
+    evChargeBtn.addEventListener("click", function () {
+      window.chargeEV(1);
+    });
+    evBox.appendChild(evLabel);
+    evBox.appendChild(evLevel);
+    evBox.appendChild(evChargeBtn);
+    stationControls.appendChild(evBox);
+  }
+
+  if (h2) {
+    const h2Box = document.createElement("div");
+    h2Box.style.display = "flex";
+    h2Box.style.flexDirection = "column";
+    h2Box.style.alignItems = "center";
+    h2Box.style.padding = "8px";
+    h2Box.style.border = "1px solid #eee";
+    h2Box.style.borderRadius = "8px";
+    const h2Label = document.createElement("div");
+    h2Label.textContent = `${h2.name}`;
+    h2Label.style.fontWeight = "700";
+    const h2Level = document.createElement("div");
+    h2Level.id = "consumer-h2-level";
+    h2Level.textContent = `${Number(h2.level_g || 0).toFixed(2)} g`;
+    h2Level.style.margin = "6px 0";
+    const h2ChargeBtn = document.createElement("button");
+    h2ChargeBtn.textContent = "Charge H2 +100 g";
+    h2ChargeBtn.className = "start-btn";
+    h2ChargeBtn.addEventListener("click", function () {
+      window.chargeH2(100);
+    });
+    h2Box.appendChild(h2Label);
+    h2Box.appendChild(h2Level);
+    h2Box.appendChild(h2ChargeBtn);
+    stationControls.appendChild(h2Box);
+  }
+
+  if (stationControls.childElementCount > 0)
+    container.appendChild(stationControls);
+
+  const title = document.createElement("div");
+  title.innerHTML = "<strong>Heat consumers</strong>";
+  container.appendChild(title);
+
+  // Living room temperature quick-display
+  const roomTempDisplay = document.createElement("div");
+  roomTempDisplay.id = "room-temp-display";
+  roomTempDisplay.style.marginTop = "6px";
+  roomTempDisplay.style.fontSize = "1.05em";
+  roomTempDisplay.style.fontWeight = "700";
+  const room = getHeatConsumers().find((x) => x.id === "room");
+  if (room)
+    roomTempDisplay.textContent = `Living room: ${room.currentTemp.toFixed(
+      2
+    )}°C (target ${room.targetTemp.toFixed(1)}°C)`;
+  container.appendChild(roomTempDisplay);
+
+  const list = document.createElement("div");
+  list.style.marginTop = "8px";
+
+  for (const c of getHeatConsumers()) {
+    const s =
+      typeof c.status === "function"
+        ? c.status()
+        : Object.assign({ id: c.id, name: c.name }, c);
+    const row = document.createElement("div");
+    row.style.display = "flex";
+    row.style.alignItems = "center";
+    row.style.justifyContent = "space-between";
+    row.style.marginBottom = "8px";
+
+    const left = document.createElement("div");
+    left.style.flex = "1";
+    left.style.paddingRight = "8px";
+    if (s.type === "thermostat") {
+      left.textContent = `${s.name}: ${
+        s.enabled ? "on" : "off"
+      } | temp ${s.currentTemp.toFixed(1)}°C → ${s.targetTemp.toFixed(
+        1
+      )}°C | delivered ${s.delivered_kWh.toFixed(3)} kWh`;
+      row.appendChild(left);
+    } else {
+      // show only the component name on the left; live stats are shown above each slider
+      left.textContent = `${s.name}`;
+      row.appendChild(left);
+
+      // Create a vertical controls container to stack slider (full-width) and button below
+      const controlsWrap = document.createElement("div");
+      controlsWrap.style.display = "flex";
+      controlsWrap.style.flexDirection = "column";
+      controlsWrap.style.alignItems = "flex-end";
+      controlsWrap.style.gap = "6px";
+      controlsWrap.style.minWidth = "140px";
+
+      // Slider row (full width relative to left column)
+      const sliderRow = document.createElement("div");
+      sliderRow.style.display = "flex";
+      sliderRow.style.alignItems = "center";
+      sliderRow.style.justifyContent = "flex-end";
+      sliderRow.style.width = "100%";
+
+      // If this consumer is the shower, offer a temperature slider (°C)
+      if (s.id === "shower") {
+        // stats shown above the slider
+        const stats = document.createElement("div");
+        stats.style.fontSize = "0.95em";
+        stats.style.marginBottom = "6px";
+        stats.style.textAlign = "right";
+        stats.id = `heat-stats-${c.id}`;
+        stats.textContent = `${s.name}: temp ${
+          c.supplyTemp
+        }°C | power ${c.power_kW.toFixed(
+          3
+        )} kW | delivered ${c.delivered_kWh.toFixed(
+          3
+        )} kWh | water ${c.waterLiters.toFixed(3)} L`;
+        controlsWrap.appendChild(stats);
+
+        const slider = document.createElement("input");
+        slider.type = "range";
+        slider.min = 30;
+        slider.max = 55;
+        slider.step = 0.5;
+        slider.value = c.supplyTemp || 45;
+        slider.title = "Shower water temperature (°C)";
+        slider.style.width = "200px";
+        // assumptions: flow ~ 0.12 kg/s (7.2 L/min), water density ~1 kg/L, specific heat 4.186 kJ/kg°C
+        const flow_l_per_s = 0.12;
+        const kWhPerLPerDeg = 0.00116278; // same as used for compute liters
+        const updateShowerPower = () => {
+          const inletTemp = 10; // assumed cold inlet
+          const deltaT = Math.max(1, (c.supplyTemp || 45) - inletTemp);
+          // power_kW = flow_l_per_s * liters/sec * specific heat * deltaT -> convert kJ to kWh
+          // liters per second = flow_l_per_s; energy per second (kW) = flow_l_per_s * kWhPerLPerDeg * deltaT * 3600?
+          // Simpler: kW = flow_l_per_s * 4.186 * deltaT / 1000 -> since 4.186 kJ/kg°C
+          const power_kW = (flow_l_per_s * 4.186 * deltaT) / 1.0; // kW approx
+          c.power_kW = Number(power_kW.toFixed(3));
+        };
+        // mark interaction on pointerdown to prevent rebuilds
+        slider.addEventListener("pointerdown", function () {
+          window.heatConsumerInteracting = true;
+        });
+        slider.addEventListener("pointerup", function () {
+          setTimeout(() => {
+            window.heatConsumerInteracting = false;
+            updateHeatConsumersUI();
+          }, 150);
+        });
+        slider.addEventListener("pointercancel", function () {
+          window.heatConsumerInteracting = false;
+        });
+        slider.addEventListener("input", function () {
+          c.supplyTemp = Number(slider.value);
+          updateShowerPower();
+          // update stats above slider only
+          const txt = `${s.name}: temp ${
+            c.supplyTemp
+          }°C | power ${c.power_kW.toFixed(
+            3
+          )} kW | delivered ${c.delivered_kWh.toFixed(
+            3
+          )} kWh | water ${c.waterLiters.toFixed(3)} L`;
+          stats.textContent = txt;
+        });
+        // initialize mapping
+        updateShowerPower();
+        // ensure initial stats shown above slider
+        stats.textContent = `${s.name}: temp ${
+          c.supplyTemp
+        }°C | power ${c.power_kW.toFixed(
+          3
+        )} kW | delivered ${c.delivered_kWh.toFixed(
+          3
+        )} kWh | water ${c.waterLiters.toFixed(3)} L`;
+        left.textContent = `${s.name}`;
+        sliderRow.appendChild(slider);
+      }
+
+      // If this consumer is the radiator, offer a temperature slider (supply temp °C) mapping to power
+      if (s.id === "radiator") {
+        const stats = document.createElement("div");
+        stats.style.fontSize = "0.95em";
+        stats.style.marginBottom = "6px";
+        stats.style.textAlign = "right";
+        stats.id = `heat-stats-${c.id}`;
+        stats.textContent = `${s.name}: temp ${
+          c.supplyTemp
+        }°C | power ${c.power_kW.toFixed(
+          3
+        )} kW | delivered ${c.delivered_kWh.toFixed(3)} kWh`;
+        controlsWrap.appendChild(stats);
+
+        const slider = document.createElement("input");
+        slider.type = "range";
+        slider.min = 35;
+        slider.max = 80;
+        slider.step = 1;
+        slider.value = c.supplyTemp || 45;
+        slider.title = "Radiator supply temperature (°C)";
+        slider.style.width = "200px";
+        // mapping: assume radiator power scales with deltaT to room (simple linear model)
+        const room = getHeatConsumers().find((x) => x.id === "room");
+        const updateRadiatorPower = () => {
+          const roomTemp = room ? room.currentTemp || 18 : 18;
+          const deltaT = Math.max(1, (c.supplyTemp || 45) - roomTemp);
+          // reference: at 45°C supply and room 18°C -> default power ~2 kW (existing default)
+          const refDelta = 45 - 18;
+          const refPower = 2; // kW at refDelta
+          const power_kW = (deltaT / refDelta) * refPower;
+          c.power_kW = Number(Math.max(0, power_kW).toFixed(3));
+        };
+        // mark interaction on pointerdown to prevent rebuilds
+        slider.addEventListener("pointerdown", function () {
+          window.heatConsumerInteracting = true;
+        });
+        slider.addEventListener("pointerup", function () {
+          setTimeout(() => {
+            window.heatConsumerInteracting = false;
+            updateHeatConsumersUI();
+          }, 150);
+        });
+        slider.addEventListener("pointercancel", function () {
+          window.heatConsumerInteracting = false;
+        });
+        slider.addEventListener("input", function () {
+          c.supplyTemp = Number(slider.value);
+          updateRadiatorPower();
+          const txt = `${s.name}: temp ${
+            c.supplyTemp
+          }°C | power ${c.power_kW.toFixed(
+            3
+          )} kW | delivered ${c.delivered_kWh.toFixed(3)} kWh`;
+          stats.textContent = txt;
+        });
+        updateRadiatorPower();
+        stats.textContent = `${s.name}: temp ${
+          c.supplyTemp
+        }°C | power ${c.power_kW.toFixed(
+          3
+        )} kW | delivered ${c.delivered_kWh.toFixed(3)} kWh`;
+        left.textContent = `${s.name}`;
+        sliderRow.appendChild(slider);
+      }
+
+      // Button row placed below slider
+      const btnRow = document.createElement("div");
+      btnRow.style.display = "flex";
+      btnRow.style.justifyContent = "flex-end";
+
+      const btn = document.createElement("button");
+      btn.id = `heat-toggle-${s.id}`;
+      btn.dataset.target = s.id;
+      btn.style.minWidth = "88px";
+      btn.style.fontWeight = "600";
+      // Use green class when enabled, red when disabled (matches fuelcell start/stop styling)
+      if (s.enabled) {
+        btn.className = "start-btn"; // green
+        btn.textContent = "On";
+      } else {
+        btn.className = "stop-btn"; // red
+        btn.textContent = "Off";
+      }
+      btn.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        // Toggle the consumer and rebuild UI
+        toggleHeatConsumer(s.id, !s.enabled);
+      });
+      btnRow.appendChild(btn);
+
+      controlsWrap.appendChild(sliderRow);
+      controlsWrap.appendChild(btnRow);
+      row.appendChild(controlsWrap);
+    }
+
+    list.appendChild(row);
+  }
+
+  // Footer: thermal storage summary
+  const footer = document.createElement("div");
+  footer.style.marginTop = "6px";
+  footer.style.fontWeight = "600";
+
+  container.appendChild(list);
+  container.appendChild(footer);
+
+  // Update room temp display after rendering
+  const updatedRoom = getHeatConsumers().find((x) => x.id === "room");
+  if (updatedRoom) {
+    const d = document.getElementById("room-temp-display");
+    if (d)
+      d.textContent = `Living room: ${updatedRoom.currentTemp.toFixed(
+        2
+      )}°C (target ${updatedRoom.targetTemp.toFixed(1)}°C)`;
+  }
+}
+
+// Helper: charge EV station by kWh (consumes from battery if available, else from thermal store not used)
+window.chargeEV = function (kwh) {
+  try {
+    const ev = window.consumers.get("charging_electric");
+    if (!ev) return;
+    const amount = Number(kwh) || 0;
+    // draw from battery if possible
+    const fromBattery = Math.min(amount, Math.max(0, charge.storage - 0));
+    if (fromBattery > 0) charge.updateBatteryStorage(-fromBattery);
+    ev.level_kWh = Math.min(ev.capacity_kWh, (ev.level_kWh || 0) + fromBattery);
+    // update UI bits
+    const evElem = document.getElementById("consumer-ev-level");
+    if (evElem)
+      evElem.textContent = `${Number(ev.level_kWh || 0).toFixed(2)} kWh`;
+    if (
+      window.consumers &&
+      typeof window.consumers.updateTopPanels === "function"
+    )
+      window.consumers.updateTopPanels();
+  } catch (e) {
+    console.warn("chargeEV failed", e);
+  }
+};
+
+// Helper: charge H2 station by grams (consumes from electrolyzer storage if available)
+window.chargeH2 = function (g) {
+  try {
+    const st = window.consumers.get("charging_hydrogen");
+    if (!st) return;
+    const grams = Number(g) || 0;
+    // draw from hydro.storage produced by electrolyzer
+    const available = Math.max(0, hydro.storage || 0);
+    const taken = Math.min(available, grams);
+    if (taken > 0) {
+      hydro.storage = Math.max(0, hydro.storage - taken);
+      st.level_g = Math.min(st.capacity_g, (st.level_g || 0) + taken);
+    }
+    const h2Elem = document.getElementById("consumer-h2-level");
+    if (h2Elem) h2Elem.textContent = `${Number(st.level_g || 0).toFixed(2)} g`;
+    if (
+      window.consumers &&
+      typeof window.consumers.updateTopPanels === "function"
+    )
+      window.consumers.updateTopPanels();
+  } catch (e) {
+    console.warn("chargeH2 failed", e);
+  }
+};
+
+function distributeHeatToConsumers(dtHours = 1 / 3600) {
+  const hc = getHeatConsumers();
+  if (!Array.isArray(hc) || hc.length === 0) return 0;
+  const consumers = hc
+    .slice()
+    .sort((a, b) => (a.priority || 1) - (b.priority || 1));
+  let totalProvided = 0;
+  for (const c of consumers) {
+    // if object has consume method (legacy class) prefer it, else use plain-object helper
+    const provided =
+      typeof c.consume === "function"
+        ? c.consume(dtHours)
+        : consumePlainConsumer(c, dtHours);
+    totalProvided += provided;
+    if (thermalStorage.level_kWh <= 0) break;
+  }
+  updateHeatConsumersUI();
+  updateThermalGaugeUI();
+  return totalProvided;
+}
+
+window.toggleHeatConsumer = function (id, enabled) {
+  const c =
+    getHeatConsumers().find((x) => x.id === id) ||
+    (window.consumers ? window.consumers.get(id) : null);
+  if (!c) return;
+  // Support both class-based and plain-object consumers
+  if (typeof c.setEnabled === "function") c.setEnabled(enabled);
+  else c.enabled = !!enabled;
+  updateHeatConsumersUI();
+  const btn = document.getElementById(`heat-toggle-${id}`);
+  if (btn) {
+    if (enabled) {
+      btn.className = "start-btn";
+      btn.textContent = "On";
+    } else {
+      btn.className = "stop-btn";
+      btn.textContent = "Off";
+    }
+  }
+};
+
+// 1s loop: update breakdown UI and let consumers draw from stored heat
+setInterval(() => {
+  try {
+    const heat =
+      typeof heaterInstance !== "undefined" && heaterInstance
+        ? heaterInstance.produceHeat()
+        : null;
+    if (heat) updateHeatBreakdownUI(heat);
+    // consumers draw from thermal store (dtHours = 1s)
+    distributeHeatToConsumers(1 / 3600);
+  } catch (e) {
+    console.error("Heat UI loop error", e);
+  }
+}, 1000);
+
 // --- Thermal capacity recommendation & sticky UI wiring ---
 // Compute recoverable heat at rated power (kW) from electrolyzer and fuel cell
 function computeRecoverableAtRated_kW({
@@ -997,7 +1789,7 @@ const hydro = new electrolyzer();
 window.hydro = hydro;
 const fc = new fuelcell();
 window.fc = fc;
-// heater instance
+
 const heaterInstance = new heater();
 window.heaterInstance = heaterInstance;
 
@@ -1138,7 +1930,7 @@ export class tradeElectricity {
     await this.priceCheck();
     const amount = getBuyAmount();
     const pricePerKWh = this.electricityPrice / 1000;
-    // Allow buying if price is negative, regardless of balance
+
     const enoughMoney = pricePerKWh < 0 || this.money >= pricePerKWh * amount;
     const enoughCapacity = charge.storage + amount <= charge.capacity;
     if (enoughMoney && enoughCapacity) {
@@ -1163,7 +1955,6 @@ export class tradeElectricity {
     await this.priceCheck();
     const amount = getSellAmount();
     if (charge.storage >= amount) {
-      // electricityPrice is in €/MWh, so per kWh is electricityPrice / 1000
       const pricePerKWh = this.electricityPrice / 1000;
       this.money += pricePerKWh * amount;
       charge.updateBatteryStorage(-amount);
@@ -1182,7 +1973,6 @@ export class tradeElectricity {
     }
   }
 
-  // New method to sell a custom amount (for auto-sell)
   async sellCustomAmount(amount) {
     await this.priceCheck();
     if (charge.storage >= amount && amount > 0) {
@@ -1206,14 +1996,12 @@ export class tradeElectricity {
 }
 let trade = new tradeElectricity();
 
-// --- Weather API polling every 5 minutes ---
 function pollWeather() {
   pv.checkforSun();
 }
 setInterval(pollWeather, 5 * 60 * 1000);
 pollWeather();
 
-// --- Regularly update current market price at the top of each hour ---
 function scheduleHourlyPriceUpdate() {
   const now = new Date();
   const minutesUntilNextHour = 60 - now.getMinutes();
@@ -1224,14 +2012,12 @@ function scheduleHourlyPriceUpdate() {
     `Next client-side price update scheduled in ${minutesUntilNextHour} minutes and ${now.getSeconds()} seconds`
   );
 
-  // Schedule the first update at the top of the next hour
   setTimeout(() => {
     if (typeof trade !== "undefined" && trade.priceCheck) {
       console.log("Updating market price at:", new Date().toLocaleTimeString());
       trade.priceCheck();
     }
 
-    // Then set up recurring hourly updates
     setInterval(() => {
       if (typeof trade !== "undefined" && trade.priceCheck) {
         console.log(
@@ -1240,27 +2026,19 @@ function scheduleHourlyPriceUpdate() {
         );
         trade.priceCheck();
       }
-    }, 3600000); // Update every hour (3,600,000 ms)
+    }, 3600000);
   }, millisecondsUntilNextHour);
 }
 
-// Start the hourly price update scheduling
 scheduleHourlyPriceUpdate();
 
 async function updateSimulation() {
-  console.log(charge.storage);
-  // Use the cached sun status instead of checking every second
   let sun = pv.lastSunStatus || false;
-  // NOTE: removed PV fallback; use explicit use-case wiring to set sun where appropriate
-  // Debug: top-level tick info to diagnose charging issues
-  try {
 
-  } catch (e) {
-    // silent
-  }
+  try {
+  } catch (e) {}
   if (sun) {
     try {
-      // defensive debug info to diagnose charging issues
       const pvPower = Number(pv.power) || 0;
       const pvEff = Number(pv.efficiency) || 0;
       const battEff = Number(charge.efficiency) || 0;
@@ -1270,16 +2048,12 @@ async function updateSimulation() {
       const powergenerated =
         ((pvEff / 100) * pvPower * (battEff / 100) * sf) / 1000;
 
-      // Only add if it doesn't overfill battery
       if (powergenerated > 0 && powergenerated + stored <= cap) {
         charge.updateBatteryStorage(powergenerated);
       } else if (powergenerated > 0 && stored < cap) {
-        // partial fill if small difference
         const free = Math.max(0, cap - stored);
         charge.updateBatteryStorage(Math.min(powergenerated, free));
       }
-      // Update on-page debug overlay for quick inspection (created once)
-
     } catch (err) {
       console.error("Error in PV charging block", err);
     }
@@ -1316,9 +2090,7 @@ async function updateSimulation() {
     hydro.produceHydrogen();
   }
 
-  // Heat recovery: run heater produceHeat every tick (1s) and store recovered heat
   try {
-    // ensureThermalGaugeDOM removed - sticky bar element exists statically in index.html
     const dtSeconds = 1; // updateSimulation called every 1s
     const dtHours = dtSeconds / 3600;
     const heat = heaterInstance ? heaterInstance.produceHeat() : null;
@@ -1344,6 +2116,12 @@ function resetSimulation() {
   hydro.storage = 0;
   trade.money = 0;
 
+  try {
+    thermalStorage.level_kWh = 0;
+  } catch (e) {
+    console.warn("thermalStorage reset failed", e);
+  }
+
   if (electrolyzerInterval !== null) {
     clearInterval(electrolyzerInterval);
     electrolyzerInterval = null;
@@ -1362,16 +2140,47 @@ function resetSimulation() {
   }
 
   const hydrogenLevelElem = document.getElementById("hydrogen-level");
-  if (hydrogenLevelElem) hydrogenLevelElem.innerText = " 0 g";
+  if (hydrogenLevelElem) hydrogenLevelElem.innerText = "0.00 g";
+
+  const hydrogenStoragePercentElem = document.getElementById(
+    "hydrogen-storage-percentage"
+  );
+  if (hydrogenStoragePercentElem) hydrogenStoragePercentElem.textContent = "0%";
 
   const hydrogenGaugePercentElem = document.getElementById(
     "hydrogen-gauge-percentage"
   );
-  if (hydrogenGaugePercentElem) hydrogenGaugePercentElem.innerText = " 0 %";
+  if (hydrogenGaugePercentElem) hydrogenGaugePercentElem.innerText = "0 %";
   const hydrogenGaugeLevelElem = document.getElementById(
     "hydrogen-gauge-level"
   );
-  if (hydrogenGaugeLevelElem) hydrogenGaugeLevelElem.style.width = 0;
+  if (hydrogenGaugeLevelElem) hydrogenGaugeLevelElem.style.width = "0%";
+
+  const hydrogenGaugeFill = document.getElementById("hydrogen-gauge-fill");
+  if (hydrogenGaugeFill) {
+    try {
+      const totalLength = 157;
+      hydrogenGaugeFill.setAttribute("stroke-dashoffset", totalLength);
+    } catch (e) {
+      /* ignore */
+    }
+  }
+  // Reset sticky hydrogen gauge if present
+  const stickyHydrogenGaugeFill = document.getElementById(
+    "sticky-hydrogen-gauge-fill"
+  );
+  if (stickyHydrogenGaugeFill) {
+    try {
+      const totalLength = 157;
+      stickyHydrogenGaugeFill.setAttribute("stroke-dashoffset", totalLength);
+    } catch (e) {
+      /* ignore */
+    }
+  }
+  const stickyHydrogenPercent = document.getElementById(
+    "sticky-hydrogen-gauge-percentage"
+  );
+  if (stickyHydrogenPercent) stickyHydrogenPercent.textContent = "0 %";
   const moneyElem = document.getElementById("money");
   if (moneyElem) moneyElem.innerText = "  0 €";
 
@@ -1389,6 +2198,58 @@ function resetSimulation() {
 
   // Show notification
   showNotification("Simulation reset!", "buy");
+  // reset heat consumers stats
+  try {
+    const hc = getHeatConsumers();
+    for (const h of hc) {
+      h.delivered_kWh = 0;
+      if (Object.prototype.hasOwnProperty.call(h, "waterLiters"))
+        h.waterLiters = 0;
+      if (h.id === "room") h.currentTemp = 18;
+      if (h.id === "shower" || h.id === "radiator") h.enabled = false;
+    }
+    // refresh UI
+    updateHeatConsumersUI();
+    updateThermalGaugeUI();
+  } catch (e) {
+    console.warn("Failed to reset heat consumers", e);
+  }
+  // reset our charging stations
+  try {
+    if (window.consumers) {
+      const ev = window.consumers.get("charging_electric");
+      if (ev) {
+        ev.level_kWh = 0;
+      }
+      const h2 = window.consumers.get("charging_hydrogen");
+      if (h2) {
+        h2.level_g = 0;
+      }
+      // update any top-panels
+      if (
+        window.consumers &&
+        typeof window.consumers.updateTopPanels === "function"
+      )
+        window.consumers.updateTopPanels();
+      // update consumer panel display nodes if present
+      const evElem = document.getElementById("consumer-ev-level");
+      if (evElem) evElem.textContent = "0.00 kWh";
+      const h2Elem = document.getElementById("consumer-h2-level");
+      if (h2Elem) h2Elem.textContent = "0.00 g";
+      // refresh heat consumers UI to reflect disabled consumers
+      updateHeatConsumersUI();
+      // refresh thermal sticky gauge
+      updateThermalGaugeUI();
+      // also reset sticky thermal gauge label to 0 kWh
+      const stickyThermal = document.getElementById(
+        "sticky-thermal-gauge-percentage"
+      );
+      if (stickyThermal)
+        stickyThermal.textContent = formatKWh(thermalStorage.level_kWh);
+    }
+  } catch (e) {
+    console.warn("Failed to reset charging stations", e);
+  }
 }
 
 //Slider für Simulation
@@ -2000,6 +2861,20 @@ getCarbonIntensity();
 
 //Regelmäßige Updates laufen nur über updateSimulation()
 setInterval(updateSimulation, 1000);
+
+// Render the thermal UI immediately when DOM is ready so users see controls right away
+document.addEventListener("DOMContentLoaded", function () {
+  try {
+    const heat =
+      typeof heaterInstance !== "undefined" && heaterInstance
+        ? heaterInstance.produceHeat()
+        : null;
+    if (heat) updateHeatBreakdownUI(heat);
+    updateHeatConsumersUI();
+  } catch (e) {
+    console.warn("init heat UI failed", e);
+  }
+});
 
 //TODO- farbschema an website anpassen
 
