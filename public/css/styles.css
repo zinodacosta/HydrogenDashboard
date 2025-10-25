@@ -197,6 +197,15 @@
   text-align: center !important;
 }
 
+/* Embed-mode: when the app runs inside a transparent iframe, remove page background
+   so only the app chrome renders inside the host page. Use the .embed-mode class on
+   html/body to opt into this behavior. */
+html.embed-mode, body.embed-mode {
+  background-image: none !important;
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
 
 /* Ensure the wrapper panel sits above other widgets */
 #flowchart-panel {

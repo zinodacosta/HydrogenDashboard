@@ -9,9 +9,13 @@ if (typeof window.money !== "number") {
 // render more compact. The widget page sets `window.__WIDGET_EMBED = true`.
 document.addEventListener("DOMContentLoaded", function () {
   try {
-    if (window.__WIDGET_EMBED) {
+    // Allow embed mode to be signalled either by the widget bootstrap (window.__WIDGET_EMBED)
+    // or via URL query param `embed=1` when we redirect to index.html?embed=1.
+    const urlParams = typeof window !== 'undefined' && window.location ? new URLSearchParams(window.location.search) : null;
+    if (window.__WIDGET_EMBED || (urlParams && (urlParams.get('embed') === '1' || urlParams.get('embed') === 'true'))) {
       // add a body class so CSS can target embed-mode
       document.body.classList.add("embed-mode");
+      document.documentElement.classList.add('embed-mode');
       // hide common chrome elements if present
       document
         .querySelectorAll(
@@ -26,6 +30,10 @@ document.addEventListener("DOMContentLoaded", function () {
       try {
         document.documentElement.style.margin = "0";
         document.body.style.margin = "0";
+        // remove large background images/colors so the iframe appears transparent
+        try { document.body.style.backgroundImage = 'none'; } catch (e) {}
+        try { document.body.style.backgroundColor = 'transparent'; } catch (e) {}
+        try { document.documentElement.style.background = 'transparent'; } catch (e) {}
       } catch (e) {}
     }
   } catch (e) {
