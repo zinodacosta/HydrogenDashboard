@@ -243,6 +243,25 @@ const translations = {
     fuelcellPower: "Fuelcell Power:",
     startElectrolyzer: "Start Electrolyzer",
     stopElectrolyzer: "Stop Electrolyzer",
+  startedElectrolyzerMsg: "Started Electrolyzer!",
+  stoppedElectrolyzerMsg: "Stopped Electrolyzer!",
+  startedFuelCellMsg: "Started Fuel Cell!",
+  stoppedFuelCellMsg: "Stopped Fuel Cell!",
+  hydrogenNotInitialized: "Hydrogen system not initialized.",
+  invalidHydrogenAmount: "Invalid hydrogen amount.",
+  invalidHydrogenPrice: "Invalid hydrogen price.",
+  notEnoughHydrogenToSell: "Not enough hydrogen to sell. You have {have} g, tried to sell {tried} g.",
+  soldHydrogen: "Sold {kg}kg hydrogen for {eur} € at {price} €/kg",
+  batteryFull: "Battery is full.",
+  electricityBought: "Bought {amount} kWh at {price} €/kWh",
+  electricitySold: "Sold {amount} kWh at {price} €/kWh",
+  electricityAutoSold: "{amount} kWh automatically sold at {price} €/kWh",
+  fuelcellStoppedNoHydrogen: "Fuel cell stopped: No hydrogen left.",
+  cannotBuy: "Cannot buy: {reason}",
+  cannotSellNotEnoughStorage: "Cannot sell: not enough storage.",
+  simulationReset: "Simulation reset!",
+  notEnoughBattery: "Not enough battery energy to start electrolyzer.",
+  noHydrogenStored: "No hydrogen stored.",
     startFuelcell: "Start Fuelcell",
     stopFuelcell: "Stop Fuelcell",
     chargingStation: "Charging Station",
@@ -269,6 +288,18 @@ const translations = {
       "Other Conventional",
       "Other Renewable",
     ],
+    heatConsumersTitle: "Heat consumers",
+    chargeEVBtn: "Charge EV +1 kWh",
+    chargeH2Btn: "Charge H2 +100 g",
+    onText: "On",
+    offText: "Off",
+    showerTempTitle: "Shower water temperature (°C)",
+    radiatorTempTitle: "Radiator supply temperature (°C)",
+    tempLabel: "temp",
+    powerLabel: "power",
+    deliveredLabel: "delivered",
+    waterLabel: "water",
+    thermalStoreLabel: "Thermal store:",
   },
   de: {
     tradingPanelTitle: "Handelspanel",
@@ -381,6 +412,25 @@ const translations = {
     pvStatusSunny: "Die Sonne scheint. PV lädt.",
     startElectrolyzer: "Elektrolyseur starten",
     stopElectrolyzer: "Elektrolyseur stoppen",
+  startedElectrolyzerMsg: "Elektrolyseur gestartet!",
+  stoppedElectrolyzerMsg: "Elektrolyseur gestoppt!",
+  startedFuelCellMsg: "Brennstoffzelle gestartet!",
+  stoppedFuelCellMsg: "Brennstoffzelle gestoppt!",
+  hydrogenNotInitialized: "Wasserstoffsystem nicht initialisiert.",
+  invalidHydrogenAmount: "Ungültige Wasserstoffmenge.",
+  invalidHydrogenPrice: "Ungültiger Wasserstoffpreis.",
+  notEnoughHydrogenToSell: "Nicht genügend Wasserstoff zum Verkaufen. Sie haben {have} g, versucht zu verkaufen {tried} g.",
+  soldHydrogen: "{kg}kg Wasserstoff verkauft für {eur} € zu {price} €/kg",
+  batteryFull: "Batterie ist voll.",
+  electricityBought: "Gekauft {amount} kWh zu {price} €/kWh",
+  electricitySold: "Verkauft {amount} kWh zu {price} €/kWh",
+  electricityAutoSold: "{amount} kWh automatisch verkauft zu {price} €/kWh",
+  fuelcellStoppedNoHydrogen: "Brennstoffzelle gestoppt: Kein Wasserstoff vorhanden.",
+  cannotBuy: "Kann nicht kaufen: {reason}",
+  cannotSellNotEnoughStorage: "Kann nicht verkaufen: nicht genug Speicher.",
+  simulationReset: "Simulation zurückgesetzt!",
+  notEnoughBattery: "Nicht genügend Batteriespeicher, um den Elektrolyseur zu starten.",
+  noHydrogenStored: "Kein Wasserstoff gespeichert.",
     startFuelcell: "Brennstoffzelle starten",
     stopFuelcell: "Brennstoffzelle stoppen",
     chargingStation: "Ladestation",
@@ -407,7 +457,47 @@ const translations = {
       "Andere konventionelle",
       "Andere erneuerbare",
     ],
+    heatConsumersTitle: "Wärmeverbraucher",
+    chargeEVBtn: "EV laden +1 kWh",
+    chargeH2Btn: "H2 laden +100 g",
+    onText: "An",
+    offText: "Aus",
+    showerTempTitle: "Duschwassertemperatur (°C)",
+    radiatorTempTitle: "Vorlauftemperatur des Heizkörpers (°C)",
+    tempLabel: "Temp",
+    powerLabel: "Leistung",
+    deliveredLabel: "geliefert",
+    waterLabel: "Wasser",
+    thermalStoreLabel: "Thermischer Speicher:",
   },
+};
+
+// Expose a tiny translation accessor for other modules
+window.getTranslation = function (key) {
+  try {
+    if (typeof translations === "undefined") return key;
+    if (!currentLanguage) currentLanguage = "en";
+    const dict = translations[currentLanguage] || {};
+    return dict[key] !== undefined ? dict[key] : key;
+  } catch (e) {
+    return key;
+  }
+};
+
+// Simple translator with interpolation support: window.t('key', {var: value})
+window.t = function (key, vars) {
+  try {
+    let txt = window.getTranslation ? window.getTranslation(key) : key;
+    if (vars && typeof vars === "object") {
+      for (const k in vars) {
+        const v = vars[k];
+        txt = txt.replace(new RegExp("\\{" + k + "\\}", "g"), v);
+      }
+    }
+    return txt;
+  } catch (e) {
+    return key;
+  }
 };
 
 function setLanguage(lang) {

@@ -3,6 +3,26 @@
 if (typeof window.money !== "number") {
   window.money = 0;
 }
+
+// If the app is loaded inside the widget iframe, allow a lightweight
+// embed-only mode. This will hide chrome elements and make the app
+// render more compact. The widget page sets `window.__WIDGET_EMBED = true`.
+document.addEventListener('DOMContentLoaded', function () {
+  try {
+    if (window.__WIDGET_EMBED) {
+      // add a body class so CSS can target embed-mode
+      document.body.classList.add('embed-mode');
+      // hide common chrome elements if present
+      document.querySelectorAll('.header, .footer, .sidebar, .sticky-bar, #flowchart-panel').forEach(function (el) {
+        try { el.style.display = 'none'; } catch (e) {}
+      });
+      // reduce global margins to fit widget container
+      try { document.documentElement.style.margin = '0'; document.body.style.margin = '0'; } catch (e) {}
+    }
+  } catch (e) {
+    console.warn('embed-mode init failed', e);
+  }
+});
 // --- Flowchart fuel cell arrow toggle logic ---
 function updateFuelCellArrow(isWorking) {
   const staticArrow = document.getElementById("fuelcell-static-arrow");
@@ -15,7 +35,7 @@ function updateFuelCellArrow(isWorking) {
 
 function sellHydrogen(amount, pricePerGram) {
   if (!window.hydro || typeof window.money === "undefined") {
-    showNotification("Hydrogen system not initialized.", "sell");
+    showNotification(window.t ? window.t('hydrogenNotInitialized') : 'Hydrogen system not initialized.', "sell");
     return false;
   }
   const amt = parseFloat(amount);
@@ -23,18 +43,21 @@ function sellHydrogen(amount, pricePerGram) {
   const amtKg = amt / 1000;
   const pricePerKg = parseFloat(pricePerGram);
   if (isNaN(amt) || amt <= 0) {
-    showNotification("Invalid hydrogen amount.", "sell");
+    showNotification(window.t ? window.t('invalidHydrogenAmount') : 'Invalid hydrogen amount.', "sell");
     return false;
   }
   if (isNaN(pricePerKg) || pricePerKg <= 0) {
-    showNotification("Invalid hydrogen price.", "sell");
+    showNotification(window.t ? window.t('invalidHydrogenPrice') : 'Invalid hydrogen price.', "sell");
     return false;
   }
   if (window.hydro.storage < amt) {
     showNotification(
-      `Not enough hydrogen to sell. You have ${window.hydro.storage.toFixed(
-        2
-      )} g, tried to sell ${amt} g.`,
+      window.t
+        ? window.t('notEnoughHydrogenToSell', {
+            have: window.hydro.storage.toFixed(2),
+            tried: amt,
+          })
+        : `Not enough hydrogen to sell. You have ${window.hydro.storage.toFixed(2)} g, tried to sell ${amt} g.`,
       "sell"
     );
     return false;
@@ -52,9 +75,13 @@ function sellHydrogen(amount, pricePerGram) {
   if (window.setHydrogenTopPanel)
     window.setHydrogenTopPanel(window.hydro.storage.toFixed(2));
   showNotification(
-    `Sold ${amtKg.toFixed(3)}kg hydrogen for ${(amtKg * pricePerKg).toFixed(
-      2
-    )} € at ${pricePerKg.toFixed(2)} €/kg`,
+    window.t
+      ? window.t('soldHydrogen', {
+          kg: amtKg.toFixed(3),
+          eur: (amtKg * pricePerKg).toFixed(2),
+          price: pricePerKg.toFixed(2),
+        })
+      : `Sold ${amtKg.toFixed(3)}kg hydrogen for ${(amtKg * pricePerKg).toFixed(2)} € at ${pricePerKg.toFixed(2)} €/kg`,
     "sell"
   );
   // Update hydrogen gauge
@@ -90,7 +117,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Simulation speed slider logic
   const speedSlider = document.getElementById("simulation-speed-slider");
   const speedIndicator = document.getElementById("simulation-speed-indicator");
-  // Ensure only static fuel cell arrow is visible on page load
+
   const fcStaticArrow = document.getElementById("fuelcell-static-arrow");
   const fcAnimatedArrow = document.getElementById("fuelcell-animated-arrow");
   if (fcStaticArrow && fcAnimatedArrow) {
@@ -112,10 +139,9 @@ document.addEventListener("DOMContentLoaded", function () {
     updateSpeedIndicator();
     speedSlider.addEventListener("input", updateSpeedIndicator);
   }
-  // Debug: Check presence of sell hydrogen button and inputs
-  // Use number input for price instead of slider
+
   const sellHydrogenPriceInput = document.getElementById("sell-hydrogen-price");
-  // Add hydrogen storage display next to current market price
+
   function updateHydrogenStorageDisplay() {
     const marketPriceLabel = document.getElementById(
       "latest-hydrogen-price-label"
@@ -137,18 +163,15 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Initial update and periodic refresh
   updateHydrogenStorageDisplay();
   setInterval(updateHydrogenStorageDisplay, 1000);
   const citySelect = document.getElementById("city-select");
   const locationDisplay = document.getElementById("location");
   if (!citySelect || !locationDisplay) return;
 
-  // Set city to the selected value from dropdown on initial load
   city = citySelect.value;
   locationDisplay.innerHTML = city;
 
-  // Set PV Status to current value on page load (do not force 'Sun is shining')
   setTimeout(() => {
     pv.checkforSun();
   }, 1000);
@@ -169,7 +192,24 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Only keep increment logic for buy/sell electricity, not hydrogen here
+  // Use-case selector: update room name/area and thermal mass so room size affects heating speed
+  const useCaseSelect = document.getElementById("use-case");
+  if (useCaseSelect) {
+    useCaseSelect.addEventListener("change", function () {
+      try {
+        applyUseCase(useCaseSelect.value);
+      } catch (e) {
+        console.warn("applyUseCase failed", e);
+      }
+    });
+    // apply initial selection
+    try {
+      applyUseCase(useCaseSelect.value || "offgrid");
+    } catch (e) {
+      console.warn("initial applyUseCase failed", e);
+    }
+  }
+
   document
     .querySelectorAll(
       '.trade-increment[data-target="buy-amount"], .trade-increment[data-target="sell-amount"]'
@@ -233,7 +273,6 @@ document.addEventListener("DOMContentLoaded", function () {
   pv.checkforSun();
 });
 
-// Unified UI updater for battery so other modules can call it safely
 window.setBatteryTopPanel = function (storage_kwh, capacity_kwh) {
   try {
     const batteryLevelElem = document.getElementById("battery-level");
@@ -249,7 +288,7 @@ window.setBatteryTopPanel = function (storage_kwh, capacity_kwh) {
       const percent = (storage_kwh / capacity_kwh) * 100;
       batteryStoragePercent.textContent = percent.toFixed(1) + "%";
     }
-    // Update small gauges if present
+
     const batteryGaugePercentage = document.getElementById(
       "battery-gauge-percentage"
     );
@@ -273,7 +312,6 @@ function showNotification(message, type) {
   const notification = document.getElementById("notification");
   if (!notification) return;
 
-  // Remove both classes first
   notification.classList.remove("notification-buy", "notification-sell");
   if (type === "buy") {
     notification.classList.add("notification-buy");
@@ -283,9 +321,8 @@ function showNotification(message, type) {
 
   notification.textContent = message;
   notification.style.display = "block";
-  // Restart animation
   notification.style.animation = "none";
-  // Force reflow
+
   void notification.offsetWidth;
   notification.style.animation = "";
 
@@ -299,7 +336,7 @@ export class photovoltaik {
   constructor() {
     this.power = 250; //Watt
     this.efficiency = 20;
-    this.lastSunStatus = false; // Cache for sun status
+    this.lastSunStatus = false;
   }
   updatePVEfficiency(amount) {
     this.efficiency = amount;
@@ -308,13 +345,11 @@ export class photovoltaik {
     this.power = amount;
   }
   async checkforSun() {
-    // Ensure PV charges if 'Always Sunny' is selected
     document.getElementById("location").innerHTML = city;
     let sun = false;
     const sunElem = document.getElementById("sun");
     const citySelectElem = document.getElementById("city-select");
     if (city === "Always Sunny") {
-      // Force sunny state
       if (sunElem) {
         sunElem.innerHTML =
           '<span class="pv-sun-highlight">Sun is shining</span>';
@@ -330,7 +365,7 @@ export class photovoltaik {
       this.lastSunStatus = sun;
       return sun;
     }
-    // ...existing code for API/weather-based charging...
+
     try {
       const response = await fetch(
         `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${city}`
@@ -377,7 +412,7 @@ export class photovoltaik {
         }
         if (sunElem) sunElem.classList.remove("pv-sun-highlight");
       }
-      this.lastSunStatus = sun; // Cache the sun status
+      this.lastSunStatus = sun;
       return sun;
     } catch (error) {
       console.error("Error", error);
@@ -414,7 +449,6 @@ export class battery {
       this.storage += amount;
     }
 
-    // Update the battery UI through the unified helper to avoid conflicting writes
     if (typeof window.setBatteryTopPanel === "function") {
       window.setBatteryTopPanel(this.storage, this.capacity);
     } else {
@@ -439,7 +473,7 @@ export class battery {
     if (batteryGaugePercentElem) {
       batteryGaugePercentElem.textContent = batteryPercentage.toFixed(1) + " %";
       batteryGaugePercentElem.setAttribute("fill", "#222");
-      // Update sticky bar battery gauge percentage and fill (same logic as code-minimized)
+
       const stickyBatteryGaugePercentElem = document.getElementById(
         "sticky-battery-gauge-percentage"
       );
@@ -456,10 +490,10 @@ export class battery {
         stickyBatteryGaugeFill.setAttribute("stroke-dashoffset", offset);
       }
     }
-    // Animate SVG half-circle gauge
+
     const batteryGaugeFill = document.getElementById("battery-gauge-fill");
     if (batteryGaugeFill) {
-      const totalLength = 157; // SVG path length for half-circle
+      const totalLength = 157;
       const offset = totalLength * (1 - batteryPercentage / 100);
       batteryGaugeFill.setAttribute("stroke-dashoffset", offset);
     }
@@ -469,7 +503,6 @@ export class battery {
     if (batteryGaugeLevelElem)
       batteryGaugeLevelElem.style.width = batteryPercentage.toFixed(1) + "%";
 
-    // Electrolyzer arrow logic: animated only when electrolyzer is running
     const staticArrow = document.getElementById("electrolyzer-static-arrow");
     const animatedArrow = document.getElementById(
       "electrolyzer-animated-arrow"
@@ -482,7 +515,7 @@ export class battery {
     );
     let shouldBeAnimated =
       electrolyzerInterval !== null || batteryPercentage >= 80;
-    // Fix: Only update battery->electrolyzer arrow if state changes
+
     if (staticArrow && animatedArrow) {
       if (typeof this.lastBatteryElectrolyzerArrowState === "undefined") {
         this.lastBatteryElectrolyzerArrowState = null;
@@ -493,7 +526,7 @@ export class battery {
         this.lastBatteryElectrolyzerArrowState = shouldBeAnimated;
       }
     }
-    // Output arrow always updates (no flicker issue)
+
     if (outStaticArrow && outAnimatedArrow) {
       outStaticArrow.style.display = shouldBeAnimated ? "none" : "block";
       outAnimatedArrow.style.display = shouldBeAnimated ? "block" : "none";
@@ -526,10 +559,9 @@ export class fuelcell {
           (this.power / 1000) *
           speedfactor) /
         100;
-      // Prevent battery from exceeding its max capacity
+
       let availableCapacity = charge.capacity - charge.storage;
       if (availableCapacity <= 0) {
-        // Battery is full, stop fuel cell and notify
         if (
           typeof fuelCellInterval !== "undefined" &&
           fuelCellInterval !== null
@@ -537,14 +569,13 @@ export class fuelcell {
           clearInterval(fuelCellInterval);
           fuelCellInterval = null;
         }
-        showNotification("Battery is full.", "sell");
+  showNotification(window.t ? window.t('batteryFull') : 'Battery is full.', "sell");
         return;
       }
       let actualPowerProduced = Math.min(powerProduced, availableCapacity);
       charge.updateBatteryStorage(actualPowerProduced);
       hydro.storage -= actualPowerProduced;
 
-      // If hydrogen storage is now 0 or less, stop the fuel cell and show notification
       if (hydro.storage <= 0) {
         hydro.storage = 0;
         if (
@@ -555,7 +586,7 @@ export class fuelcell {
           fuelCellInterval = null;
         }
         updateFuelCellArrow(false);
-        showNotification("Fuel cell stopped: No hydrogen left.", "sell");
+        showNotification(window.t ? window.t('fuelcellStoppedNoHydrogen') : 'Fuel cell stopped: No hydrogen left.', "sell");
       }
 
       if (typeof window.setBatteryTopPanel === "function") {
@@ -594,107 +625,114 @@ export class electrolyzer {
   }
 
   produceHydrogen() {
-    if (charge.storage > 0.1) {
-      //max hydrogen possible under current battery level
-      let maxHydrogen = this.capacity - this.storage;
-      let possibleHydrogenProduced =
+    // Updated per-tick energy-based hydrogen production model.
+    // This function is called every second (either from the start button interval
+    // or via the auto-trigger in updateSimulation). We'll consume a small amount
+    // of battery energy (kWh) and convert it to grams of hydrogen.
+    try {
+      const dtSeconds = 1;
+      const sf = typeof speedfactor !== "undefined" ? Number(speedfactor) : 1;
+      const available_kWh = Number(charge.storage || 0);
+      const power_kW = ((Number(this.power) || 0) / 1000) * sf; // rated power scaled by speed
+      // energy we would use this tick if the electrolyzer runs at rated power
+      const energyNeeded_kWh = (power_kW * dtSeconds) / 3600; // kWh per dtSeconds
+
+      if (available_kWh <= 0 || energyNeeded_kWh <= 0) {
+        console.log(
+          "[DEBUG] produceHydrogen() aborted: no available energy or invalid energyNeeded",
+          { available_kWh, energyNeeded_kWh }
+        );
+        const hydrogenLevelElem = document.getElementById("hydrogen-level");
+        if (hydrogenLevelElem)
+          hydrogenLevelElem.innerHTML = this.storage.toFixed(2) + " g";
+        errorCheck();
+        return;
+      }
+
+      // maximum hydrogen that fits into electrolyzer storage (grams)
+      const maxHydrogen = Math.max(0, this.capacity - this.storage);
+
+      // possibleHydrogenProduced estimation using user's provided formula
+      // units/scale per the project's historical constants
+      const possibleHydrogenProduced =
         (charge.storage *
           55.5 *
           (this.efficiency / 100) *
           (this.power / 1000) *
-          speedfactor) /
+          sf) /
         10000;
-      //Batteriespeicher * 55.5kg/kWh * Elektrolyse Wirkungsgrad * Elektrolyse Leistung
 
-      //only produce whats possible under both constraints
-      let actualHydrogenProduced = Math.min(
+      const actualHydrogenProduced = Math.min(
         possibleHydrogenProduced,
         maxHydrogen
       );
 
-      let actualBatteryConsumption =
+      // battery consumption required to create the actual hydrogen produced
+      const actualBatteryConsumption =
         actualHydrogenProduced * (1 / (this.efficiency / 100));
 
       if (
         charge.storage >= actualBatteryConsumption &&
         actualHydrogenProduced > 0
       ) {
-        this.storage += actualHydrogenProduced;
+        // commit: deduct battery and add hydrogen grams
         charge.updateBatteryStorage(-actualBatteryConsumption);
-
-        const hydrogenLevelElem = document.getElementById("hydrogen-level");
-        if (hydrogenLevelElem)
-          hydrogenLevelElem.innerHTML = this.storage.toFixed(2) + " g";
-        let hydrogenPercentage = (this.storage / this.capacity) * 100;
-        // Animate SVG half-circle hydrogen gauge
-        const hydrogenGaugeFill = document.getElementById(
-          "hydrogen-gauge-fill"
+        this.storage = Number(
+          Math.min(
+            this.capacity,
+            this.storage + actualHydrogenProduced
+          ).toFixed(6)
         );
-        if (hydrogenGaugeFill) {
-          const totalLength = 157; // SVG path length for half-circle
-          const offset = totalLength * (1 - hydrogenPercentage / 100);
-          hydrogenGaugeFill.setAttribute("stroke-dashoffset", offset);
-        }
-        // Update sticky bar hydrogen gauge
-        const stickyHydrogenGaugeFill = document.getElementById(
-          "sticky-hydrogen-gauge-fill"
+      } else {
+        console.log(
+          "[DEBUG] produceHydrogen() not enough battery for candidate production",
+          {
+            charge_storage_kWh: Number(charge.storage || 0),
+            required_kWh: actualBatteryConsumption,
+          }
         );
-        if (stickyHydrogenGaugeFill) {
-          const stickyTotalLength = 82; // Updated SVG path length for larger sticky bar gauge
-          const stickyOffset =
-            stickyTotalLength * (1 - hydrogenPercentage / 100);
-          stickyHydrogenGaugeFill.setAttribute(
-            "stroke-dashoffset",
-            stickyOffset
-          );
-        }
-        const hydrogenGaugePercentElem = document.getElementById(
-          "hydrogen-gauge-percentage"
-        );
-        if (hydrogenGaugePercentElem) {
-          hydrogenGaugePercentElem.textContent =
-            hydrogenPercentage.toFixed(1) + " %";
-          hydrogenGaugePercentElem.setAttribute("fill", "#222");
-          // Update sticky bar hydrogen gauge percentage and fill (same logic as code-minimized)
-          const stickyHydrogenGaugePercentElem = document.getElementById(
-            "sticky-hydrogen-gauge-percentage"
-          );
-          if (stickyHydrogenGaugePercentElem) {
-            stickyHydrogenGaugePercentElem.textContent =
-              hydrogenPercentage.toFixed(1) + " %";
-          }
-          const stickyHydrogenGaugeFill = document.getElementById(
-            "sticky-hydrogen-gauge-fill"
-          );
-          if (stickyHydrogenGaugeFill) {
-            const totalLength = 157;
-            const offset = totalLength * (1 - hydrogenPercentage / 100);
-            stickyHydrogenGaugeFill.setAttribute("stroke-dashoffset", offset);
-          }
-        }
-        // Simulation state
-        const simStateElem = document.getElementById("simulation-state");
-        if (simStateElem) {
-          if (simStateElem.innerHTML === "Charge Mode") {
-            simStateElem.innerHTML = "Charge Mode + Hydrogen Mode ";
-          } else {
-            simStateElem.innerHTML = "Hydrogen Mode ";
-          }
-        }
-        errorCheck();
+        // nothing else to do this tick
+        return;
       }
-    } else {
+
+      // Update UI elements
       const hydrogenLevelElem = document.getElementById("hydrogen-level");
       if (hydrogenLevelElem)
         hydrogenLevelElem.innerHTML = this.storage.toFixed(2) + " g";
-      let hydrogenPercentage = (this.storage / this.capacity) * 100;
-      // Animate SVG half-circle hydrogen gauge
+      const hydrogenPercentage = (this.storage / this.capacity) * 100;
+
       const hydrogenGaugeFill = document.getElementById("hydrogen-gauge-fill");
       if (hydrogenGaugeFill) {
         const totalLength = 157;
         const offset = totalLength * (1 - hydrogenPercentage / 100);
         hydrogenGaugeFill.setAttribute("stroke-dashoffset", offset);
       }
+      const stickyHydrogenGaugeFill = document.getElementById(
+        "sticky-hydrogen-gauge-fill"
+      );
+      if (stickyHydrogenGaugeFill) {
+        // keep same total length as main gauge (157) so both visuals are proportional
+        const stickyTotalLength = 157;
+        const stickyOffset = stickyTotalLength * (1 - hydrogenPercentage / 100);
+        stickyHydrogenGaugeFill.setAttribute("stroke-dashoffset", stickyOffset);
+      }
+
+      // Also update hydrogen storage percentage badge and gauge width so all UI reflects new storage
+      const hydrogenStoragePercentElem = document.getElementById(
+        "hydrogen-storage-percentage"
+      );
+      if (hydrogenStoragePercentElem && this.capacity > 0) {
+        hydrogenStoragePercentElem.textContent =
+          ((this.storage / this.capacity) * 100).toFixed(1) + "%";
+      }
+      const hydrogenGaugeLevelElem = document.getElementById(
+        "hydrogen-gauge-level"
+      );
+      if (hydrogenGaugeLevelElem) {
+        hydrogenGaugeLevelElem.style.width =
+          hydrogenPercentage.toFixed(1) + "%";
+      }
+
       const hydrogenGaugePercentElem = document.getElementById(
         "hydrogen-gauge-percentage"
       );
@@ -702,18 +740,37 @@ export class electrolyzer {
         hydrogenGaugePercentElem.textContent =
           hydrogenPercentage.toFixed(1) + " %";
         hydrogenGaugePercentElem.setAttribute("fill", "#222");
+        const stickyHydrogenGaugePercentElem = document.getElementById(
+          "sticky-hydrogen-gauge-percentage"
+        );
+        if (stickyHydrogenGaugePercentElem)
+          stickyHydrogenGaugePercentElem.textContent =
+            hydrogenPercentage.toFixed(1) + " %";
       }
+
+      // Update top-panel hydrogen display if available
+      if (window.setHydrogenTopPanel)
+        window.setHydrogenTopPanel(this.storage.toFixed(2));
+
+      const simStateElem = document.getElementById("simulation-state");
+      if (simStateElem) {
+        if (simStateElem.innerHTML === "Charge Mode")
+          simStateElem.innerHTML = "Charge Mode + Hydrogen Mode ";
+        else simStateElem.innerHTML = "Hydrogen Mode ";
+      }
+
       errorCheck();
+    } catch (e) {
+      console.warn("produceHydrogen error", e);
     }
   }
 }
 
 export class heater {
   constructor() {
-    // sensible defaults (fractions are unitless, efficiencies 0..1)
     this.config = {
-      electrolyzerRecoverableFraction: 0.2, // fraction of waste heat that can be recovered
-      electrolyzerExchangerEff: 0.8, // heat exchanger efficiency
+      electrolyzerRecoverableFraction: 0.2,
+      electrolyzerExchangerEff: 0.8,
       fuelcellRecoverableFraction: 0.85,
       fuelcellExchangerEff: 0.9,
     };
@@ -809,16 +866,14 @@ export class heater {
     };
   }
 }
-// --- Thermal storage model ---
+
 const thermalStorage = {
-  capacity_kWh: 50, // default capacity
+  capacity_kWh: 50,
   level_kWh: 0,
-  lossFractionPerHour: 0.01, // 1% per hour
+  lossFractionPerHour: 0.01, //1% per hour
 };
 
 function routeRecoveredHeat_kWh(recovered_kWh, dtHours = 1 / 3600) {
-  // recovered_kWh is kWh for the dt passed (caller should pass dtSeconds/3600)
-  // First: store as much as possible
   const free = Math.max(
     0,
     thermalStorage.capacity_kWh - thermalStorage.level_kWh
@@ -826,7 +881,7 @@ function routeRecoveredHeat_kWh(recovered_kWh, dtHours = 1 / 3600) {
   const toStore = Math.min(recovered_kWh, free);
   thermalStorage.level_kWh += toStore;
   const dumped = Math.max(0, recovered_kWh - toStore);
-  // Apply storage losses for this dt (fraction per hour)
+
   const loss =
     thermalStorage.level_kWh * (thermalStorage.lossFractionPerHour * dtHours);
   thermalStorage.level_kWh = Math.max(0, thermalStorage.level_kWh - loss);
@@ -837,11 +892,7 @@ function formatKWh(v) {
   return Number(v || 0).toFixed(3) + " kWh";
 }
 
-// ensureThermalGaugeDOM removed: thermal gauge exists only in the sticky bar now
-
-// update thermal gauge UI
 function updateThermalGaugeUI() {
-  // Only update the sticky bar thermal gauge (UI exists in sticky bar)
   const percent = Math.min(
     100,
     (thermalStorage.level_kWh / Math.max(1, thermalStorage.capacity_kWh)) * 100
@@ -849,7 +900,7 @@ function updateThermalGaugeUI() {
   const stickyThermalPercentageElem = document.getElementById(
     "sticky-thermal-gauge-percentage"
   );
-  // display current storage in kWh (not capacity) while the SVG fill still represents level/capacity
+
   if (stickyThermalPercentageElem)
     stickyThermalPercentageElem.textContent = formatKWh(
       thermalStorage.level_kWh
@@ -864,16 +915,10 @@ function updateThermalGaugeUI() {
   }
 }
 
-// --- Machinery heat breakdown UI and heat consumers ---
-// Show raw vs recoverable heat and allow consuming stored heat (shower/radiator)
-
 function updateHeatBreakdownUI(heat) {
-  // Machine heat info is intentionally not shown in the thermal panel.
-  // The simulation still computes recoverable_kWh and stores it in the thermal storage.
   return;
 }
 
-// Heat consumer class and UI
 class HeatConsumer {
   constructor(id, name, type = "constant", power_kW = 1, options = {}) {
     this.id = id;
@@ -886,10 +931,9 @@ class HeatConsumer {
     this.targetTemp = options.targetTemp || 21;
     this.thermalMass_kWhPerDeg = options.thermalMass_kWhPerDeg || 0.25;
     this.priority = options.priority || 1;
-    // shower-specific: track liters used; default deltaT for heating incoming water (°C)
+
     this.waterLiters = 0;
-    this.showerDeltaT = options.showerDeltaT || 35; // typical rise from cold to shower temp
-    // radiator/shower UI temperature state (supply/outlet temp in °C)
+    this.showerDeltaT = options.showerDeltaT || 35;
     this.supplyTemp =
       options.supplyTemp ||
       (this.id === "radiator" ? 45 : this.id === "shower" ? 45 : undefined);
@@ -898,7 +942,8 @@ class HeatConsumer {
   consume(dtHours = 1 / 3600) {
     if (!this.enabled || dtHours <= 0) return 0;
     if (this.type === "constant") {
-      const need = this.power_kW * dtHours;
+      const sf = typeof speedfactor !== "undefined" ? Number(speedfactor) : 1;
+      const need = this.power_kW * dtHours * sf;
       const provided = Math.min(thermalStorage.level_kWh, need);
       thermalStorage.level_kWh = Math.max(
         0,
@@ -930,7 +975,8 @@ class HeatConsumer {
     if (this.type === "thermostat") {
       const delta = this.targetTemp - this.currentTemp;
       if (delta <= 0) return 0;
-      const need = delta * this.thermalMass_kWhPerDeg;
+      const sf = typeof speedfactor !== "undefined" ? Number(speedfactor) : 1;
+      const need = delta * this.thermalMass_kWhPerDeg * sf;
       const provided = Math.min(thermalStorage.level_kWh, need);
       thermalStorage.level_kWh = Math.max(
         0,
@@ -1027,6 +1073,7 @@ window.consumerState = {
     currentTemp: 18,
     targetTemp: 21,
     thermalMass_kWhPerDeg: 0.25,
+    area_m2: 20,
     delivered_kWh: 0,
     priority: 1,
   },
@@ -1068,6 +1115,124 @@ window.consumerState = {
   },
 };
 
+/**
+ * Apply a named use case which adjusts the primary room's name, area (m^2)
+ * and thermalMass (kWh required to raise room by 1°C) so room size influences
+ * how fast it heats up. Call updateHeatConsumersUI() after applying.
+ *
+ * Mapping (per product manager):
+ * - offgrid -> Living room, 20 m²
+ * - microgrid -> Storage room, 100 m²
+ * - evcharge -> Storage hall, 1000 m²
+ * - industrial -> Storage hall (Large), 5000 m²
+ */
+function applyUseCase(usecaseKey) {
+  const mapping = {
+    offgrid: { name: "Living room", area: 20 },
+    microgrid: { name: "Storage room", area: 100 },
+    evcharge: { name: "Storage hall", area: 1000 },
+    industrial: { name: "Storage hall (Large)", area: 5000 },
+  };
+  const m = mapping[usecaseKey] || mapping.offgrid;
+  const room = window.consumerState && window.consumerState.room;
+  if (!room) return;
+  room.name = m.name;
+  room.area_m2 = m.area;
+  // thermalMass per °C scales linearly with area. Calibrated so 20 m² -> 0.25 kWh/°C
+  room.thermalMass_kWhPerDeg = Number((m.area * 0.0125).toFixed(4));
+  // update UI summary area under use-case selector if present
+  const bp = document.getElementById("bullet-points-container");
+  if (bp) {
+    bp.innerHTML = `<div style="margin-top:8px;font-size:0.98em;">Selected room: <strong>${room.name}</strong> — area: <strong>${room.area_m2} m²</strong>. Larger rooms require more energy to raise temperature (slower warm-up).</div>`;
+  }
+  // refresh the consumers UI so labels/temps reflect new settings
+  if (typeof updateHeatConsumersUI === "function") updateHeatConsumersUI();
+
+  // Reset storages when switching use case: battery, hydrogen, thermal
+  try {
+    if (typeof charge !== "undefined" && charge) {
+      charge.storage = 0;
+      if (typeof window.setBatteryTopPanel === "function")
+        window.setBatteryTopPanel(0, charge.capacity);
+      const batteryLevelElem = document.getElementById("battery-level");
+      if (batteryLevelElem) batteryLevelElem.innerText = "0 kWh";
+      const batteryStoragePercent = document.getElementById(
+        "battery-storage-percentage"
+      );
+      if (batteryStoragePercent) batteryStoragePercent.textContent = "0%";
+    }
+  } catch (e) {
+    console.warn("Failed to reset battery storage on usecase change", e);
+  }
+
+  // Ensure all battery gauge visuals are reset as well
+  try {
+    const batteryGaugeFill = document.getElementById("battery-gauge-fill");
+    if (batteryGaugeFill) {
+      const totalLength = 157;
+      batteryGaugeFill.setAttribute("stroke-dashoffset", totalLength);
+    }
+    const batteryGaugeLevelElem = document.getElementById(
+      "battery-gauge-level"
+    );
+    if (batteryGaugeLevelElem) batteryGaugeLevelElem.style.width = "0%";
+    const batteryGaugePercentElem = document.getElementById(
+      "battery-gauge-percentage"
+    );
+    if (batteryGaugePercentElem) batteryGaugePercentElem.textContent = "0 %";
+    const stickyBatteryGaugeFill = document.getElementById(
+      "sticky-battery-gauge-fill"
+    );
+    if (stickyBatteryGaugeFill)
+      stickyBatteryGaugeFill.setAttribute("stroke-dashoffset", 157);
+    const stickyBatteryGaugePercent = document.getElementById(
+      "sticky-battery-gauge-percentage"
+    );
+    if (stickyBatteryGaugePercent)
+      stickyBatteryGaugePercent.textContent = "0 %";
+    // Update wave loader positions if present
+    const waveLoader1 = document.querySelector(".wave-loader1");
+    if (waveLoader1) {
+      waveLoader1.style.setProperty("--before-top", -15 + "%");
+      waveLoader1.style.setProperty("--after-top", -15 + "%");
+    }
+  } catch (e) {
+    console.warn("Failed to reset battery gauge visuals", e);
+  }
+
+  try {
+    if (typeof hydro !== "undefined" && hydro) {
+      hydro.storage = 0;
+      const hydrogenLevelElem = document.getElementById("hydrogen-level");
+      if (hydrogenLevelElem) hydrogenLevelElem.innerText = "0.00 g";
+      const hydrogenStoragePercentElem = document.getElementById(
+        "hydrogen-storage-percentage"
+      );
+      if (hydrogenStoragePercentElem)
+        hydrogenStoragePercentElem.textContent = "0%";
+      const hydrogenGaugePercentElem = document.getElementById(
+        "hydrogen-gauge-percentage"
+      );
+      if (hydrogenGaugePercentElem) hydrogenGaugePercentElem.innerText = "0 %";
+      const hydrogenGaugeLevelElem = document.getElementById(
+        "hydrogen-gauge-level"
+      );
+      if (hydrogenGaugeLevelElem) hydrogenGaugeLevelElem.style.width = "0%";
+    }
+  } catch (e) {
+    console.warn("Failed to reset hydrogen storage on usecase change", e);
+  }
+
+  try {
+    if (typeof thermalStorage !== "undefined" && thermalStorage) {
+      thermalStorage.level_kWh = 0;
+      updateThermalGaugeUI();
+    }
+  } catch (e) {
+    console.warn("Failed to reset thermal storage on usecase change", e);
+  }
+}
+
 // For backwards compatibility: export a small array view used by some code paths
 // Helper to return the current heat consumer objects as an array (single source-of-truth)
 function getHeatConsumers() {
@@ -1089,8 +1254,9 @@ function consumePlainConsumer(c, dtHours = 1 / 3600) {
   if (c.enabled === false || dtHours <= 0) return 0;
   const type = c.type || "constant";
   if (type === "constant") {
+    const sf = typeof speedfactor !== "undefined" ? Number(speedfactor) : 1;
     const power_kW = Number(c.power_kW) || 0;
-    const need = power_kW * dtHours;
+    const need = power_kW * dtHours * sf;
     const provided = Math.min(thermalStorage.level_kWh, need);
     thermalStorage.level_kWh = Math.max(0, thermalStorage.level_kWh - provided);
     c.delivered_kWh = Number(((c.delivered_kWh || 0) + provided).toFixed(6));
@@ -1112,10 +1278,11 @@ function consumePlainConsumer(c, dtHours = 1 / 3600) {
     return provided;
   }
   if (type === "thermostat") {
+    const sf2 = typeof speedfactor !== "undefined" ? Number(speedfactor) : 1;
     const delta = (c.targetTemp || 0) - (c.currentTemp || 0);
     if (delta <= 0) return 0;
     const thermalMass = c.thermalMass_kWhPerDeg || 0.25;
-    const need = delta * thermalMass;
+    const need = delta * thermalMass * sf2;
     const provided = Math.min(thermalStorage.level_kWh, need);
     thermalStorage.level_kWh = Math.max(0, thermalStorage.level_kWh - provided);
     c.currentTemp = Number(
@@ -1189,29 +1356,56 @@ function updateHeatConsumersUI() {
         const stats = document.getElementById(`heat-stats-${c.id}`);
         if (stats) {
           if (c.id === "shower") {
-            stats.textContent = `${c.name}: temp ${Number(
+            const tlabel_p = window.getTranslation
+              ? window.getTranslation("tempLabel")
+              : "temp";
+            const plabel_p = window.getTranslation
+              ? window.getTranslation("powerLabel")
+              : "power";
+            const dlabel_p = window.getTranslation
+              ? window.getTranslation("deliveredLabel")
+              : "delivered";
+            const wlabel_p = window.getTranslation
+              ? window.getTranslation("waterLabel")
+              : "water";
+            stats.textContent = `${c.name}: ${tlabel_p} ${Number(
               c.supplyTemp || 0
-            )}°C | power ${Number(c.power_kW || 0).toFixed(
+            )}°C | ${plabel_p} ${Number(c.power_kW || 0).toFixed(
               3
-            )} kW | delivered ${Number(c.delivered_kWh || 0).toFixed(
+            )} kW | ${dlabel_p} ${Number(c.delivered_kWh || 0).toFixed(
               3
-            )} kWh | water ${Number(c.waterLiters || 0).toFixed(3)} L`;
+            )} kWh | ${wlabel_p} ${Number(c.waterLiters || 0).toFixed(3)} L`;
           } else if (c.id === "radiator") {
-            stats.textContent = `${c.name}: temp ${Number(
+            const tlabel_p2 = window.getTranslation
+              ? window.getTranslation("tempLabel")
+              : "temp";
+            const plabel_p2 = window.getTranslation
+              ? window.getTranslation("powerLabel")
+              : "power";
+            const dlabel_p2 = window.getTranslation
+              ? window.getTranslation("deliveredLabel")
+              : "delivered";
+            stats.textContent = `${c.name}: ${tlabel_p2} ${Number(
               c.supplyTemp || 0
-            )}°C | power ${Number(c.power_kW || 0).toFixed(
+            )}°C | ${plabel_p2} ${Number(c.power_kW || 0).toFixed(
               3
-            )} kW | delivered ${Number(c.delivered_kWh || 0).toFixed(3)} kWh`;
+            )} kW | ${dlabel_p2} ${Number(c.delivered_kWh || 0).toFixed(
+              3
+            )} kWh`;
           }
         }
       }
-      // update footer and sticky gauge
+
       const footer = document.getElementById("heat-consumers-footer");
-      if (footer)
-        footer.textContent = `Thermal store: ${formatKWh(
+      if (footer) {
+        const tStore = window.getTranslation
+          ? window.getTranslation("thermalStoreLabel")
+          : "Thermal store:";
+        footer.textContent = `${tStore} ${formatKWh(
           thermalStorage.level_kWh
         )} / ${thermalStorage.capacity_kWh} kWh`;
-      // update EV/H2 top values as well
+      }
+
       if (
         window.consumers &&
         typeof window.consumers.updateTopPanels === "function"
@@ -1223,10 +1417,18 @@ function updateHeatConsumersUI() {
     return;
   }
 
-  // Clear and rebuild DOM content for predictable button wiring
-  container.innerHTML = "";
+  const leftTarget =
+    document.getElementById("consumer-panel-left") || container;
+  const rightTarget =
+    document.getElementById("consumer-panel-right") || container;
 
-  // EV / H2 quick controls area (rendered at the top of the Consumers panel)
+  if (leftTarget === rightTarget) {
+    leftTarget.innerHTML = "";
+  } else {
+    leftTarget.innerHTML = "";
+    rightTarget.innerHTML = "";
+  }
+
   const stationControls = document.createElement("div");
   stationControls.style.display = "flex";
   stationControls.style.gap = "12px";
@@ -1250,12 +1452,15 @@ function updateHeatConsumersUI() {
     const evLabel = document.createElement("div");
     evLabel.textContent = `${ev.name}`;
     evLabel.style.fontWeight = "700";
-    const evLevel = document.createElement("div");
-    evLevel.id = "consumer-ev-level";
-    evLevel.textContent = `${Number(ev.level_kWh || 0).toFixed(2)} kWh`;
+  const evLevel = document.createElement("div");
+  evLevel.id = "consumer-ev-level";
+  evLevel.className = "consumer-level";
+  evLevel.textContent = `${Number(ev.level_kWh || 0).toFixed(2)} kWh`;
     evLevel.style.margin = "6px 0";
     const evChargeBtn = document.createElement("button");
-    evChargeBtn.textContent = "Charge EV +1 kWh";
+    evChargeBtn.textContent = window.getTranslation
+      ? window.getTranslation("chargeEVBtn")
+      : "Charge EV +1 kWh";
     evChargeBtn.className = "start-btn";
     evChargeBtn.addEventListener("click", function () {
       window.chargeEV(1);
@@ -1277,12 +1482,15 @@ function updateHeatConsumersUI() {
     const h2Label = document.createElement("div");
     h2Label.textContent = `${h2.name}`;
     h2Label.style.fontWeight = "700";
-    const h2Level = document.createElement("div");
-    h2Level.id = "consumer-h2-level";
-    h2Level.textContent = `${Number(h2.level_g || 0).toFixed(2)} g`;
+  const h2Level = document.createElement("div");
+  h2Level.id = "consumer-h2-level";
+  h2Level.className = "consumer-level";
+  h2Level.textContent = `${Number(h2.level_g || 0).toFixed(2)} g`;
     h2Level.style.margin = "6px 0";
     const h2ChargeBtn = document.createElement("button");
-    h2ChargeBtn.textContent = "Charge H2 +100 g";
+    h2ChargeBtn.textContent = window.getTranslation
+      ? window.getTranslation("chargeH2Btn")
+      : "Charge H2 +100 g";
     h2ChargeBtn.className = "start-btn";
     h2ChargeBtn.addEventListener("click", function () {
       window.chargeH2(100);
@@ -1294,24 +1502,30 @@ function updateHeatConsumersUI() {
   }
 
   if (stationControls.childElementCount > 0)
-    container.appendChild(stationControls);
+    leftTarget.appendChild(stationControls);
 
   const title = document.createElement("div");
-  title.innerHTML = "<strong>Heat consumers</strong>";
-  container.appendChild(title);
+  const heatTitle = window.getTranslation
+    ? window.getTranslation("heatConsumersTitle")
+    : "Heat consumers";
+  title.innerHTML = `<strong>${heatTitle}</strong>`;
+  rightTarget.appendChild(title);
 
-  // Living room temperature quick-display
   const roomTempDisplay = document.createElement("div");
   roomTempDisplay.id = "room-temp-display";
   roomTempDisplay.style.marginTop = "6px";
   roomTempDisplay.style.fontSize = "1.05em";
   roomTempDisplay.style.fontWeight = "700";
   const room = getHeatConsumers().find((x) => x.id === "room");
-  if (room)
-    roomTempDisplay.textContent = `Living room: ${room.currentTemp.toFixed(
+  if (room) {
+    const areaText = room.area_m2 ? ` (${room.area_m2} m²)` : "";
+    roomTempDisplay.textContent = `${
+      room.name
+    }${areaText}: ${room.currentTemp.toFixed(
       2
     )}°C (target ${room.targetTemp.toFixed(1)}°C)`;
-  container.appendChild(roomTempDisplay);
+  }
+  rightTarget.appendChild(roomTempDisplay);
 
   const list = document.createElement("div");
   list.style.marginTop = "8px";
@@ -1331,18 +1545,28 @@ function updateHeatConsumersUI() {
     left.style.flex = "1";
     left.style.paddingRight = "8px";
     if (s.type === "thermostat") {
+      const onText = window.getTranslation
+        ? window.getTranslation("onText")
+        : "On";
+      const offText = window.getTranslation
+        ? window.getTranslation("offText")
+        : "Off";
+      const tlabel_tt = window.getTranslation
+        ? window.getTranslation("tempLabel")
+        : "temp";
+      const dlabel_tt = window.getTranslation
+        ? window.getTranslation("deliveredLabel")
+        : "delivered";
       left.textContent = `${s.name}: ${
-        s.enabled ? "on" : "off"
-      } | temp ${s.currentTemp.toFixed(1)}°C → ${s.targetTemp.toFixed(
+        s.enabled ? onText : offText
+      } | ${tlabel_tt} ${s.currentTemp.toFixed(1)}°C → ${s.targetTemp.toFixed(
         1
-      )}°C | delivered ${s.delivered_kWh.toFixed(3)} kWh`;
+      )}°C | ${dlabel_tt} ${s.delivered_kWh.toFixed(3)} kWh`;
       row.appendChild(left);
     } else {
-      // show only the component name on the left; live stats are shown above each slider
       left.textContent = `${s.name}`;
       row.appendChild(left);
 
-      // Create a vertical controls container to stack slider (full-width) and button below
       const controlsWrap = document.createElement("div");
       controlsWrap.style.display = "flex";
       controlsWrap.style.flexDirection = "column";
@@ -1350,28 +1574,37 @@ function updateHeatConsumersUI() {
       controlsWrap.style.gap = "6px";
       controlsWrap.style.minWidth = "140px";
 
-      // Slider row (full width relative to left column)
       const sliderRow = document.createElement("div");
       sliderRow.style.display = "flex";
       sliderRow.style.alignItems = "center";
       sliderRow.style.justifyContent = "flex-end";
       sliderRow.style.width = "100%";
 
-      // If this consumer is the shower, offer a temperature slider (°C)
       if (s.id === "shower") {
-        // stats shown above the slider
         const stats = document.createElement("div");
         stats.style.fontSize = "0.95em";
         stats.style.marginBottom = "6px";
         stats.style.textAlign = "right";
         stats.id = `heat-stats-${c.id}`;
-        stats.textContent = `${s.name}: temp ${
+        const tlabel = window.getTranslation
+          ? window.getTranslation("tempLabel")
+          : "temp";
+        const plabel = window.getTranslation
+          ? window.getTranslation("powerLabel")
+          : "power";
+        const dlabel = window.getTranslation
+          ? window.getTranslation("deliveredLabel")
+          : "delivered";
+        const wlabel = window.getTranslation
+          ? window.getTranslation("waterLabel")
+          : "water";
+        stats.textContent = `${s.name}: ${tlabel} ${
           c.supplyTemp
-        }°C | power ${c.power_kW.toFixed(
+        }°C | ${plabel} ${c.power_kW.toFixed(
           3
-        )} kW | delivered ${c.delivered_kWh.toFixed(
+        )} kW | ${dlabel} ${c.delivered_kWh.toFixed(
           3
-        )} kWh | water ${c.waterLiters.toFixed(3)} L`;
+        )} kWh | ${wlabel} ${c.waterLiters.toFixed(3)} L`;
         controlsWrap.appendChild(stats);
 
         const slider = document.createElement("input");
@@ -1380,17 +1613,19 @@ function updateHeatConsumersUI() {
         slider.max = 55;
         slider.step = 0.5;
         slider.value = c.supplyTemp || 45;
-        slider.title = "Shower water temperature (°C)";
+        slider.title = window.getTranslation
+          ? window.getTranslation("showerTempTitle")
+          : "Shower water temperature (°C)";
         slider.style.width = "200px";
-        // assumptions: flow ~ 0.12 kg/s (7.2 L/min), water density ~1 kg/L, specific heat 4.186 kJ/kg°C
+        //assumptions: flow ~ 0.12 kg/s (7.2 L/min), water density ~1 kg/L, specific heat 4.186 kJ/kg°C
         const flow_l_per_s = 0.12;
         const kWhPerLPerDeg = 0.00116278; // same as used for compute liters
         const updateShowerPower = () => {
           const inletTemp = 10; // assumed cold inlet
           const deltaT = Math.max(1, (c.supplyTemp || 45) - inletTemp);
-          // power_kW = flow_l_per_s * liters/sec * specific heat * deltaT -> convert kJ to kWh
-          // liters per second = flow_l_per_s; energy per second (kW) = flow_l_per_s * kWhPerLPerDeg * deltaT * 3600?
-          // Simpler: kW = flow_l_per_s * 4.186 * deltaT / 1000 -> since 4.186 kJ/kg°C
+          //power_kW = flow_l_per_s * liters/sec * specific heat * deltaT -> convert kJ to kWh
+          //liters per second = flow_l_per_s; energy per second (kW) = flow_l_per_s * kWhPerLPerDeg * deltaT * 3600?
+          //Simpler: kW = flow_l_per_s * 4.186 * deltaT / 1000 -> since 4.186 kJ/kg°C
           const power_kW = (flow_l_per_s * 4.186 * deltaT) / 1.0; // kW approx
           c.power_kW = Number(power_kW.toFixed(3));
         };
@@ -1411,25 +1646,37 @@ function updateHeatConsumersUI() {
           c.supplyTemp = Number(slider.value);
           updateShowerPower();
           // update stats above slider only
-          const txt = `${s.name}: temp ${
+          const tlabel_i = window.getTranslation
+            ? window.getTranslation("tempLabel")
+            : "temp";
+          const plabel_i = window.getTranslation
+            ? window.getTranslation("powerLabel")
+            : "power";
+          const dlabel_i = window.getTranslation
+            ? window.getTranslation("deliveredLabel")
+            : "delivered";
+          const wlabel_i = window.getTranslation
+            ? window.getTranslation("waterLabel")
+            : "water";
+          const txt = `${s.name}: ${tlabel_i} ${
             c.supplyTemp
-          }°C | power ${c.power_kW.toFixed(
+          }°C | ${plabel_i} ${c.power_kW.toFixed(
             3
-          )} kW | delivered ${c.delivered_kWh.toFixed(
+          )} kW | ${dlabel_i} ${c.delivered_kWh.toFixed(
             3
-          )} kWh | water ${c.waterLiters.toFixed(3)} L`;
+          )} kWh | ${wlabel_i} ${c.waterLiters.toFixed(3)} L`;
           stats.textContent = txt;
         });
         // initialize mapping
         updateShowerPower();
         // ensure initial stats shown above slider
-        stats.textContent = `${s.name}: temp ${
+        stats.textContent = `${s.name}: ${tlabel} ${
           c.supplyTemp
-        }°C | power ${c.power_kW.toFixed(
+        }°C | ${plabel} ${c.power_kW.toFixed(
           3
-        )} kW | delivered ${c.delivered_kWh.toFixed(
+        )} kW | ${dlabel} ${c.delivered_kWh.toFixed(
           3
-        )} kWh | water ${c.waterLiters.toFixed(3)} L`;
+        )} kWh | ${wlabel} ${c.waterLiters.toFixed(3)} L`;
         left.textContent = `${s.name}`;
         sliderRow.appendChild(slider);
       }
@@ -1441,11 +1688,20 @@ function updateHeatConsumersUI() {
         stats.style.marginBottom = "6px";
         stats.style.textAlign = "right";
         stats.id = `heat-stats-${c.id}`;
-        stats.textContent = `${s.name}: temp ${
+        const tlabelR = window.getTranslation
+          ? window.getTranslation("tempLabel")
+          : "temp";
+        const plabelR = window.getTranslation
+          ? window.getTranslation("powerLabel")
+          : "power";
+        const dlabelR = window.getTranslation
+          ? window.getTranslation("deliveredLabel")
+          : "delivered";
+        stats.textContent = `${s.name}: ${tlabelR} ${
           c.supplyTemp
-        }°C | power ${c.power_kW.toFixed(
+        }°C | ${plabelR} ${c.power_kW.toFixed(
           3
-        )} kW | delivered ${c.delivered_kWh.toFixed(3)} kWh`;
+        )} kW | ${dlabelR} ${c.delivered_kWh.toFixed(3)} kWh`;
         controlsWrap.appendChild(stats);
 
         const slider = document.createElement("input");
@@ -1454,7 +1710,9 @@ function updateHeatConsumersUI() {
         slider.max = 80;
         slider.step = 1;
         slider.value = c.supplyTemp || 45;
-        slider.title = "Radiator supply temperature (°C)";
+        slider.title = window.getTranslation
+          ? window.getTranslation("radiatorTempTitle")
+          : "Radiator supply temperature (°C)";
         slider.style.width = "200px";
         // mapping: assume radiator power scales with deltaT to room (simple linear model)
         const room = getHeatConsumers().find((x) => x.id === "room");
@@ -1483,19 +1741,28 @@ function updateHeatConsumersUI() {
         slider.addEventListener("input", function () {
           c.supplyTemp = Number(slider.value);
           updateRadiatorPower();
-          const txt = `${s.name}: temp ${
+          const tlabel_rr = window.getTranslation
+            ? window.getTranslation("tempLabel")
+            : "temp";
+          const plabel_rr = window.getTranslation
+            ? window.getTranslation("powerLabel")
+            : "power";
+          const dlabel_rr = window.getTranslation
+            ? window.getTranslation("deliveredLabel")
+            : "delivered";
+          const txt = `${s.name}: ${tlabel_rr} ${
             c.supplyTemp
-          }°C | power ${c.power_kW.toFixed(
+          }°C | ${plabel_rr} ${c.power_kW.toFixed(
             3
-          )} kW | delivered ${c.delivered_kWh.toFixed(3)} kWh`;
+          )} kW | ${dlabel_rr} ${c.delivered_kWh.toFixed(3)} kWh`;
           stats.textContent = txt;
         });
         updateRadiatorPower();
-        stats.textContent = `${s.name}: temp ${
+        stats.textContent = `${s.name}: ${tlabelR} ${
           c.supplyTemp
-        }°C | power ${c.power_kW.toFixed(
+        }°C | ${plabelR} ${c.power_kW.toFixed(
           3
-        )} kW | delivered ${c.delivered_kWh.toFixed(3)} kWh`;
+        )} kW | ${dlabelR} ${c.delivered_kWh.toFixed(3)} kWh`;
         left.textContent = `${s.name}`;
         sliderRow.appendChild(slider);
       }
@@ -1513,10 +1780,14 @@ function updateHeatConsumersUI() {
       // Use green class when enabled, red when disabled (matches fuelcell start/stop styling)
       if (s.enabled) {
         btn.className = "start-btn"; // green
-        btn.textContent = "On";
+        btn.textContent = window.getTranslation
+          ? window.getTranslation("onText")
+          : "On";
       } else {
         btn.className = "stop-btn"; // red
-        btn.textContent = "Off";
+        btn.textContent = window.getTranslation
+          ? window.getTranslation("offText")
+          : "Off";
       }
       btn.addEventListener("click", function (ev) {
         ev.preventDefault();
@@ -1538,17 +1809,23 @@ function updateHeatConsumersUI() {
   footer.style.marginTop = "6px";
   footer.style.fontWeight = "600";
 
-  container.appendChild(list);
-  container.appendChild(footer);
+  rightTarget.appendChild(list);
+  rightTarget.appendChild(footer);
 
   // Update room temp display after rendering
   const updatedRoom = getHeatConsumers().find((x) => x.id === "room");
   if (updatedRoom) {
     const d = document.getElementById("room-temp-display");
-    if (d)
-      d.textContent = `Living room: ${updatedRoom.currentTemp.toFixed(
+    if (d) {
+      const areaText = updatedRoom.area_m2
+        ? ` (${updatedRoom.area_m2} m²)`
+        : "";
+      d.textContent = `${
+        updatedRoom.name
+      }${areaText}: ${updatedRoom.currentTemp.toFixed(
         2
       )}°C (target ${updatedRoom.targetTemp.toFixed(1)}°C)`;
+    }
   }
 }
 
@@ -1571,6 +1848,21 @@ window.chargeEV = function (kwh) {
       typeof window.consumers.updateTopPanels === "function"
     )
       window.consumers.updateTopPanels();
+    // Briefly animate the arrow from electrolyzer -> EV charge to indicate charge transfer
+    try {
+      const s = document.getElementById("electrolyzer-to-ev-static-arrow");
+      const a = document.getElementById("electrolyzer-to-ev-animated-arrow");
+      if (s && a) {
+        s.style.display = "none";
+        a.style.display = "block";
+        setTimeout(() => {
+          a.style.display = "none";
+          s.style.display = "block";
+        }, 900);
+      }
+    } catch (e) {
+      console.warn("ev arrow animation failed", e);
+    }
   } catch (e) {
     console.warn("chargeEV failed", e);
   }
@@ -1596,6 +1888,21 @@ window.chargeH2 = function (g) {
       typeof window.consumers.updateTopPanels === "function"
     )
       window.consumers.updateTopPanels();
+    // Briefly animate the arrow from fuelcell -> H2 station to indicate charge transfer
+    try {
+      const s = document.getElementById("fuelcell-to-h2-static-arrow");
+      const a = document.getElementById("fuelcell-to-h2-animated-arrow");
+      if (s && a) {
+        s.style.display = "none";
+        a.style.display = "block";
+        setTimeout(() => {
+          a.style.display = "none";
+          s.style.display = "block";
+        }, 900);
+      }
+    } catch (e) {
+      console.warn("h2 arrow animation failed", e);
+    }
   } catch (e) {
     console.warn("chargeH2 failed", e);
   }
@@ -1635,10 +1942,14 @@ window.toggleHeatConsumer = function (id, enabled) {
   if (btn) {
     if (enabled) {
       btn.className = "start-btn";
-      btn.textContent = "On";
+      btn.textContent = window.getTranslation
+        ? window.getTranslation("onText")
+        : "On";
     } else {
       btn.className = "stop-btn";
-      btn.textContent = "Off";
+      btn.textContent = window.getTranslation
+        ? window.getTranslation("offText")
+        : "Off";
     }
   }
 };
@@ -1937,7 +2248,12 @@ export class tradeElectricity {
       this.money -= pricePerKWh * amount;
       charge.updateBatteryStorage(amount);
       showNotification(
-        `${amount} kWh Electricity bought at ${pricePerKWh.toFixed(3)} €/kWh!`,
+        window.t
+          ? window.t('electricityBought', {
+              amount: amount,
+              price: pricePerKWh.toFixed(3),
+            })
+          : `${amount} kWh Electricity bought at ${pricePerKWh.toFixed(3)} €/kWh!`,
         "buy"
       );
       const moneyElem = document.getElementById("money");
@@ -1948,7 +2264,10 @@ export class tradeElectricity {
       let reason = "";
       if (!enoughMoney) reason += "not enough money. ";
       if (!enoughCapacity) reason += "not enough battery capacity.";
-      showNotification(`Cannot buy: ${reason.trim()}`, "sell");
+      showNotification(
+        window.t ? window.t('cannotBuy', { reason: reason.trim() }) : `Cannot buy: ${reason.trim()}`,
+        "sell"
+      );
     }
   }
   async sellElectricity() {
@@ -1959,7 +2278,12 @@ export class tradeElectricity {
       this.money += pricePerKWh * amount;
       charge.updateBatteryStorage(-amount);
       showNotification(
-        `${amount} kWh Electricity sold at ${pricePerKWh.toFixed(3)} €/kWh!`,
+        window.t
+          ? window.t('electricitySold', {
+              amount: amount,
+              price: pricePerKWh.toFixed(3),
+            })
+          : `${amount} kWh Electricity sold at ${pricePerKWh.toFixed(3)} €/kWh!`,
         "sell"
       );
       const moneyElem = document.getElementById("money");
@@ -1969,7 +2293,10 @@ export class tradeElectricity {
         setTimeout(() => moneyElem.classList.remove("money-pop"), 700);
       }
     } else {
-      showNotification(`Cannot sell: not enough storage.`, "buy");
+      showNotification(
+        window.t ? window.t('cannotSellNotEnoughStorage') : `Cannot sell: not enough storage.`,
+        "buy"
+      );
     }
   }
 
@@ -1980,9 +2307,12 @@ export class tradeElectricity {
       this.money += pricePerKWh * amount;
       charge.updateBatteryStorage(-amount);
       showNotification(
-        `${amount} kWh Electricity automatically sold at ${pricePerKWh.toFixed(
-          3
-        )} €/kWh!`,
+        window.t
+          ? window.t('electricityAutoSold', {
+              amount: amount,
+              price: pricePerKWh.toFixed(3),
+            })
+          : `${amount} kWh Electricity automatically sold at ${pricePerKWh.toFixed(3)} €/kWh!`,
         "sell"
       );
       const moneyElem = document.getElementById("money");
@@ -2087,7 +2417,11 @@ async function updateSimulation() {
     hydro.storage < hydro.capacity &&
     !electrolyzerManuallyStopped
   ) {
-    hydro.produceHydrogen();
+    try {
+      hydro.produceHydrogen();
+    } catch (err) {
+      console.error("[DEBUG] hydro.produceHydrogen() threw:", err);
+    }
   }
 
   try {
@@ -2197,7 +2531,7 @@ function resetSimulation() {
   }
 
   // Show notification
-  showNotification("Simulation reset!", "buy");
+  showNotification(window.t ? window.t('simulationReset') : 'Simulation reset!', "buy");
   // reset heat consumers stats
   try {
     const hc = getHeatConsumers();
@@ -2603,17 +2937,37 @@ document.addEventListener("DOMContentLoaded", function () {
 
 //Buttons für die Simulation
 document.getElementById("convert-to-hydrogen").addEventListener("click", () => {
-  if (hydro.storage > 0) {
+  try {
+    // If battery doesn't have enough energy, keep arrows static and notify user (localized)
+    const minBatteryThreshold = 0.1; // kWh minimal required to start
+    if (!charge || Number(charge.storage || 0) <= minBatteryThreshold) {
+      // Ensure arrows are static
+      try {
+        document.getElementById("electrolyzer-static-arrow").style.display = "block";
+        document.getElementById("electrolyzer-animated-arrow").style.display = "none";
+        const outStatic = document.getElementById("electrolyzer-output-static-arrow");
+        const outAnim = document.getElementById("electrolyzer-output-animated-arrow");
+        if (outStatic && outAnim) {
+          outStatic.style.display = "block";
+          outAnim.style.display = "none";
+        }
+      } catch (e) {
+        console.warn("Failed to set arrows static", e);
+      }
+
+      const msg = window.getTranslation
+        ? window.getTranslation("notEnoughBattery")
+        : "Not enough battery energy to start electrolyzer.";
+      showNotification(msg, "sell");
+      return;
+    }
+
+    // Proceed to start electrolyzer normally
     document.getElementById("simulation-state").innerHTML = " Hydrogen Mode ";
     document.getElementById("electrolyzer-static-arrow").style.display = "none";
-    document.getElementById("electrolyzer-animated-arrow").style.display =
-      "block";
-    const outStatic = document.getElementById(
-      "electrolyzer-output-static-arrow"
-    );
-    const outAnim = document.getElementById(
-      "electrolyzer-output-animated-arrow"
-    );
+    document.getElementById("electrolyzer-animated-arrow").style.display = "block";
+    const outStatic = document.getElementById("electrolyzer-output-static-arrow");
+    const outAnim = document.getElementById("electrolyzer-output-animated-arrow");
     if (outStatic && outAnim) {
       outStatic.style.display = "none";
       outAnim.style.display = "block";
@@ -2622,10 +2976,27 @@ document.getElementById("convert-to-hydrogen").addEventListener("click", () => {
     electrolyzerManuallyStopped = false;
     if (electrolyzerInterval === null) {
       electrolyzerInterval = setInterval(() => {
-        hydro.produceHydrogen(); //Wasserstoffproduktion schrittweise
-      }, 1000); //Alle Sekunde
+        hydro.produceHydrogen(); // run production each second; method handles battery checks
+      }, 1000);
       console.log("Electrolyzer started");
+      try {
+        const startMsg = window.getTranslation
+          ? window.getTranslation("startElectrolyzer")
+          : "Started Electrolyzer!";
+        showNotification(startMsg, "buy");
+      } catch (e) {
+        console.warn("notify start electrolyzer failed", e);
+      }
+      // If there is no battery energy, inform the user (but still allow the interval)
+      if (!(charge && charge.storage > 0)) {
+        const noBatMsg = window.getTranslation
+          ? window.getTranslation("notEnoughBattery")
+          : "Electrolyzer started but no battery energy available.";
+        showNotification(noBatMsg, "sell");
+      }
     }
+  } catch (e) {
+    console.warn("Failed to start electrolyzer", e);
   }
 });
 
@@ -2657,7 +3028,7 @@ document
         fc2cStatic.style.display = "none";
         fc2cAnim.style.display = "block";
       }
-      showNotification("Started Fuel Cell!", "buy");
+  showNotification(window.t ? window.t('startedFuelCellMsg') : 'Started Fuel Cell!', "buy");
       //Starte die Umwandlung im Elektrolyseur, wenn noch kein Intervall läuft
       if (fuelCellInterval === null) {
         fuelCellInterval = setInterval(() => {
@@ -2666,7 +3037,7 @@ document
         console.log("Fuel Cell started");
       }
     } else {
-      showNotification("No hydrogen stored.", "sell");
+      showNotification(window.t ? window.t('noHydrogenStored') : 'No hydrogen stored.', "sell");
     }
   });
 
@@ -2694,6 +3065,14 @@ document
       clearInterval(electrolyzerInterval); //Stoppe den Elektrolyseur
       electrolyzerInterval = null;
       console.log("Electrolyzer stopped");
+      try {
+        const stopMsg = window.getTranslation
+          ? window.getTranslation("stopElectrolyzer")
+          : "Stopped Electrolyzer!";
+        showNotification(stopMsg, "sell");
+      } catch (e) {
+        console.warn("notify stop electrolyzer failed", e);
+      }
     } else {
       // If never started, do not block future starts
       electrolyzerManuallyStopped = false;
@@ -2704,8 +3083,8 @@ document
   .getElementById("convert-to-electricity-stop")
   .addEventListener("click", () => {
     document.getElementById("simulation-state").innerHTML = " ";
-    updateFuelCellArrow(false);
-    showNotification("Stopped Fuel Cell!", "sell");
+  updateFuelCellArrow(false);
+  showNotification(window.t ? window.t('stoppedFuelCellMsg') : 'Stopped Fuel Cell!', "sell");
     const h2fStatic = document.getElementById(
       "hydrogen-to-fuelcell-static-arrow"
     );
@@ -2911,3 +3290,68 @@ function errorCheck() {
     resetSimulation();
   }
 }
+
+// Flowchart expand/collapse wiring: toggles the extra area below the flowchart by 194px
+document.addEventListener("DOMContentLoaded", function () {
+  try {
+    const toggle = document.getElementById("flowchart-toggle");
+    if (!toggle) return;
+    // find the closest .flowchart ancestor to expand
+    const flowchart =
+      toggle.closest(".flowchart") || document.querySelector(".flowchart");
+    if (!flowchart) return;
+    // Align the expanded subrow items under their parent icons
+    function positionFlowSubItems() {
+      try {
+        const evBlock = document.getElementById("flow-ev-block");
+        const h2Block = document.getElementById("flow-h2-block");
+        if (!evBlock && !h2Block) return;
+        const el = flowchart.querySelector(
+          '.flow-item img[alt="Electrolyzer"]'
+        );
+        const fc = flowchart.querySelector('.flow-item img[alt="Fuel Cell"]');
+        const containerRect = flowchart.getBoundingClientRect();
+        if (el && evBlock) {
+          const r = el.getBoundingClientRect();
+          // anchor slightly left by 20px for visual alignment (user requested additional 10px)
+          const centerX = r.left + r.width / 2 - containerRect.left - 20;
+          evBlock.style.left = Math.round(centerX) + "px";
+        }
+        if (fc && h2Block) {
+          const r2 = fc.getBoundingClientRect();
+          const centerX2 = r2.left + r2.width / 2 - containerRect.left - 20;
+          h2Block.style.left = Math.round(centerX2) + "px";
+        }
+      } catch (e) {
+        console.warn("positionFlowSubItems failed", e);
+      }
+    }
+
+    // Reposition on toggle and resize
+    toggle.addEventListener("click", function () {
+      const expanded = toggle.getAttribute("aria-expanded") === "true";
+      if (!expanded) {
+        flowchart.classList.add("expanded");
+        toggle.setAttribute("aria-expanded", "true");
+        toggle.textContent = "▲";
+        // ensure subitems are positioned after layout
+        setTimeout(positionFlowSubItems, 80);
+      } else {
+        flowchart.classList.remove("expanded");
+        toggle.setAttribute("aria-expanded", "false");
+        toggle.textContent = "▼";
+      }
+    });
+
+    // Recompute positions on window resize so subitems stay anchored
+    window.addEventListener("resize", function () {
+      if (flowchart.classList.contains("expanded")) positionFlowSubItems();
+    });
+    // Also run once on load in case the flowchart is initially expanded
+    setTimeout(() => {
+      if (flowchart.classList.contains("expanded")) positionFlowSubItems();
+    }, 120);
+  } catch (e) {
+    console.warn("flowchart toggle init failed", e);
+  }
+});

@@ -82,6 +82,44 @@
           <img src="/icons/charging-station.webp" alt="Charging Station" />
           <p>Charging Station</p>
         </div>
+        <!-- Subrow for expanded flowchart content (hidden until expanded) -->
+        <div class="flow-subrow" id="flowchart-subrow" style="display:none;width:100%;justify-content:center;gap:48px;margin-top:12px;">
+          <!-- EV charge under Electrolyzer -->
+          <div class="flow-subitem" id="flow-ev-block" style="display:flex;align-items:center;gap:32px;flex-direction:row;">
+            <!-- battery icon to the left of EV arrow -->
+            <div id="ev-left-battery" style="display:flex;flex-direction:column;align-items:center;margin-right:6px;">
+              <img id="ev-left-battery-icon" src="/icons/battery.webp" alt="Battery" style="width:54px;height:auto;" />
+              <div>Battery</div>
+            </div>
+            <div id="electrolyzer-to-ev-arrow" style="display:flex;flex-direction:column;align-items:center;">
+              <img id="electrolyzer-to-ev-static-arrow" src="/icons/arrow.webp" alt="->" style="width:40px;" />
+              <img id="electrolyzer-to-ev-animated-arrow" src="/icons/arrowanim.gif" alt="anim" style="width:40px;display:none;" />
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;">
+              <img id="ev-charge-icon" src="/icons/charging-station.webp" alt="EV Charge" style="width:54px;height:auto;" />
+              <div style="font-size:12px;margin-top:4px;">EV Charge</div>
+            </div>
+          </div>
+
+          <!-- H2 charging station under Fuel Cell -->
+          <div class="flow-subitem" id="flow-h2-block" style="display:flex;align-items:center;gap:32px;flex-direction:row;">
+            <!-- hydrogen storage icon to the left of H2 arrow -->
+            <div id="h2-left-storage" style="display:flex;flex-direction:column;align-items:center;margin-right:6px;">
+              <img id="h2-left-storage-icon" src="/icons/hydrogenstorage.webp" alt="Hydrogen Storage" style="width:54px;height:auto;" />
+              <div>Hydrogen Storage</div>
+            </div>
+            <div id="fuelcell-to-h2-arrow" style="display:flex;flex-direction:column;align-items:center;">
+              <img id="fuelcell-to-h2-static-arrow" src="/icons/arrow.webp" alt="->" style="width:40px;" />
+              <img id="fuelcell-to-h2-animated-arrow" src="/icons/arrowanim.gif" alt="anim" style="width:40px;display:none;" />
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;">
+              <img id="h2-charge-icon" src="/icons/hydrogenchargingstation.png" alt="H2 Charge" style="width:54px;height:auto;" />
+              <div style="font-size:12px;margin-top:4px;">H2 Charge</div>
+            </div>
+          </div>
+        </div>
+        <!-- Expand toggle: bottom centered arrow -->
+        <button id="flowchart-toggle" aria-expanded="false" title="Expand flowchart" style="position:absolute;left:50%;transform:translateX(-50%);bottom:6px;width:36px;height:28px;border-radius:6px;border:none;background:#1976d2;color:#fff;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.12);">▼</button>
       </div>
     </div>
     <div id="corner-widget" class="widget-card">
@@ -173,23 +211,23 @@
                 <img src="/icons/thermometer.webp" alt="Thermal Icon" style="width:34px;height:34px;object-fit:contain;" />
                 <div id="sticky-thermal-gauge-percentage" style="font-size: 16px; color: #222; font-weight: bold; text-align:center;">0 kWh</div>
               </div>
-              <div style="margin-top: 2px; font-size: 15px; color: #222; font-weight: 500;">Thermal</div>
+              <div style="margin-top: 2px; font-size: 15px; color: #222;">Thermal</div>
             </div>
             <!-- Sticky Bar Charging Station: Electric -->
             <div id="sticky-charging-electric" style="display: flex; flex-direction: column; align-items: center; margin-right: 2px;">
               <div style="display:flex;flex-direction:column;align-items:center;">
                 <img src="/icons/charging-station.webp" alt="Charging Station Electric" style="width:34px;height:34px;object-fit:contain;" />
-                <div id="charging-electric-level" style="font-size: 14px; color: #222; font-weight: 700; text-align:center;">0 kWh</div>
+                <div id="charging-electric-level" style="font-size: 14px;font-weight:bold; color: #222; text-align:center;">0 kWh</div>
               </div>
-              <div style="margin-top: 2px; font-size: 13px; color: #222; font-weight: 500;">EV Charge</div>
+              <div style="margin-top: 2px; font-size: 13px; color: #222;">EV Station</div>
             </div>
             <!-- Sticky Bar Charging Station: Hydrogen -->
             <div id="sticky-charging-hydrogen" style="display: flex; flex-direction: column; align-items: center; margin-right: 2px;">
               <div style="display:flex;flex-direction:column;align-items:center;">
                 <img src="/icons/hydrogenstorage.webp" alt="Charging Station Hydrogen" style="width:34px;height:34px;object-fit:contain;" />
-                <div id="charging-hydrogen-level" style="font-size: 14px; color: #222; font-weight: 700; text-align:center;">0 g</div>
+                <div id="charging-hydrogen-level" style="font-size: 14px; font-weight:bold; color: #222; text-align:center;">0 g</div>
               </div>
-              <div style="margin-top: 2px; font-size: 13px; color: #222; font-weight: 500;">H2 Charge</div>
+              <div style="margin-top: 2px; font-size: 13px; color: #222;">H2 Station</div>
             </div>
             <button id="lang-de" class="lang-toggle lang-off">DE</button>
             <button id="lang-en" class="lang-toggle lang-on">EN</button>
@@ -373,12 +411,17 @@
                   <button id="convert-to-electricity-stop" class="stop-btn">Stop Fuelcell</button>
                 </div>
               </div>
-              <div class="eco-item" id="consumer">
+
+            </div>
+                          <div class="eco-item" id="consumer">
                 <h3>Consumers</h3>
                 <div id="consumer-panel-content" style="padding:8px 4px;">
+                  <div class="consumer-columns" style="display:flex;gap:12px;align-items:flex-start;">
+                    <div id="consumer-panel-left" style="flex:0 0 260px;min-width:180px;"></div>
+                    <div id="consumer-panel-right" style="flex:1;"></div>
+                  </div>
                 </div>
               </div>
-            </div>
             <div id="button-container">
             </div>
 
