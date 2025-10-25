@@ -7,20 +7,29 @@ if (typeof window.money !== "number") {
 // If the app is loaded inside the widget iframe, allow a lightweight
 // embed-only mode. This will hide chrome elements and make the app
 // render more compact. The widget page sets `window.__WIDGET_EMBED = true`.
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener("DOMContentLoaded", function () {
   try {
     if (window.__WIDGET_EMBED) {
       // add a body class so CSS can target embed-mode
-      document.body.classList.add('embed-mode');
+      document.body.classList.add("embed-mode");
       // hide common chrome elements if present
-      document.querySelectorAll('.header, .footer, .sidebar, .sticky-bar, #flowchart-panel').forEach(function (el) {
-        try { el.style.display = 'none'; } catch (e) {}
-      });
+      document
+        .querySelectorAll(
+          ".header, .footer, .sidebar, .sticky-bar, #flowchart-panel"
+        )
+        .forEach(function (el) {
+          try {
+            el.style.display = "none";
+          } catch (e) {}
+        });
       // reduce global margins to fit widget container
-      try { document.documentElement.style.margin = '0'; document.body.style.margin = '0'; } catch (e) {}
+      try {
+        document.documentElement.style.margin = "0";
+        document.body.style.margin = "0";
+      } catch (e) {}
     }
   } catch (e) {
-    console.warn('embed-mode init failed', e);
+    console.warn("embed-mode init failed", e);
   }
 });
 // --- Flowchart fuel cell arrow toggle logic ---
@@ -35,7 +44,12 @@ function updateFuelCellArrow(isWorking) {
 
 function sellHydrogen(amount, pricePerGram) {
   if (!window.hydro || typeof window.money === "undefined") {
-    showNotification(window.t ? window.t('hydrogenNotInitialized') : 'Hydrogen system not initialized.', "sell");
+    showNotification(
+      window.t
+        ? window.t("hydrogenNotInitialized")
+        : "Hydrogen system not initialized.",
+      "sell"
+    );
     return false;
   }
   const amt = parseFloat(amount);
@@ -43,21 +57,29 @@ function sellHydrogen(amount, pricePerGram) {
   const amtKg = amt / 1000;
   const pricePerKg = parseFloat(pricePerGram);
   if (isNaN(amt) || amt <= 0) {
-    showNotification(window.t ? window.t('invalidHydrogenAmount') : 'Invalid hydrogen amount.', "sell");
+    showNotification(
+      window.t ? window.t("invalidHydrogenAmount") : "Invalid hydrogen amount.",
+      "sell"
+    );
     return false;
   }
   if (isNaN(pricePerKg) || pricePerKg <= 0) {
-    showNotification(window.t ? window.t('invalidHydrogenPrice') : 'Invalid hydrogen price.', "sell");
+    showNotification(
+      window.t ? window.t("invalidHydrogenPrice") : "Invalid hydrogen price.",
+      "sell"
+    );
     return false;
   }
   if (window.hydro.storage < amt) {
     showNotification(
       window.t
-        ? window.t('notEnoughHydrogenToSell', {
+        ? window.t("notEnoughHydrogenToSell", {
             have: window.hydro.storage.toFixed(2),
             tried: amt,
           })
-        : `Not enough hydrogen to sell. You have ${window.hydro.storage.toFixed(2)} g, tried to sell ${amt} g.`,
+        : `Not enough hydrogen to sell. You have ${window.hydro.storage.toFixed(
+            2
+          )} g, tried to sell ${amt} g.`,
       "sell"
     );
     return false;
@@ -76,12 +98,14 @@ function sellHydrogen(amount, pricePerGram) {
     window.setHydrogenTopPanel(window.hydro.storage.toFixed(2));
   showNotification(
     window.t
-      ? window.t('soldHydrogen', {
+      ? window.t("soldHydrogen", {
           kg: amtKg.toFixed(3),
           eur: (amtKg * pricePerKg).toFixed(2),
           price: pricePerKg.toFixed(2),
         })
-      : `Sold ${amtKg.toFixed(3)}kg hydrogen for ${(amtKg * pricePerKg).toFixed(2)} € at ${pricePerKg.toFixed(2)} €/kg`,
+      : `Sold ${amtKg.toFixed(3)}kg hydrogen for ${(amtKg * pricePerKg).toFixed(
+          2
+        )} € at ${pricePerKg.toFixed(2)} €/kg`,
     "sell"
   );
   // Update hydrogen gauge
@@ -569,7 +593,10 @@ export class fuelcell {
           clearInterval(fuelCellInterval);
           fuelCellInterval = null;
         }
-  showNotification(window.t ? window.t('batteryFull') : 'Battery is full.', "sell");
+        showNotification(
+          window.t ? window.t("batteryFull") : "Battery is full.",
+          "sell"
+        );
         return;
       }
       let actualPowerProduced = Math.min(powerProduced, availableCapacity);
@@ -586,7 +613,12 @@ export class fuelcell {
           fuelCellInterval = null;
         }
         updateFuelCellArrow(false);
-        showNotification(window.t ? window.t('fuelcellStoppedNoHydrogen') : 'Fuel cell stopped: No hydrogen left.', "sell");
+        showNotification(
+          window.t
+            ? window.t("fuelcellStoppedNoHydrogen")
+            : "Fuel cell stopped: No hydrogen left.",
+          "sell"
+        );
       }
 
       if (typeof window.setBatteryTopPanel === "function") {
@@ -1452,10 +1484,10 @@ function updateHeatConsumersUI() {
     const evLabel = document.createElement("div");
     evLabel.textContent = `${ev.name}`;
     evLabel.style.fontWeight = "700";
-  const evLevel = document.createElement("div");
-  evLevel.id = "consumer-ev-level";
-  evLevel.className = "consumer-level";
-  evLevel.textContent = `${Number(ev.level_kWh || 0).toFixed(2)} kWh`;
+    const evLevel = document.createElement("div");
+    evLevel.id = "consumer-ev-level";
+    evLevel.className = "consumer-level";
+    evLevel.textContent = `${Number(ev.level_kWh || 0).toFixed(2)} kWh`;
     evLevel.style.margin = "6px 0";
     const evChargeBtn = document.createElement("button");
     evChargeBtn.textContent = window.getTranslation
@@ -1482,10 +1514,10 @@ function updateHeatConsumersUI() {
     const h2Label = document.createElement("div");
     h2Label.textContent = `${h2.name}`;
     h2Label.style.fontWeight = "700";
-  const h2Level = document.createElement("div");
-  h2Level.id = "consumer-h2-level";
-  h2Level.className = "consumer-level";
-  h2Level.textContent = `${Number(h2.level_g || 0).toFixed(2)} g`;
+    const h2Level = document.createElement("div");
+    h2Level.id = "consumer-h2-level";
+    h2Level.className = "consumer-level";
+    h2Level.textContent = `${Number(h2.level_g || 0).toFixed(2)} g`;
     h2Level.style.margin = "6px 0";
     const h2ChargeBtn = document.createElement("button");
     h2ChargeBtn.textContent = window.getTranslation
@@ -2249,11 +2281,13 @@ export class tradeElectricity {
       charge.updateBatteryStorage(amount);
       showNotification(
         window.t
-          ? window.t('electricityBought', {
+          ? window.t("electricityBought", {
               amount: amount,
               price: pricePerKWh.toFixed(3),
             })
-          : `${amount} kWh Electricity bought at ${pricePerKWh.toFixed(3)} €/kWh!`,
+          : `${amount} kWh Electricity bought at ${pricePerKWh.toFixed(
+              3
+            )} €/kWh!`,
         "buy"
       );
       const moneyElem = document.getElementById("money");
@@ -2265,7 +2299,9 @@ export class tradeElectricity {
       if (!enoughMoney) reason += "not enough money. ";
       if (!enoughCapacity) reason += "not enough battery capacity.";
       showNotification(
-        window.t ? window.t('cannotBuy', { reason: reason.trim() }) : `Cannot buy: ${reason.trim()}`,
+        window.t
+          ? window.t("cannotBuy", { reason: reason.trim() })
+          : `Cannot buy: ${reason.trim()}`,
         "sell"
       );
     }
@@ -2279,11 +2315,13 @@ export class tradeElectricity {
       charge.updateBatteryStorage(-amount);
       showNotification(
         window.t
-          ? window.t('electricitySold', {
+          ? window.t("electricitySold", {
               amount: amount,
               price: pricePerKWh.toFixed(3),
             })
-          : `${amount} kWh Electricity sold at ${pricePerKWh.toFixed(3)} €/kWh!`,
+          : `${amount} kWh Electricity sold at ${pricePerKWh.toFixed(
+              3
+            )} €/kWh!`,
         "sell"
       );
       const moneyElem = document.getElementById("money");
@@ -2294,7 +2332,9 @@ export class tradeElectricity {
       }
     } else {
       showNotification(
-        window.t ? window.t('cannotSellNotEnoughStorage') : `Cannot sell: not enough storage.`,
+        window.t
+          ? window.t("cannotSellNotEnoughStorage")
+          : `Cannot sell: not enough storage.`,
         "buy"
       );
     }
@@ -2308,11 +2348,13 @@ export class tradeElectricity {
       charge.updateBatteryStorage(-amount);
       showNotification(
         window.t
-          ? window.t('electricityAutoSold', {
+          ? window.t("electricityAutoSold", {
               amount: amount,
               price: pricePerKWh.toFixed(3),
             })
-          : `${amount} kWh Electricity automatically sold at ${pricePerKWh.toFixed(3)} €/kWh!`,
+          : `${amount} kWh Electricity automatically sold at ${pricePerKWh.toFixed(
+              3
+            )} €/kWh!`,
         "sell"
       );
       const moneyElem = document.getElementById("money");
@@ -2531,7 +2573,10 @@ function resetSimulation() {
   }
 
   // Show notification
-  showNotification(window.t ? window.t('simulationReset') : 'Simulation reset!', "buy");
+  showNotification(
+    window.t ? window.t("simulationReset") : "Simulation reset!",
+    "buy"
+  );
   // reset heat consumers stats
   try {
     const hc = getHeatConsumers();
@@ -2943,10 +2988,16 @@ document.getElementById("convert-to-hydrogen").addEventListener("click", () => {
     if (!charge || Number(charge.storage || 0) <= minBatteryThreshold) {
       // Ensure arrows are static
       try {
-        document.getElementById("electrolyzer-static-arrow").style.display = "block";
-        document.getElementById("electrolyzer-animated-arrow").style.display = "none";
-        const outStatic = document.getElementById("electrolyzer-output-static-arrow");
-        const outAnim = document.getElementById("electrolyzer-output-animated-arrow");
+        document.getElementById("electrolyzer-static-arrow").style.display =
+          "block";
+        document.getElementById("electrolyzer-animated-arrow").style.display =
+          "none";
+        const outStatic = document.getElementById(
+          "electrolyzer-output-static-arrow"
+        );
+        const outAnim = document.getElementById(
+          "electrolyzer-output-animated-arrow"
+        );
         if (outStatic && outAnim) {
           outStatic.style.display = "block";
           outAnim.style.display = "none";
@@ -2965,9 +3016,14 @@ document.getElementById("convert-to-hydrogen").addEventListener("click", () => {
     // Proceed to start electrolyzer normally
     document.getElementById("simulation-state").innerHTML = " Hydrogen Mode ";
     document.getElementById("electrolyzer-static-arrow").style.display = "none";
-    document.getElementById("electrolyzer-animated-arrow").style.display = "block";
-    const outStatic = document.getElementById("electrolyzer-output-static-arrow");
-    const outAnim = document.getElementById("electrolyzer-output-animated-arrow");
+    document.getElementById("electrolyzer-animated-arrow").style.display =
+      "block";
+    const outStatic = document.getElementById(
+      "electrolyzer-output-static-arrow"
+    );
+    const outAnim = document.getElementById(
+      "electrolyzer-output-animated-arrow"
+    );
     if (outStatic && outAnim) {
       outStatic.style.display = "none";
       outAnim.style.display = "block";
@@ -3028,7 +3084,10 @@ document
         fc2cStatic.style.display = "none";
         fc2cAnim.style.display = "block";
       }
-  showNotification(window.t ? window.t('startedFuelCellMsg') : 'Started Fuel Cell!', "buy");
+      showNotification(
+        window.t ? window.t("startedFuelCellMsg") : "Started Fuel Cell!",
+        "buy"
+      );
       //Starte die Umwandlung im Elektrolyseur, wenn noch kein Intervall läuft
       if (fuelCellInterval === null) {
         fuelCellInterval = setInterval(() => {
@@ -3037,7 +3096,10 @@ document
         console.log("Fuel Cell started");
       }
     } else {
-      showNotification(window.t ? window.t('noHydrogenStored') : 'No hydrogen stored.', "sell");
+      showNotification(
+        window.t ? window.t("noHydrogenStored") : "No hydrogen stored.",
+        "sell"
+      );
     }
   });
 
@@ -3083,8 +3145,11 @@ document
   .getElementById("convert-to-electricity-stop")
   .addEventListener("click", () => {
     document.getElementById("simulation-state").innerHTML = " ";
-  updateFuelCellArrow(false);
-  showNotification(window.t ? window.t('stoppedFuelCellMsg') : 'Stopped Fuel Cell!', "sell");
+    updateFuelCellArrow(false);
+    showNotification(
+      window.t ? window.t("stoppedFuelCellMsg") : "Stopped Fuel Cell!",
+      "sell"
+    );
     const h2fStatic = document.getElementById(
       "hydrogen-to-fuelcell-static-arrow"
     );

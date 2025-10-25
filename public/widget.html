@@ -1,87 +1,125 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Hydrogen Dashboard Widget</title>
-  <link rel="stylesheet" href="/css/styles.css" />
-  <style>
-    /* compact container for widget */
-    html,body{height:100%;margin:0}
-    #widget-root{width:100%;height:100%;overflow:hidden}
-    /* hide header/footer if your main app has them; adapt selectors to your app */
-    .header, .footer, .sidebar { display:none !important; }
-    /* ensure widget content fits */
-    .app { box-sizing:border-box; padding:8px; }
-    /* small adjustments for embedded widget */
-    body.embed-mode .flowchart { position:relative; width:100%; padding:6px; }
-  </style>
-</head>
-<body>
-  <div id="widget-root">
-    <!-- the main app will mount into #app -->
-    <div id="app" class="app"></div>
-  </div>
-
-  <script>
-    // signal to the app it's in embed/widget mode and expose simple config via query
-    window.__WIDGET_EMBED = true;
-    window.__WIDGET_CONFIG = (function () {
-      const p = new URLSearchParams(location.search);
-      return {
-        lang: p.get('lang') || 'en',
-        theme: p.get('theme') || 'auto',
-        baseUrl: p.get('baseUrl') || '',
-      };
-    })();
-
-    // If the full app markup is required (most event wiring expects many elements),
-    // redirect to the main index.html with embed=1 so the main page provides full DOM.
-    // This keeps widget.html minimal but avoids runtime null element errors.
-    (function redirectToIndexIfNeeded() {
-      try {
-        // Only redirect when we're directly loading widget.html
-        if (location.pathname.endsWith('/widget.html') || location.pathname.endsWith('/widget')) {
-          const search = location.search ? location.search + '&' : '?';
-          const target = '/index.html' + (location.search ? location.search + '&embed=1' : '?embed=1');
-          // Avoid redirect loop: if already on index.html do nothing
-          if (!location.pathname.endsWith('/index.html')) {
-            location.replace(target);
-          }
-        }
-      } catch (e) {
-        console.warn('widget redirect failed', e);
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Hydrogen Dashboard Widget</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      /* compact container for widget */
+      html,
+      body {
+        height: 100%;
+        margin: 0;
       }
-    })();
+      #widget-root {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      /* hide header/footer if your main app has them; adapt selectors to your app */
+      .header,
+      .footer,
+      .sidebar {
+        display: none !important;
+      }
+      /* ensure widget content fits */
+      .app {
+        box-sizing: border-box;
+        padding: 8px;
+      }
+      /* small adjustments for embedded widget */
+      body.embed-mode .flowchart {
+        position: relative;
+        width: 100%;
+        padding: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="widget-root">
+      <!-- the main app will mount into #app -->
+      <div id="app" class="app"></div>
+    </div>
 
-    // postMessage bridge for simple control from parent
-    window.addEventListener('message', function (ev) {
-      try {
-        // NOTE: in production validate ev.origin against an allowlist
-        const msg = ev.data || {};
-        if (msg && msg.type) {
-          if (msg.type === 'startElectrolyzer') {
-            document.getElementById('convert-to-hydrogen')?.click();
-          } else if (msg.type === 'stopElectrolyzer') {
-            document.getElementById('convert-to-hydrogen-stop')?.click();
-          } else if (msg.type === 'setLanguage') {
-            if (typeof window.setLanguage === 'function') window.setLanguage(msg.lang);
-          } else if (msg.type === 'getState') {
-            const state = {
-              battery: window.charge ? window.charge.storage : null,
-              hydrogen: window.hydro ? window.hydro.storage : null,
-              thermal: window.thermalStorage ? window.thermalStorage.level_kWh : null
-            };
-            ev.source.postMessage({ type: 'state', state }, ev.origin || '*');
+    <script>
+      // signal to the app it's in embed/widget mode and expose simple config via query
+      window.__WIDGET_EMBED = true;
+      window.__WIDGET_CONFIG = (function () {
+        const p = new URLSearchParams(location.search);
+        return {
+          lang: p.get("lang") || "en",
+          theme: p.get("theme") || "auto",
+          baseUrl: p.get("baseUrl") || "",
+        };
+      })();
+
+      // If the full app markup is required (most event wiring expects many elements),
+      // redirect to the main index.html with embed=1 so the main page provides full DOM.
+      // This keeps widget.html minimal but avoids runtime null element errors.
+      (function redirectToIndexIfNeeded() {
+        try {
+          // Only redirect when we're directly loading widget.html
+          if (
+            location.pathname.endsWith("/widget.html") ||
+            location.pathname.endsWith("/widget")
+          ) {
+            const search = location.search ? location.search + "&" : "?";
+            const target =
+              "/index.html" +
+              (location.search ? location.search + "&embed=1" : "?embed=1");
+            // Avoid redirect loop: if already on index.html do nothing
+            if (!location.pathname.endsWith("/index.html")) {
+              location.replace(target);
+            }
           }
+        } catch (e) {
+          console.warn("widget redirect failed", e);
         }
-      } catch (e) { console.warn('widget message handler', e); }
-    }, false);
-  </script>
+      })();
 
-  <!-- load your app JS as an ES module so `export` statements parse correctly -->
-  <script type="module" src="/js/simulation.js"></script>
-  <!-- fallback note for very old browsers that do not support modules -->
-  <noscript><!-- Older browsers without ES module support will not run the widget. --></noscript>
-</body>
+      // postMessage bridge for simple control from parent
+      window.addEventListener(
+        "message",
+        function (ev) {
+          try {
+            // NOTE: in production validate ev.origin against an allowlist
+            const msg = ev.data || {};
+            if (msg && msg.type) {
+              if (msg.type === "startElectrolyzer") {
+                document.getElementById("convert-to-hydrogen")?.click();
+              } else if (msg.type === "stopElectrolyzer") {
+                document.getElementById("convert-to-hydrogen-stop")?.click();
+              } else if (msg.type === "setLanguage") {
+                if (typeof window.setLanguage === "function")
+                  window.setLanguage(msg.lang);
+              } else if (msg.type === "getState") {
+                const state = {
+                  battery: window.charge ? window.charge.storage : null,
+                  hydrogen: window.hydro ? window.hydro.storage : null,
+                  thermal: window.thermalStorage
+                    ? window.thermalStorage.level_kWh
+                    : null,
+                };
+                ev.source.postMessage(
+                  { type: "state", state },
+                  ev.origin || "*"
+                );
+              }
+            }
+          } catch (e) {
+            console.warn("widget message handler", e);
+          }
+        },
+        false
+      );
+    </script>
+
+    <!-- load your app JS as an ES module so `export` statements parse correctly -->
+    <script type="module" src="/js/simulation.js"></script>
+    <!-- fallback note for very old browsers that do not support modules -->
+    <noscript
+      ><!-- Older browsers without ES module support will not run the widget. --></noscript
+    >
+  </body>
 </html>
