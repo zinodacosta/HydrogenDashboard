@@ -6,7 +6,6 @@
     <title>Hydrogen Dashboard Widget</title>
     <link rel="stylesheet" href="/css/styles.css" />
     <style>
-      /* compact container for widget */
       html,
       body {
         height: 100%;
@@ -17,18 +16,15 @@
         height: 100%;
         overflow: hidden;
       }
-      /* hide header/footer if your main app has them; adapt selectors to your app */
       .header,
       .footer,
       .sidebar {
         display: none !important;
       }
-      /* ensure widget content fits */
       .app {
         box-sizing: border-box;
         padding: 8px;
       }
-      /* small adjustments for embedded widget */
       body.embed-mode .flowchart {
         position: relative;
         width: 100%;
@@ -38,12 +34,10 @@
   </head>
   <body>
     <div id="widget-root">
-      <!-- the main app will mount into #app -->
       <div id="app" class="app"></div>
     </div>
 
     <script>
-      // signal to the app it's in embed/widget mode and expose simple config via query
       window.__WIDGET_EMBED = true;
       window.__WIDGET_CONFIG = (function () {
         const p = new URLSearchParams(location.search);
@@ -54,21 +48,18 @@
         };
       })();
 
-      // If the full app markup is required (most event wiring expects many elements),
-      // redirect to the main index.html with embed=1 so the main page provides full DOM.
-      // This keeps widget.html minimal but avoids runtime null element errors.
       (function redirectToIndexIfNeeded() {
         try {
-          // Only redirect when we're directly loading widget.html
+
           if (
             location.pathname.endsWith("/widget.html") ||
             location.pathname.endsWith("/widget")
           ) {
-            const search = location.search ? location.search + "&" : "?";
-            const target =
-              "/index.html" +
-              (location.search ? location.search + "&embed=1" : "?embed=1");
-            // Avoid redirect loop: if already on index.html do nothing
+            const params = new URLSearchParams(location.search || "");
+            if (!params.has("embed")) params.set("embed", "1");
+            // default to showing chrome (sticky bar etc.) unless host overrides
+            if (!params.has("chrome")) params.set("chrome", "full");
+            const target = "/index.html?" + params.toString();
             if (!location.pathname.endsWith("/index.html")) {
               location.replace(target);
             }
@@ -78,12 +69,11 @@
         }
       })();
 
-      // postMessage bridge for simple control from parent
       window.addEventListener(
         "message",
         function (ev) {
           try {
-            // NOTE: in production validate ev.origin against an allowlist
+
             const msg = ev.data || {};
             if (msg && msg.type) {
               if (msg.type === "startElectrolyzer") {
@@ -115,11 +105,11 @@
       );
     </script>
 
-    <!-- load your app JS as an ES module so `export` statements parse correctly -->
+
     <script type="module" src="/js/simulation.js"></script>
-    <!-- fallback note for very old browsers that do not support modules -->
+
     <noscript
-      ><!-- Older browsers without ES module support will not run the widget. --></noscript
+      ><!-- Older browsers without ES module support will not run widget. --></noscript
     >
   </body>
 </html>

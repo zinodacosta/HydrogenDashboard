@@ -1,58 +1,111 @@
-// Standalone hydrogen selling function for UI integration
-// Unified hydrogen selling logic
+
 if (typeof window.money !== "number") {
   window.money = 0;
 }
 
-// If the app is loaded inside the widget iframe, allow a lightweight
-// embed-only mode. This will hide chrome elements and make the app
-// render more compact. The widget page sets `window.__WIDGET_EMBED = true`.
+
 document.addEventListener("DOMContentLoaded", function () {
   try {
-    // Allow embed mode to be signalled either by the widget bootstrap (window.__WIDGET_EMBED)
-    // or via URL query param `embed=1` when we redirect to index.html?embed=1.
     const urlParams =
       typeof window !== "undefined" && window.location
         ? new URLSearchParams(window.location.search)
         : null;
-    if (
+
+    const embedFlag =
       window.__WIDGET_EMBED ||
       (urlParams &&
-        (urlParams.get("embed") === "1" || urlParams.get("embed") === "true"))
-    ) {
-      // add a body class so CSS can target embed-mode
-      document.body.classList.add("embed-mode");
+        (urlParams.get("embed") === "1" || urlParams.get("embed") === "true"));
+
+    if (embedFlag) {
+      // add embed-mode markers
       document.documentElement.classList.add("embed-mode");
-      // hide common chrome elements if present
-      document
-        .querySelectorAll(
-          ".header, .footer, .sidebar, .sticky-bar, #flowchart-panel"
-        )
-        .forEach(function (el) {
+      document.body.classList.add("embed-mode");
+
+      // merge runtime config from widget bootstrap and url params
+      const cfg = Object.assign({}, window.__WIDGET_CONFIG || {});
+      if (urlParams) {
+        ["hideFlowchart", "hideStickyBar", "chrome"].forEach((k) => {
+          if (urlParams.has(k)) cfg[k] = urlParams.get(k);
+        });
+      }
+
+      const chromeMode = (cfg.chrome || "").toLowerCase();
+      const hideFlowchart = !(
+        cfg.hideFlowchart === "0" ||
+        cfg.hideFlowchart === "false" ||
+        chromeMode === "full"
+      );
+      const hideStickyBar = !(
+        cfg.hideStickyBar === "0" ||
+        cfg.hideStickyBar === "false" ||
+        chromeMode === "full"
+      );
+
+      const toHide = [];
+      if (hideFlowchart) toHide.push("#flowchart-panel");
+      if (hideStickyBar) toHide.push(".sticky-bar");
+      // always hide header/footer/sidebar by default in embed mode
+      toHide.push(".header", ".footer", ".sidebar");
+
+      if (toHide.length) {
+        document.querySelectorAll(toHide.join(",")).forEach(function (el) {
           try {
             el.style.display = "none";
           } catch (e) {}
         });
-      // reduce global margins to fit widget container
+      }
+
       try {
         document.documentElement.style.margin = "0";
         document.body.style.margin = "0";
-        // remove large background images/colors so the iframe appears transparent
-        try {
-          document.body.style.backgroundImage = "none";
-        } catch (e) {}
-        try {
-          document.body.style.backgroundColor = "transparent";
-        } catch (e) {}
-        try {
-          document.documentElement.style.background = "transparent";
-        } catch (e) {}
+        document.body.style.backgroundImage = "none";
+        document.body.style.backgroundColor = "transparent";
+        document.documentElement.style.background = "transparent";
       } catch (e) {}
     }
   } catch (e) {
     console.warn("embed-mode init failed", e);
   }
 });
+// Allow runtime override from parent frames via postMessage for testing/embed control.
+window.addEventListener('message', function(ev) {
+  try {
+    const msg = ev && ev.data ? ev.data : null;
+    if (!msg || msg.type !== 'setConfig' || !msg.cfg) return;
+    const cfg = Object.assign({}, msg.cfg || {});
+    const chromeMode = (cfg.chrome || '').toLowerCase();
+    const hideFlowchart = !(cfg.hideFlowchart === '0' || cfg.hideFlowchart === 'false' || chromeMode === 'full');
+    const hideStickyBar = !(cfg.hideStickyBar === '0' || cfg.hideStickyBar === 'false' || chromeMode === 'full');
+    const toHide = [];
+    if (hideFlowchart) toHide.push('#flowchart-panel');
+    if (hideStickyBar) toHide.push('.sticky-bar');
+    // header/footer/sidebar remain hidden by default in embed mode unless explicitly requested
+    if (!(cfg.showHeader || cfg.showHeader === '1' || cfg.showHeader === true)) {
+      toHide.push('.header', '.footer', '.sidebar');
+    }
+    // Apply hide/show
+    // First reset elements we control (show all), then hide requested ones
+    try {
+      document.querySelectorAll('.header, .footer, .sidebar, #flowchart-panel, .sticky-bar').forEach(function(el){
+        try { el.style.display = ''; } catch(e){}
+      });
+    } catch(e){}
+    if (toHide.length) {
+      document.querySelectorAll(toHide.join(',')).forEach(function(el){ try{ el.style.display = 'none'; }catch(e){} });
+    }
+    try {
+      document.documentElement.style.margin = '0';
+      document.body.style.margin = '0';
+      if (cfg.transparent !== false) {
+        document.body.style.backgroundImage = 'none';
+        document.body.style.backgroundColor = 'transparent';
+        document.documentElement.style.background = 'transparent';
+      }
+    } catch(e){}
+  } catch (e) {
+    // ignore
+  }
+}, false);
 // --- Flowchart fuel cell arrow toggle logic ---
 function updateFuelCellArrow(isWorking) {
   const staticArrow = document.getElementById("fuelcell-static-arrow");
