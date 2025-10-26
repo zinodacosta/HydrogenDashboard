@@ -125,10 +125,10 @@ window.addEventListener(
       } catch (e) {}
       // acknowledge to parent that the config was applied (best-effort)
       try {
-        if (ev && ev.source && typeof ev.source.postMessage === 'function') {
-          const reply = { type: 'configApplied', ok: true, cfg: cfg };
+        if (ev && ev.source && typeof ev.source.postMessage === "function") {
+          const reply = { type: "configApplied", ok: true, cfg: cfg };
           try {
-            ev.source.postMessage(reply, ev.origin || '*');
+            ev.source.postMessage(reply, ev.origin || "*");
           } catch (e) {}
         }
       } catch (e) {}

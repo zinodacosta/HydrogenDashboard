@@ -73,15 +73,19 @@
           }
         });
         // Listen for acknowledgement from the embedded frame
-        window.addEventListener('message', function(ev) {
-          try {
-            const d = ev && ev.data ? ev.data : null;
-            if (!d) return;
-            if (d.type === 'configApplied') {
-              status.textContent = 'config applied';
-            }
-          } catch(e){}
-        }, false);
+        window.addEventListener(
+          "message",
+          function (ev) {
+            try {
+              const d = ev && ev.data ? ev.data : null;
+              if (!d) return;
+              if (d.type === "configApplied") {
+                status.textContent = "config applied";
+              }
+            } catch (e) {}
+          },
+          false
+        );
       })();
     </script>
   </body>
