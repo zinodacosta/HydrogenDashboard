@@ -1,8 +1,6 @@
-
 if (typeof window.money !== "number") {
   window.money = 0;
 }
-
 
 document.addEventListener("DOMContentLoaded", function () {
   try {
@@ -51,10 +49,11 @@ document.addEventListener("DOMContentLoaded", function () {
         document.querySelectorAll(toHide.join(",")).forEach(function (el) {
           try {
             el.style.display = "none";
-          } catch (e) {}
+          } catch (e) {
+            // ignore
+          }
         });
       }
-
       try {
         document.documentElement.style.margin = "0";
         document.body.style.margin = "0";
@@ -68,44 +67,77 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 // Allow runtime override from parent frames via postMessage for testing/embed control.
-window.addEventListener('message', function(ev) {
-  try {
-    const msg = ev && ev.data ? ev.data : null;
-    if (!msg || msg.type !== 'setConfig' || !msg.cfg) return;
-    const cfg = Object.assign({}, msg.cfg || {});
-    const chromeMode = (cfg.chrome || '').toLowerCase();
-    const hideFlowchart = !(cfg.hideFlowchart === '0' || cfg.hideFlowchart === 'false' || chromeMode === 'full');
-    const hideStickyBar = !(cfg.hideStickyBar === '0' || cfg.hideStickyBar === 'false' || chromeMode === 'full');
-    const toHide = [];
-    if (hideFlowchart) toHide.push('#flowchart-panel');
-    if (hideStickyBar) toHide.push('.sticky-bar');
-    // header/footer/sidebar remain hidden by default in embed mode unless explicitly requested
-    if (!(cfg.showHeader || cfg.showHeader === '1' || cfg.showHeader === true)) {
-      toHide.push('.header', '.footer', '.sidebar');
-    }
-    // Apply hide/show
-    // First reset elements we control (show all), then hide requested ones
+window.addEventListener(
+  "message",
+  function (ev) {
     try {
-      document.querySelectorAll('.header, .footer, .sidebar, #flowchart-panel, .sticky-bar').forEach(function(el){
-        try { el.style.display = ''; } catch(e){}
-      });
-    } catch(e){}
-    if (toHide.length) {
-      document.querySelectorAll(toHide.join(',')).forEach(function(el){ try{ el.style.display = 'none'; }catch(e){} });
-    }
-    try {
-      document.documentElement.style.margin = '0';
-      document.body.style.margin = '0';
-      if (cfg.transparent !== false) {
-        document.body.style.backgroundImage = 'none';
-        document.body.style.backgroundColor = 'transparent';
-        document.documentElement.style.background = 'transparent';
+      const msg = ev && ev.data ? ev.data : null;
+      if (!msg || msg.type !== "setConfig" || !msg.cfg) return;
+      const cfg = Object.assign({}, msg.cfg || {});
+      const chromeMode = (cfg.chrome || "").toLowerCase();
+      const hideFlowchart = !(
+        cfg.hideFlowchart === "0" ||
+        cfg.hideFlowchart === "false" ||
+        chromeMode === "full"
+      );
+      const hideStickyBar = !(
+        cfg.hideStickyBar === "0" ||
+        cfg.hideStickyBar === "false" ||
+        chromeMode === "full"
+      );
+      const toHide = [];
+      if (hideFlowchart) toHide.push("#flowchart-panel");
+      if (hideStickyBar) toHide.push(".sticky-bar");
+      // header/footer/sidebar remain hidden by default in embed mode unless explicitly requested
+      if (
+        !(cfg.showHeader || cfg.showHeader === "1" || cfg.showHeader === true)
+      ) {
+        toHide.push(".header", ".footer", ".sidebar");
       }
-    } catch(e){}
-  } catch (e) {
-    // ignore
-  }
-}, false);
+      // Apply hide/show
+      // First reset elements we control (show all), then hide requested ones
+      try {
+        document
+          .querySelectorAll(
+            ".header, .footer, .sidebar, #flowchart-panel, .sticky-bar"
+          )
+          .forEach(function (el) {
+            try {
+              el.style.display = "";
+            } catch (e) {}
+          });
+      } catch (e) {}
+      if (toHide.length) {
+        document.querySelectorAll(toHide.join(",")).forEach(function (el) {
+          try {
+            el.style.display = "none";
+          } catch (e) {}
+        });
+      }
+      try {
+        document.documentElement.style.margin = "0";
+        document.body.style.margin = "0";
+        if (cfg.transparent !== false) {
+          document.body.style.backgroundImage = "none";
+          document.body.style.backgroundColor = "transparent";
+          document.documentElement.style.background = "transparent";
+        }
+      } catch (e) {}
+      // acknowledge to parent that the config was applied (best-effort)
+      try {
+        if (ev && ev.source && typeof ev.source.postMessage === 'function') {
+          const reply = { type: 'configApplied', ok: true, cfg: cfg };
+          try {
+            ev.source.postMessage(reply, ev.origin || '*');
+          } catch (e) {}
+        }
+      } catch (e) {}
+    } catch (e) {
+      // ignore
+    }
+  },
+  false
+);
 // --- Flowchart fuel cell arrow toggle logic ---
 function updateFuelCellArrow(isWorking) {
   const staticArrow = document.getElementById("fuelcell-static-arrow");
