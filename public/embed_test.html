@@ -21,72 +21,11 @@
     </style>
   </head>
   <body>
-    <div style="position: fixed; left: 8px; top: 8px; z-index: 1000000">
-      <button id="use-local">Use local widget</button>
-      <button id="use-remote">Use remote widget</button>
-      <span
-        id="status"
-        style="margin-left: 8px; font-size: 0.9em; color: #444"
-      ></span>
-    </div>
-
     <iframe
       id="embed-frame"
       src="index.html?embed=1&chrome=full"
       title="Hydrogen Widget"
       allowtransparency="true"
     ></iframe>
-
-    <script>
-      (function () {
-        const iframe = document.getElementById("embed-frame");
-        const status = document.getElementById("status");
-        const setSrc = (url, label) => {
-          iframe.src = url;
-          status.textContent = label;
-        };
-        document
-          .getElementById("use-local")
-          .addEventListener("click", function () {
-            setSrc("index.html?embed=1&chrome=full", "local");
-          });
-        document
-          .getElementById("use-remote")
-          .addEventListener("click", function () {
-            setSrc(
-              "https://hydrogenfrontend.vercel.app/index.html?embed=1&chrome=full",
-              "remote"
-            );
-          });
-
-        // After iframe loads, attempt to send a fallback config message asking
-        // the embedded app to show chrome. The embedded app will ignore unknown
-        // origins in production; this is a harmless dev helper for testing.
-        iframe.addEventListener("load", function () {
-          try {
-            iframe.contentWindow.postMessage(
-              { type: "setConfig", cfg: { chrome: "full" } },
-              "*"
-            );
-          } catch (e) {
-            // ignore
-          }
-        });
-        // Listen for acknowledgement from the embedded frame
-        window.addEventListener(
-          "message",
-          function (ev) {
-            try {
-              const d = ev && ev.data ? ev.data : null;
-              if (!d) return;
-              if (d.type === "configApplied") {
-                status.textContent = "config applied";
-              }
-            } catch (e) {}
-          },
-          false
-        );
-      })();
-    </script>
   </body>
 </html>
