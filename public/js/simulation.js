@@ -15,11 +15,8 @@ document.addEventListener("DOMContentLoaded", function () {
         (urlParams.get("embed") === "1" || urlParams.get("embed") === "true"));
 
     if (embedFlag) {
-      // add embed-mode markers
       document.documentElement.classList.add("embed-mode");
       document.body.classList.add("embed-mode");
-
-      // merge runtime config from widget bootstrap and url params
       const cfg = Object.assign({}, window.__WIDGET_CONFIG || {});
       if (urlParams) {
         ["hideFlowchart", "hideStickyBar", "chrome"].forEach((k) => {
@@ -42,7 +39,6 @@ document.addEventListener("DOMContentLoaded", function () {
       const toHide = [];
       if (hideFlowchart) toHide.push("#flowchart-panel");
       if (hideStickyBar) toHide.push(".sticky-bar");
-      // always hide header/footer/sidebar by default in embed mode
       toHide.push(".header", ".footer", ".sidebar");
 
       if (toHide.length) {
@@ -50,7 +46,6 @@ document.addEventListener("DOMContentLoaded", function () {
           try {
             el.style.display = "none";
           } catch (e) {
-            // ignore
           }
         });
       }
@@ -66,7 +61,6 @@ document.addEventListener("DOMContentLoaded", function () {
     console.warn("embed-mode init failed", e);
   }
 });
-// Allow runtime override from parent frames via postMessage for testing/embed control.
 window.addEventListener(
   "message",
   function (ev) {
@@ -88,14 +82,11 @@ window.addEventListener(
       const toHide = [];
       if (hideFlowchart) toHide.push("#flowchart-panel");
       if (hideStickyBar) toHide.push(".sticky-bar");
-      // header/footer/sidebar remain hidden by default in embed mode unless explicitly requested
       if (
         !(cfg.showHeader || cfg.showHeader === "1" || cfg.showHeader === true)
       ) {
         toHide.push(".header", ".footer", ".sidebar");
       }
-      // Apply hide/show
-      // First reset elements we control (show all), then hide requested ones
       try {
         document
           .querySelectorAll(
@@ -123,7 +114,6 @@ window.addEventListener(
           document.documentElement.style.background = "transparent";
         }
       } catch (e) {}
-      // acknowledge to parent that the config was applied (best-effort)
       try {
         if (ev && ev.source && typeof ev.source.postMessage === "function") {
           const reply = { type: "configApplied", ok: true, cfg: cfg };
@@ -133,12 +123,10 @@ window.addEventListener(
         }
       } catch (e) {}
     } catch (e) {
-      // ignore
     }
   },
   false
 );
-// --- Flowchart fuel cell arrow toggle logic ---
 function updateFuelCellArrow(isWorking) {
   const staticArrow = document.getElementById("fuelcell-static-arrow");
   const animatedArrow = document.getElementById("fuelcell-animated-arrow");
@@ -159,7 +147,7 @@ function sellHydrogen(amount, pricePerGram) {
     return false;
   }
   const amt = parseFloat(amount);
-  // Convert grams to kilograms for price calculation
+
   const amtKg = amt / 1000;
   const pricePerKg = parseFloat(pricePerGram);
   if (isNaN(amt) || amt <= 0) {
@@ -190,11 +178,9 @@ function sellHydrogen(amount, pricePerGram) {
     );
     return false;
   }
-  // Perform the sale
   window.hydro.storage -= amt;
   window.money += amtKg * pricePerKg;
 
-  // Update UI
   const hydrogenLevelElem = document.getElementById("hydrogen-level");
   if (hydrogenLevelElem)
     hydrogenLevelElem.innerHTML = window.hydro.storage.toFixed(2) + " g";
@@ -214,7 +200,6 @@ function sellHydrogen(amount, pricePerGram) {
         )} € at ${pricePerKg.toFixed(2)} €/kg`,
     "sell"
   );
-  // Update hydrogen gauge
   const hydrogenStoragePercent = document.getElementById(
     "hydrogen-storage-percentage"
   );
@@ -244,7 +229,6 @@ let batteryLevelElem, batteryGaugePercentageElem, batteryGaugeLevelElem;
 let hydrogenLevelElem, hydrogenGaugePercentageElem, hydrogenGaugeLevelElem;
 //js for dropdown menu of location
 document.addEventListener("DOMContentLoaded", function () {
-  // Simulation speed slider logic
   const speedSlider = document.getElementById("simulation-speed-slider");
   const speedIndicator = document.getElementById("simulation-speed-indicator");
 
@@ -322,7 +306,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Use-case selector: update room name/area and thermal mass so room size affects heating speed
   const useCaseSelect = document.getElementById("use-case");
   if (useCaseSelect) {
     useCaseSelect.addEventListener("change", function () {
@@ -332,7 +315,6 @@ document.addEventListener("DOMContentLoaded", function () {
         console.warn("applyUseCase failed", e);
       }
     });
-    // apply initial selection
     try {
       applyUseCase(useCaseSelect.value || "offgrid");
     } catch (e) {
@@ -763,23 +745,14 @@ export class electrolyzer {
   }
 
   produceHydrogen() {
-    // Updated per-tick energy-based hydrogen production model.
-    // This function is called every second (either from the start button interval
-    // or via the auto-trigger in updateSimulation). We'll consume a small amount
-    // of battery energy (kWh) and convert it to grams of hydrogen.
     try {
       const dtSeconds = 1;
       const sf = typeof speedfactor !== "undefined" ? Number(speedfactor) : 1;
       const available_kWh = Number(charge.storage || 0);
-      const power_kW = ((Number(this.power) || 0) / 1000) * sf; // rated power scaled by speed
-      // energy we would use this tick if the electrolyzer runs at rated power
-      const energyNeeded_kWh = (power_kW * dtSeconds) / 3600; // kWh per dtSeconds
+      const power_kW = ((Number(this.power) || 0) / 1000) * sf;
+      const energyNeeded_kWh = (power_kW * dtSeconds) / 3600;
 
       if (available_kWh <= 0 || energyNeeded_kWh <= 0) {
-        console.log(
-          "[DEBUG] produceHydrogen() aborted: no available energy or invalid energyNeeded",
-          { available_kWh, energyNeeded_kWh }
-        );
         const hydrogenLevelElem = document.getElementById("hydrogen-level");
         if (hydrogenLevelElem)
           hydrogenLevelElem.innerHTML = this.storage.toFixed(2) + " g";
@@ -787,11 +760,11 @@ export class electrolyzer {
         return;
       }
 
-      // maximum hydrogen that fits into electrolyzer storage (grams)
+      //maximum hydrogen that fits into electrolyzer storage (grams)
       const maxHydrogen = Math.max(0, this.capacity - this.storage);
 
-      // possibleHydrogenProduced estimation using user's provided formula
-      // units/scale per the project's historical constants
+      //possibleHydrogenProduced estimation using user's provided formula
+      //units/scale per the project's historical constants
       const possibleHydrogenProduced =
         (charge.storage *
           55.5 *
@@ -805,7 +778,6 @@ export class electrolyzer {
         maxHydrogen
       );
 
-      // battery consumption required to create the actual hydrogen produced
       const actualBatteryConsumption =
         actualHydrogenProduced * (1 / (this.efficiency / 100));
 
@@ -813,7 +785,6 @@ export class electrolyzer {
         charge.storage >= actualBatteryConsumption &&
         actualHydrogenProduced > 0
       ) {
-        // commit: deduct battery and add hydrogen grams
         charge.updateBatteryStorage(-actualBatteryConsumption);
         this.storage = Number(
           Math.min(
@@ -829,11 +800,9 @@ export class electrolyzer {
             required_kWh: actualBatteryConsumption,
           }
         );
-        // nothing else to do this tick
         return;
       }
 
-      // Update UI elements
       const hydrogenLevelElem = document.getElementById("hydrogen-level");
       if (hydrogenLevelElem)
         hydrogenLevelElem.innerHTML = this.storage.toFixed(2) + " g";
@@ -849,13 +818,11 @@ export class electrolyzer {
         "sticky-hydrogen-gauge-fill"
       );
       if (stickyHydrogenGaugeFill) {
-        // keep same total length as main gauge (157) so both visuals are proportional
         const stickyTotalLength = 157;
         const stickyOffset = stickyTotalLength * (1 - hydrogenPercentage / 100);
         stickyHydrogenGaugeFill.setAttribute("stroke-dashoffset", stickyOffset);
       }
 
-      // Also update hydrogen storage percentage badge and gauge width so all UI reflects new storage
       const hydrogenStoragePercentElem = document.getElementById(
         "hydrogen-storage-percentage"
       );
@@ -886,7 +853,6 @@ export class electrolyzer {
             hydrogenPercentage.toFixed(1) + " %";
       }
 
-      // Update top-panel hydrogen display if available
       if (window.setHydrogenTopPanel)
         window.setHydrogenTopPanel(this.storage.toFixed(2));
 
@@ -1088,21 +1054,16 @@ class HeatConsumer {
         thermalStorage.level_kWh - provided
       );
       this.delivered_kWh += provided;
-      // If this consumer is the radiator, apply delivered heat to room temperature
       if (this.id === "radiator" && provided > 0) {
-        // Find the thermostat consumer (living room)
         const room = getHeatConsumers().find((x) => x.id === "room");
         if (room) {
-          // Increase room.currentTemp by equivalent degrees: provided_kWh / thermalMass_kWhPerDeg
           const degIncrease = provided / (room.thermalMass_kWhPerDeg || 0.25);
           room.currentTemp = Number(
             (room.currentTemp + degIncrease).toFixed(3)
           );
         }
       }
-      // If this consumer is the shower, compute water liters used based on energy delivered
       if (this.id === "shower" && provided > 0) {
-        // specific heat: 4.186 kJ/kg/°C => 0.00116278 kWh/kg/°C
         const kWhPerLPerDeg = 0.00116278;
         const deltaT = this.showerDeltaT || 35;
         const liters = provided / (kWhPerLPerDeg * deltaT);
@@ -1146,7 +1107,6 @@ class HeatConsumer {
   }
 }
 
-// Manager for multiple consumers (heat, charging stations, etc.)
 class Consumers {
   constructor() {
     this.map = new Map();
@@ -1174,7 +1134,6 @@ class Consumers {
     );
   }
 
-  // helper to update any top-panel UI elements if present
   updateTopPanels() {
     try {
       const ev = this.get("charging_electric");
@@ -1201,8 +1160,6 @@ class Consumers {
   }
 }
 
-// default consumers
-// Compact plain-object consumer state (simpler for this small app)
 window.consumerState = {
   room: {
     id: "room",
@@ -1238,7 +1195,6 @@ window.consumerState = {
     delivered_kWh: 0,
     priority: 2,
   },
-  // charging stations kept here too for simplicity
   charging_electric: {
     id: "charging_electric",
     name: "EV Charging Station",
@@ -1276,17 +1232,13 @@ function applyUseCase(usecaseKey) {
   if (!room) return;
   room.name = m.name;
   room.area_m2 = m.area;
-  // thermalMass per °C scales linearly with area. Calibrated so 20 m² -> 0.25 kWh/°C
   room.thermalMass_kWhPerDeg = Number((m.area * 0.0125).toFixed(4));
-  // update UI summary area under use-case selector if present
   const bp = document.getElementById("bullet-points-container");
   if (bp) {
     bp.innerHTML = `<div style="margin-top:8px;font-size:0.98em;">Selected room: <strong>${room.name}</strong> — area: <strong>${room.area_m2} m²</strong>. Larger rooms require more energy to raise temperature (slower warm-up).</div>`;
   }
-  // refresh the consumers UI so labels/temps reflect new settings
   if (typeof updateHeatConsumersUI === "function") updateHeatConsumersUI();
 
-  // Reset storages when switching use case: battery, hydrogen, thermal
   try {
     if (typeof charge !== "undefined" && charge) {
       charge.storage = 0;
@@ -1303,7 +1255,6 @@ function applyUseCase(usecaseKey) {
     console.warn("Failed to reset battery storage on usecase change", e);
   }
 
-  // Ensure all battery gauge visuals are reset as well
   try {
     const batteryGaugeFill = document.getElementById("battery-gauge-fill");
     if (batteryGaugeFill) {
@@ -1328,7 +1279,6 @@ function applyUseCase(usecaseKey) {
     );
     if (stickyBatteryGaugePercent)
       stickyBatteryGaugePercent.textContent = "0 %";
-    // Update wave loader positions if present
     const waveLoader1 = document.querySelector(".wave-loader1");
     if (waveLoader1) {
       waveLoader1.style.setProperty("--before-top", -15 + "%");
@@ -1371,8 +1321,6 @@ function applyUseCase(usecaseKey) {
   }
 }
 
-// For backwards compatibility: export a small array view used by some code paths
-// Helper to return the current heat consumer objects as an array (single source-of-truth)
 function getHeatConsumers() {
   if (window.consumerState)
     return [
@@ -1383,10 +1331,8 @@ function getHeatConsumers() {
   return Array.isArray(window.heatConsumers) ? window.heatConsumers : [];
 }
 
-// Backwards-compatible snapshot (some legacy code reads this). Prefer getHeatConsumers() in new code.
 window.heatConsumers = getHeatConsumers();
 
-// Consumation helper for plain-object consumers (mirrors HeatConsumer.consume behaviour)
 function consumePlainConsumer(c, dtHours = 1 / 3600) {
   if (!c) return 0;
   if (c.enabled === false || dtHours <= 0) return 0;
@@ -1398,7 +1344,6 @@ function consumePlainConsumer(c, dtHours = 1 / 3600) {
     const provided = Math.min(thermalStorage.level_kWh, need);
     thermalStorage.level_kWh = Math.max(0, thermalStorage.level_kWh - provided);
     c.delivered_kWh = Number(((c.delivered_kWh || 0) + provided).toFixed(6));
-    // radiator warms room
     if (c.id === "radiator" && provided > 0) {
       const room = getHeatConsumers().find((x) => x.id === "room");
       if (room) {
@@ -1406,7 +1351,6 @@ function consumePlainConsumer(c, dtHours = 1 / 3600) {
         room.currentTemp = Number((room.currentTemp + degIncrease).toFixed(3));
       }
     }
-    // shower: compute water liters
     if (c.id === "shower" && provided > 0) {
       const kWhPerLPerDeg = 0.00116278;
       const deltaT = c.showerDeltaT || 35;
@@ -1432,12 +1376,10 @@ function consumePlainConsumer(c, dtHours = 1 / 3600) {
   return 0;
 }
 
-// Create consumers manager and register charging stations (and keep references to same objects)
 window.consumers = new Consumers();
 window.consumers.add(window.consumerState.charging_electric);
 window.consumers.add(window.consumerState.charging_hydrogen);
 
-// Charging station (electric) - simple storage-like consumer object
 const chargingElectric = {
   id: "charging_electric",
   name: "EV Charging Station",
@@ -1446,7 +1388,6 @@ const chargingElectric = {
 };
 window.consumers.add(chargingElectric);
 
-// Charging station (hydrogen) - simple storage-like consumer object
 const chargingHydrogen = {
   id: "charging_hydrogen",
   name: "H2 Charging Station",
@@ -1455,7 +1396,6 @@ const chargingHydrogen = {
 };
 window.consumers.add(chargingHydrogen);
 
-// Top-panel helpers for new charging stations (mimic battery/hydrogen top-panel setters)
 window.setChargingStationElectricTopPanel = function (level_kWh, capacity_kWh) {
   const elem = document.getElementById("charging-electric-level");
   if (elem) elem.innerText = `${Number(level_kWh || 0).toFixed(2)} kWh`;
@@ -1475,7 +1415,6 @@ function updateHeatConsumersUI() {
     container.style.fontSize = "14px";
     container.style.marginTop = "6px";
     container.style.color = "#222";
-    // append to thermal panel when available to inherit panel styling
     if (preferred) {
       preferred.appendChild(container);
     } else {
@@ -1487,7 +1426,6 @@ function updateHeatConsumersUI() {
     }
   }
 
-  // If the user is interacting with a slider, only update the stats text to avoid DOM replacement flicker
   if (window.heatConsumerInteracting) {
     try {
       for (const c of getHeatConsumers()) {
@@ -1757,17 +1695,16 @@ function updateHeatConsumersUI() {
         slider.style.width = "200px";
         //assumptions: flow ~ 0.12 kg/s (7.2 L/min), water density ~1 kg/L, specific heat 4.186 kJ/kg°C
         const flow_l_per_s = 0.12;
-        const kWhPerLPerDeg = 0.00116278; // same as used for compute liters
+        const kWhPerLPerDeg = 0.00116278; //same as used for compute liters
         const updateShowerPower = () => {
-          const inletTemp = 10; // assumed cold inlet
+          const inletTemp = 10; //assumed cold inlet
           const deltaT = Math.max(1, (c.supplyTemp || 45) - inletTemp);
           //power_kW = flow_l_per_s * liters/sec * specific heat * deltaT -> convert kJ to kWh
           //liters per second = flow_l_per_s; energy per second (kW) = flow_l_per_s * kWhPerLPerDeg * deltaT * 3600?
           //Simpler: kW = flow_l_per_s * 4.186 * deltaT / 1000 -> since 4.186 kJ/kg°C
-          const power_kW = (flow_l_per_s * 4.186 * deltaT) / 1.0; // kW approx
+          const power_kW = (flow_l_per_s * 4.186 * deltaT) / 1.0; //kW approx
           c.power_kW = Number(power_kW.toFixed(3));
         };
-        // mark interaction on pointerdown to prevent rebuilds
         slider.addEventListener("pointerdown", function () {
           window.heatConsumerInteracting = true;
         });
@@ -1783,7 +1720,6 @@ function updateHeatConsumersUI() {
         slider.addEventListener("input", function () {
           c.supplyTemp = Number(slider.value);
           updateShowerPower();
-          // update stats above slider only
           const tlabel_i = window.getTranslation
             ? window.getTranslation("tempLabel")
             : "temp";
@@ -1805,9 +1741,7 @@ function updateHeatConsumersUI() {
           )} kWh | ${wlabel_i} ${c.waterLiters.toFixed(3)} L`;
           stats.textContent = txt;
         });
-        // initialize mapping
         updateShowerPower();
-        // ensure initial stats shown above slider
         stats.textContent = `${s.name}: ${tlabel} ${
           c.supplyTemp
         }°C | ${plabel} ${c.power_kW.toFixed(
@@ -1819,7 +1753,6 @@ function updateHeatConsumersUI() {
         sliderRow.appendChild(slider);
       }
 
-      // If this consumer is the radiator, offer a temperature slider (supply temp °C) mapping to power
       if (s.id === "radiator") {
         const stats = document.createElement("div");
         stats.style.fontSize = "0.95em";
@@ -1852,18 +1785,15 @@ function updateHeatConsumersUI() {
           ? window.getTranslation("radiatorTempTitle")
           : "Radiator supply temperature (°C)";
         slider.style.width = "200px";
-        // mapping: assume radiator power scales with deltaT to room (simple linear model)
         const room = getHeatConsumers().find((x) => x.id === "room");
         const updateRadiatorPower = () => {
           const roomTemp = room ? room.currentTemp || 18 : 18;
           const deltaT = Math.max(1, (c.supplyTemp || 45) - roomTemp);
-          // reference: at 45°C supply and room 18°C -> default power ~2 kW (existing default)
           const refDelta = 45 - 18;
-          const refPower = 2; // kW at refDelta
+          const refPower = 2; //kW at refDelta
           const power_kW = (deltaT / refDelta) * refPower;
           c.power_kW = Number(Math.max(0, power_kW).toFixed(3));
         };
-        // mark interaction on pointerdown to prevent rebuilds
         slider.addEventListener("pointerdown", function () {
           window.heatConsumerInteracting = true;
         });
@@ -1905,7 +1835,6 @@ function updateHeatConsumersUI() {
         sliderRow.appendChild(slider);
       }
 
-      // Button row placed below slider
       const btnRow = document.createElement("div");
       btnRow.style.display = "flex";
       btnRow.style.justifyContent = "flex-end";
@@ -1915,21 +1844,19 @@ function updateHeatConsumersUI() {
       btn.dataset.target = s.id;
       btn.style.minWidth = "88px";
       btn.style.fontWeight = "600";
-      // Use green class when enabled, red when disabled (matches fuelcell start/stop styling)
       if (s.enabled) {
-        btn.className = "start-btn"; // green
+        btn.className = "start-btn"; 
         btn.textContent = window.getTranslation
           ? window.getTranslation("onText")
           : "On";
       } else {
-        btn.className = "stop-btn"; // red
+        btn.className = "stop-btn"; 
         btn.textContent = window.getTranslation
           ? window.getTranslation("offText")
           : "Off";
       }
       btn.addEventListener("click", function (ev) {
         ev.preventDefault();
-        // Toggle the consumer and rebuild UI
         toggleHeatConsumer(s.id, !s.enabled);
       });
       btnRow.appendChild(btn);
@@ -1942,7 +1869,6 @@ function updateHeatConsumersUI() {
     list.appendChild(row);
   }
 
-  // Footer: thermal storage summary
   const footer = document.createElement("div");
   footer.style.marginTop = "6px";
   footer.style.fontWeight = "600";
@@ -1950,7 +1876,6 @@ function updateHeatConsumersUI() {
   rightTarget.appendChild(list);
   rightTarget.appendChild(footer);
 
-  // Update room temp display after rendering
   const updatedRoom = getHeatConsumers().find((x) => x.id === "room");
   if (updatedRoom) {
     const d = document.getElementById("room-temp-display");
@@ -1967,17 +1892,14 @@ function updateHeatConsumersUI() {
   }
 }
 
-// Helper: charge EV station by kWh (consumes from battery if available, else from thermal store not used)
 window.chargeEV = function (kwh) {
   try {
     const ev = window.consumers.get("charging_electric");
     if (!ev) return;
     const amount = Number(kwh) || 0;
-    // draw from battery if possible
     const fromBattery = Math.min(amount, Math.max(0, charge.storage - 0));
     if (fromBattery > 0) charge.updateBatteryStorage(-fromBattery);
     ev.level_kWh = Math.min(ev.capacity_kWh, (ev.level_kWh || 0) + fromBattery);
-    // update UI bits
     const evElem = document.getElementById("consumer-ev-level");
     if (evElem)
       evElem.textContent = `${Number(ev.level_kWh || 0).toFixed(2)} kWh`;
@@ -1986,7 +1908,6 @@ window.chargeEV = function (kwh) {
       typeof window.consumers.updateTopPanels === "function"
     )
       window.consumers.updateTopPanels();
-    // Briefly animate the arrow from electrolyzer -> EV charge to indicate charge transfer
     try {
       const s = document.getElementById("electrolyzer-to-ev-static-arrow");
       const a = document.getElementById("electrolyzer-to-ev-animated-arrow");
@@ -2006,13 +1927,11 @@ window.chargeEV = function (kwh) {
   }
 };
 
-// Helper: charge H2 station by grams (consumes from electrolyzer storage if available)
 window.chargeH2 = function (g) {
   try {
     const st = window.consumers.get("charging_hydrogen");
     if (!st) return;
     const grams = Number(g) || 0;
-    // draw from hydro.storage produced by electrolyzer
     const available = Math.max(0, hydro.storage || 0);
     const taken = Math.min(available, grams);
     if (taken > 0) {
@@ -2026,7 +1945,6 @@ window.chargeH2 = function (g) {
       typeof window.consumers.updateTopPanels === "function"
     )
       window.consumers.updateTopPanels();
-    // Briefly animate the arrow from fuelcell -> H2 station to indicate charge transfer
     try {
       const s = document.getElementById("fuelcell-to-h2-static-arrow");
       const a = document.getElementById("fuelcell-to-h2-animated-arrow");
@@ -2054,7 +1972,6 @@ function distributeHeatToConsumers(dtHours = 1 / 3600) {
     .sort((a, b) => (a.priority || 1) - (b.priority || 1));
   let totalProvided = 0;
   for (const c of consumers) {
-    // if object has consume method (legacy class) prefer it, else use plain-object helper
     const provided =
       typeof c.consume === "function"
         ? c.consume(dtHours)
@@ -2072,7 +1989,6 @@ window.toggleHeatConsumer = function (id, enabled) {
     getHeatConsumers().find((x) => x.id === id) ||
     (window.consumers ? window.consumers.get(id) : null);
   if (!c) return;
-  // Support both class-based and plain-object consumers
   if (typeof c.setEnabled === "function") c.setEnabled(enabled);
   else c.enabled = !!enabled;
   updateHeatConsumersUI();
@@ -2092,7 +2008,6 @@ window.toggleHeatConsumer = function (id, enabled) {
   }
 };
 
-// 1s loop: update breakdown UI and let consumers draw from stored heat
 setInterval(() => {
   try {
     const heat =
@@ -2100,15 +2015,12 @@ setInterval(() => {
         ? heaterInstance.produceHeat()
         : null;
     if (heat) updateHeatBreakdownUI(heat);
-    // consumers draw from thermal store (dtHours = 1s)
     distributeHeatToConsumers(1 / 3600);
   } catch (e) {
     console.error("Heat UI loop error", e);
   }
 }, 1000);
 
-// --- Thermal capacity recommendation & sticky UI wiring ---
-// Compute recoverable heat at rated power (kW) from electrolyzer and fuel cell
 function computeRecoverableAtRated_kW({
   electrolyzerPower_kW = 5,
   electrolyzerEff_pct = 60,
@@ -2118,7 +2030,6 @@ function computeRecoverableAtRated_kW({
   const elEff = Math.max(0.01, Math.min(1, Number(electrolyzerEff_pct) / 100));
   const fcEff = Math.max(0.01, Math.min(1, Number(fuelcellEff_pct) / 100));
 
-  // conservative defaults for recoverable fractions and exchanger efficiency
   const elRecoverableFraction = 0.2;
   const elExchangerEff = 0.8;
   const fcRecoverableFraction = 0.85;
@@ -2134,7 +2045,6 @@ function computeRecoverableAtRated_kW({
     0,
     recoverable_el_kW + recoverable_fc_kW
   );
-  // scale recommendation by speedfactor to match simulation time scaling
   const sf = typeof speedfactor !== "undefined" ? Number(speedfactor) : 1;
   return {
     recoverable_el_kW: recoverable_el_kW * sf,
@@ -2149,12 +2059,10 @@ function clamp(v, lo, hi) {
 
 function toKWFromInput(value) {
   const n = Number(value) || 0;
-  // if value appears to be in W (>10) convert to kW
   return n > 10 ? n / 1000 : n;
 }
 
 function computeRecommendedThermalCapacity_kWh() {
-  // read UI controls if present, else use sensible defaults matching your use case
   const pvRaw = document.getElementById("PV-power")
     ? document.getElementById("PV-power").value
     : 10;
@@ -2186,10 +2094,9 @@ function computeRecommendedThermalCapacity_kWh() {
     fuelcellEff_pct: fcEffRaw,
   });
 
-  // Heuristic target buffering hours based on battery size: larger battery -> larger thermal buffer
-  const baseHours = clamp(Math.round(battery_kWh / 5), 6, 48); // between 6 and 48 hours
+  const baseHours = clamp(Math.round(battery_kWh / 5), 6, 48);
 
-  const safeRecoverable = Math.max(rec.totalRecoverable_kW, 0.25); // avoid tiny denominators
+  const safeRecoverable = Math.max(rec.totalRecoverable_kW, 0.25);
   let recommended_kWh = Math.round(safeRecoverable * baseHours);
   recommended_kWh = clamp(recommended_kWh, 10, 200);
   return {
@@ -2201,7 +2108,6 @@ function computeRecommendedThermalCapacity_kWh() {
 
 function updateStickyThermalCapacityUI() {
   const el = document.getElementById("sticky-thermal-gauge-percentage");
-  // Do not overwrite the sticky storage label here. Only update internal capacity value.
   const { recommended_kWh } = computeRecommendedThermalCapacity_kWh();
   thermalStorage.capacity_kWh = recommended_kWh;
 }
@@ -2223,7 +2129,6 @@ function attachThermalRecommendationListeners() {
   });
 }
 
-// initialize when DOM is ready
 document.addEventListener("DOMContentLoaded", function () {
   try {
     attachThermalRecommendationListeners();
@@ -2573,7 +2478,7 @@ async function updateSimulation() {
   }
 
   try {
-    const dtSeconds = 1; // updateSimulation called every 1s
+    const dtSeconds = 1; //updateSimulation called every 1s
     const dtHours = dtSeconds / 3600;
     const heat = heaterInstance ? heaterInstance.produceHeat() : null;
     if (heat) {
@@ -2647,7 +2552,6 @@ function resetSimulation() {
       /* ignore */
     }
   }
-  // Reset sticky hydrogen gauge if present
   const stickyHydrogenGaugeFill = document.getElementById(
     "sticky-hydrogen-gauge-fill"
   );
@@ -2666,7 +2570,6 @@ function resetSimulation() {
   const moneyElem = document.getElementById("money");
   if (moneyElem) moneyElem.innerText = "  0 €";
 
-  // Ensure Fuel Cell -> Charging Station arrow is static after reset
   const fc2cStatic = document.getElementById(
     "fuelcell-to-charging-static-arrow"
   );
@@ -2678,12 +2581,10 @@ function resetSimulation() {
     fc2cAnim.style.display = "none";
   }
 
-  // Show notification
   showNotification(
     window.t ? window.t("simulationReset") : "Simulation reset!",
     "buy"
   );
-  // reset heat consumers stats
   try {
     const hc = getHeatConsumers();
     for (const h of hc) {
@@ -2693,13 +2594,11 @@ function resetSimulation() {
       if (h.id === "room") h.currentTemp = 18;
       if (h.id === "shower" || h.id === "radiator") h.enabled = false;
     }
-    // refresh UI
     updateHeatConsumersUI();
     updateThermalGaugeUI();
   } catch (e) {
     console.warn("Failed to reset heat consumers", e);
   }
-  // reset our charging stations
   try {
     if (window.consumers) {
       const ev = window.consumers.get("charging_electric");
@@ -2710,22 +2609,17 @@ function resetSimulation() {
       if (h2) {
         h2.level_g = 0;
       }
-      // update any top-panels
       if (
         window.consumers &&
         typeof window.consumers.updateTopPanels === "function"
       )
         window.consumers.updateTopPanels();
-      // update consumer panel display nodes if present
       const evElem = document.getElementById("consumer-ev-level");
       if (evElem) evElem.textContent = "0.00 kWh";
       const h2Elem = document.getElementById("consumer-h2-level");
       if (h2Elem) h2Elem.textContent = "0.00 g";
-      // refresh heat consumers UI to reflect disabled consumers
       updateHeatConsumersUI();
-      // refresh thermal sticky gauge
       updateThermalGaugeUI();
-      // also reset sticky thermal gauge label to 0 kWh
       const stickyThermal = document.getElementById(
         "sticky-thermal-gauge-percentage"
       );
@@ -2792,7 +2686,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const PVPowerSlider = document.getElementById("PV-power");
   const PVPowerValueDisplay = document.getElementById("PV-power-value");
 
-  // Realism checkbox functionality
   const realismCheckbox = document.getElementById("realism-checkbox");
   if (realismCheckbox) {
     realismCheckbox.addEventListener("change", function () {
@@ -2875,12 +2768,10 @@ document.addEventListener("DOMContentLoaded", function () {
     buyButton.addEventListener("click", function (e) {
       e.preventDefault();
       isNotificationVisible = false;
-      // Ensure money is correct and not overwritten by hydrogen sales
       if (typeof trade.money === "undefined") {
         trade.money = window.money;
       }
       trade.buyElectricity();
-      // Sync window.money after purchase
       window.money = trade.money;
     });
   }
@@ -2914,7 +2805,6 @@ document.addEventListener("DOMContentLoaded", function () {
       PVEfficiencyValueDisplay.textContent = 22 + "%";
       PVEfficiencySlider.value = 22;
 
-      // Ensure PV is treated as sunny for the industrial use case so charging runs
       pv.lastSunStatus = true;
       const sunElem = document.getElementById("sun");
       if (sunElem)
@@ -3089,10 +2979,8 @@ document.addEventListener("DOMContentLoaded", function () {
 //Buttons für die Simulation
 document.getElementById("convert-to-hydrogen").addEventListener("click", () => {
   try {
-    // If battery doesn't have enough energy, keep arrows static and notify user (localized)
-    const minBatteryThreshold = 0.1; // kWh minimal required to start
+    const minBatteryThreshold = 0.1; //kWh minimal required to start
     if (!charge || Number(charge.storage || 0) <= minBatteryThreshold) {
-      // Ensure arrows are static
       try {
         document.getElementById("electrolyzer-static-arrow").style.display =
           "block";
@@ -3119,7 +3007,6 @@ document.getElementById("convert-to-hydrogen").addEventListener("click", () => {
       return;
     }
 
-    // Proceed to start electrolyzer normally
     document.getElementById("simulation-state").innerHTML = " Hydrogen Mode ";
     document.getElementById("electrolyzer-static-arrow").style.display = "none";
     document.getElementById("electrolyzer-animated-arrow").style.display =
@@ -3134,11 +3021,10 @@ document.getElementById("convert-to-hydrogen").addEventListener("click", () => {
       outStatic.style.display = "none";
       outAnim.style.display = "block";
     }
-    // Reset manual stop flag when starting electrolyzer
     electrolyzerManuallyStopped = false;
     if (electrolyzerInterval === null) {
       electrolyzerInterval = setInterval(() => {
-        hydro.produceHydrogen(); // run production each second; method handles battery checks
+        hydro.produceHydrogen();
       }, 1000);
       console.log("Electrolyzer started");
       try {
@@ -3149,7 +3035,6 @@ document.getElementById("convert-to-hydrogen").addEventListener("click", () => {
       } catch (e) {
         console.warn("notify start electrolyzer failed", e);
       }
-      // If there is no battery energy, inform the user (but still allow the interval)
       if (!(charge && charge.storage > 0)) {
         const noBatMsg = window.getTranslation
           ? window.getTranslation("notEnoughBattery")
@@ -3179,7 +3064,6 @@ document
         h2fStatic.style.display = "none";
         h2fAnim.style.display = "block";
       }
-      // Animate Fuel Cell -> Charging Station arrow while fuel cell runs
       const fc2cStatic = document.getElementById(
         "fuelcell-to-charging-static-arrow"
       );
@@ -3228,7 +3112,6 @@ document
       outAnim.style.display = "none";
     }
     if (electrolyzerInterval !== null) {
-      // Only set manual stop flag if interval was running
       electrolyzerManuallyStopped = true;
       clearInterval(electrolyzerInterval); //Stoppe den Elektrolyseur
       electrolyzerInterval = null;
@@ -3242,7 +3125,6 @@ document
         console.warn("notify stop electrolyzer failed", e);
       }
     } else {
-      // If never started, do not block future starts
       electrolyzerManuallyStopped = false;
     }
   });
@@ -3266,7 +3148,6 @@ document
       h2fStatic.style.display = "block";
       h2fAnim.style.display = "none";
     }
-    // Set Fuel Cell -> Charging Station arrow to static when stopping
     const fc2cStatic = document.getElementById(
       "fuelcell-to-charging-static-arrow"
     );
@@ -3301,15 +3182,12 @@ document.addEventListener("DOMContentLoaded", function () {
   const resetSellHydrogenAmountBtn = document.getElementById(
     "reset-sell-hydrogen-amount"
   );
-  // Update price value display
   if (sellHydrogenPriceSlider && sellHydrogenPriceValue) {
     sellHydrogenPriceSlider.addEventListener("input", function () {
       sellHydrogenPriceValue.textContent = sellHydrogenPriceSlider.value;
     });
-    // Set initial value
     sellHydrogenPriceValue.textContent = sellHydrogenPriceSlider.value;
   }
-  // Increment buttons for hydrogen amount
   document
     .querySelectorAll('.trade-increment[data-target="sell-hydrogen-amount"]')
     .forEach((btn) => {
@@ -3324,14 +3202,12 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       });
     });
-  // Reset button for hydrogen amount
   if (resetSellHydrogenAmountBtn && sellHydrogenAmountInput) {
     resetSellHydrogenAmountBtn.addEventListener("click", function (e) {
       e.preventDefault();
       sellHydrogenAmountInput.value = 0;
     });
   }
-  // Sell hydrogen on button click
   if (sellHydrogenButton && sellHydrogenAmountInput) {
     sellHydrogenButton.addEventListener("click", function () {
       const amount = sellHydrogenAmountInput.value;
@@ -3343,7 +3219,6 @@ document.addEventListener("DOMContentLoaded", function () {
       ) {
         price = sellHydrogenPriceInput.value;
       } else {
-        // Fallback: get latest price from DOM
         const priceEl = document.getElementById("latest-hydrogen-price");
         if (priceEl && priceEl.textContent) {
           price = priceEl.textContent;
@@ -3351,13 +3226,11 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       const result = sellHydrogen(amount, price);
       if (result) {
-        // Do NOT reset input value here; only update storage display
         updateHydrogenStorageDisplay();
       }
     });
   }
 
-  // Add hydrogen storage display next to current market price
   function updateHydrogenStorageDisplay() {
     const marketPriceLabel = document.getElementById(
       "latest-hydrogen-price-label"
@@ -3379,7 +3252,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Initial update and periodic refresh
   updateHydrogenStorageDisplay();
   setInterval(updateHydrogenStorageDisplay, 1000);
 });
@@ -3412,7 +3284,6 @@ getCarbonIntensity();
 //Regelmäßige Updates laufen nur über updateSimulation()
 setInterval(updateSimulation, 1000);
 
-// Render the thermal UI immediately when DOM is ready so users see controls right away
 document.addEventListener("DOMContentLoaded", function () {
   try {
     const heat =
@@ -3462,16 +3333,13 @@ function errorCheck() {
   }
 }
 
-// Flowchart expand/collapse wiring: toggles the extra area below the flowchart by 194px
 document.addEventListener("DOMContentLoaded", function () {
   try {
     const toggle = document.getElementById("flowchart-toggle");
     if (!toggle) return;
-    // find the closest .flowchart ancestor to expand
     const flowchart =
       toggle.closest(".flowchart") || document.querySelector(".flowchart");
     if (!flowchart) return;
-    // Align the expanded subrow items under their parent icons
     function positionFlowSubItems() {
       try {
         const evBlock = document.getElementById("flow-ev-block");
@@ -3484,7 +3352,6 @@ document.addEventListener("DOMContentLoaded", function () {
         const containerRect = flowchart.getBoundingClientRect();
         if (el && evBlock) {
           const r = el.getBoundingClientRect();
-          // anchor slightly left by 20px for visual alignment (user requested additional 10px)
           const centerX = r.left + r.width / 2 - containerRect.left - 20;
           evBlock.style.left = Math.round(centerX) + "px";
         }
@@ -3498,14 +3365,14 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
-    // Reposition on toggle and resize
+
     toggle.addEventListener("click", function () {
       const expanded = toggle.getAttribute("aria-expanded") === "true";
       if (!expanded) {
         flowchart.classList.add("expanded");
         toggle.setAttribute("aria-expanded", "true");
         toggle.textContent = "▲";
-        // ensure subitems are positioned after layout
+
         setTimeout(positionFlowSubItems, 80);
       } else {
         flowchart.classList.remove("expanded");
@@ -3514,11 +3381,9 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
 
-    // Recompute positions on window resize so subitems stay anchored
     window.addEventListener("resize", function () {
       if (flowchart.classList.contains("expanded")) positionFlowSubItems();
     });
-    // Also run once on load in case the flowchart is initially expanded
     setTimeout(() => {
       if (flowchart.classList.contains("expanded")) positionFlowSubItems();
     }, 120);

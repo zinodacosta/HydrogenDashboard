@@ -1,6 +1,4 @@
-// --- Flowchart GSAP animation and toggle logic (moved from index.html) ---
 document.addEventListener("DOMContentLoaded", function () {
-  // DOM element assignments (user request)
   const codeExpanded = document.getElementById("code-expanded");
   const codeMinimized = document.getElementById("code-minimized");
   const content = document.getElementById("corner-content");
@@ -10,7 +8,6 @@ document.addEventListener("DOMContentLoaded", function () {
   ); // expanded
   const flowchartPanel = document.getElementById("flowchart-panel");
 
-  // GSAP animation for flowchart-panel
   if (window.gsap && window.ScrollTrigger) {
     gsap.registerPlugin(ScrollTrigger);
     function animateFlowchartVanilla({
@@ -52,9 +49,7 @@ document.addEventListener("DOMContentLoaded", function () {
         },
       });
     }
-    // Animate on load and when flowchart-panel is shown
     animateFlowchartVanilla();
-    // Optionally, re-animate when panel is shown again
     const flowchartPanel = document.getElementById("flowchart-panel");
     if (flowchartPanel) {
       const observer = new MutationObserver(() => {
@@ -68,7 +63,6 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
   }
-  // Toggle flowchart-panel with code-expanded
   function updateFlowchartPanelVisibility() {
     if (!flowchartPanel || !codeExpanded) return;
     if (window.getComputedStyle(codeExpanded).display !== "none") {
@@ -78,13 +72,11 @@ document.addEventListener("DOMContentLoaded", function () {
       flowchartPanel.style.display = "none";
     }
   }
-  // Listen for widget toggle and DOM changes
   if (toggleButton) {
     toggleButton.addEventListener("click", function () {
       setTimeout(updateFlowchartPanelVisibility, 20);
     });
   }
-  // Also observe codeExpanded for style changes (in case other code toggles it)
   const observer = new MutationObserver(updateFlowchartPanelVisibility);
   if (codeExpanded) {
     observer.observe(codeExpanded, {
@@ -92,32 +84,24 @@ document.addEventListener("DOMContentLoaded", function () {
       attributeFilter: ["style"],
     });
   }
-  // On resize, reposition flowchart panel
   window.addEventListener("resize", positionFlowchartPanel);
-  // Run on load
   updateFlowchartPanelVisibility();
 });
-// (Removed duplicate flowchart animation logic)
-// --- Flowchart animation and scroll logic ---
 document.addEventListener("DOMContentLoaded", function () {
   if (window.gsap && window.ScrollTrigger) {
     gsap.registerPlugin(ScrollTrigger);
 
-    // Hide flowchart when code-expanded is scrolled down, show (with animation) when at top
     const codeExpanded = document.getElementById("code-expanded");
     const flowchartContainer = document.getElementById("flowchart-container");
     if (codeExpanded && flowchartContainer) {
       function updateFlowchartOnScrollOrVisibility() {
-        // Hide if code-expanded is hidden
         if (codeExpanded.style.display === "none") {
           flowchartContainer.style.display = "none";
           return;
         }
-        // Hide if scrolled down
         if (codeExpanded.scrollTop > 10) {
           flowchartContainer.style.display = "none";
         } else {
-          // Only animate if just becoming visible
           if (flowchartContainer.style.display === "none") {
             flowchartContainer.style.display = "";
             animateFlowchart();
@@ -130,19 +114,16 @@ document.addEventListener("DOMContentLoaded", function () {
         "scroll",
         updateFlowchartOnScrollOrVisibility
       );
-      // Also update on widget toggle (in case code-expanded is shown/hidden)
       const toggleWidgetBtn = document.getElementById("toggle-widget");
       if (toggleWidgetBtn) {
         toggleWidgetBtn.addEventListener("click", function () {
           setTimeout(updateFlowchartOnScrollOrVisibility, 10);
         });
       }
-      // Initial check
       updateFlowchartOnScrollOrVisibility();
     }
   }
 });
-// Language translation logic
 let currentLanguage = "en";
 const translations = {
   en: {
@@ -476,7 +457,6 @@ const translations = {
   },
 };
 
-// Expose a tiny translation accessor for other modules
 window.getTranslation = function (key) {
   try {
     if (typeof translations === "undefined") return key;
@@ -488,7 +468,6 @@ window.getTranslation = function (key) {
   }
 };
 
-// Simple translator with interpolation support: window.t('key', {var: value})
 window.t = function (key, vars) {
   try {
     let txt = window.getTranslation ? window.getTranslation(key) : key;
@@ -505,30 +484,24 @@ window.t = function (key, vars) {
 };
 
 function setLanguage(lang) {
-  // Trading Panel header
   if (document.getElementById("trading-panel-title")) {
     document.getElementById("trading-panel-title").textContent =
       translations[lang].tradingPanelTitle;
   }
-  // Latest Hydrogen Price label
   if (document.getElementById("latest-hydrogen-price-label")) {
-    // Only replace the label text, not the value or unit
     const labelEl = document.getElementById("latest-hydrogen-price-label");
     const valueEl = document.getElementById("latest-hydrogen-price");
     let labelText = translations[lang].latestHydrogenPriceLabel;
-    // Replace only the label part before the value span
     labelEl.innerHTML = `${labelText} <span id='latest-hydrogen-price'>${
       valueEl ? valueEl.textContent : "--"
     }</span> €/kg`;
   }
-  // Realism label/info (if present)
   if (document.getElementById("realism-label"))
     document.getElementById("realism-label").textContent =
       translations[lang].realism;
   if (document.getElementById("realism-info"))
     document.getElementById("realism-info").textContent =
       translations[lang].realismInfo;
-  // PV Status (sun is shining)
   if (
     document.getElementById("pv-status-label") &&
     document.getElementById("sun") &&
@@ -542,7 +515,6 @@ function setLanguage(lang) {
   )
     document.getElementById("sun").textContent =
       translations[lang].pvStatusSunny;
-  // Fuelcell Efficiency, Power
   if (
     document.getElementById("fuelcell-efficiency") &&
     document.querySelector("label[for='fuelcell-efficiency']")
@@ -555,7 +527,6 @@ function setLanguage(lang) {
   )
     document.querySelector("label[for='fuelcell-power']").textContent =
       translations[lang].fuelcellPower;
-  // PV Status (sun is shining)
   if (
     document.getElementById("pv-status-label") &&
     document.getElementById("sun") &&
@@ -569,18 +540,15 @@ function setLanguage(lang) {
   )
     document.getElementById("sun").textContent =
       translations[lang].pvStatusSunny;
-  // Select Location label
   if (document.getElementById("city-select-label"))
     document.getElementById("city-select-label").textContent =
       translations[lang].selectLocation || translations[lang].citySelectLabel;
-  // Current Location label
   if (document.getElementById("current-location-label"))
     document.getElementById(
       "current-location-label"
     ).childNodes[0].textContent =
       (translations[lang].currentLocation ||
         translations[lang].currentLocationLabel) + " ";
-  // PV Status (cloudy)
   if (
     document.getElementById("pv-status-label") &&
     document.getElementById("sun") &&
@@ -594,7 +562,6 @@ function setLanguage(lang) {
   )
     document.getElementById("sun").textContent =
       translations[lang].pvStatusCloudy;
-  // Hydrogen Level
   if (
     document.getElementById("hydrogen-level") &&
     document.querySelector("#electrolyzer h3")
@@ -610,7 +577,6 @@ function setLanguage(lang) {
   )
     document.getElementById("hydrogen-level").previousSibling.textContent =
       translations[lang].hydrogenLevel;
-  // Electrolyzer Efficiency, Power, Capacity
   if (
     document.getElementById("electrolyzer-efficiency") &&
     document.querySelector("label[for='electrolyzer-efficiency']")
@@ -629,7 +595,6 @@ function setLanguage(lang) {
   )
     document.querySelector("label[for='electrolyzer-capacity']").textContent =
       translations[lang].electrolyzerCapacity;
-  // Hydrogen Storage
   if (
     document.getElementById("hydrogen-storage-percentage") &&
     document.querySelector("#electrolyzer .level-highlight") &&
@@ -639,7 +604,6 @@ function setLanguage(lang) {
     document.querySelector(
       "#electrolyzer .level-highlight"
     ).previousElementSibling.textContent = translations[lang].hydrogenStorage;
-  // Battery Level
   if (
     document.getElementById("battery-level") &&
     document.querySelector("#battery h3")
@@ -655,7 +619,6 @@ function setLanguage(lang) {
   )
     document.getElementById("battery-level").previousSibling.textContent =
       translations[lang].batteryLevel;
-  // Battery Efficiency, Capacity
   if (
     document.getElementById("battery-efficiency") &&
     document.querySelector("label[for='battery-efficiency']")
@@ -668,7 +631,6 @@ function setLanguage(lang) {
   )
     document.querySelector("label[for='battery-capacity']").textContent =
       translations[lang].batteryCapacity;
-  // Battery Storage
   if (
     document.getElementById("battery-storage-percentage") &&
     document.querySelector("#battery .level-highlight") &&
@@ -677,7 +639,6 @@ function setLanguage(lang) {
     document.querySelector(
       "#battery .level-highlight"
     ).previousElementSibling.textContent = translations[lang].batteryStorage;
-  // Machinery panels
   if (
     document.getElementById("photovoltaik") &&
     document.querySelector("#photovoltaik h3")
@@ -702,7 +663,6 @@ function setLanguage(lang) {
   )
     document.querySelector("#fuelcell h3").textContent =
       translations[lang].fuelcellPanel;
-  // Flow chart icon titles
   document.querySelectorAll(".flow-item").forEach((el, i) => {
     const flowKeys = [
       "flowPhotovoltaik",
@@ -715,20 +675,16 @@ function setLanguage(lang) {
     if (el.querySelector("p") && flowKeys[i])
       el.querySelector("p").textContent = translations[lang][flowKeys[i]];
   });
-  // Graph headers
   document.querySelectorAll(".graph-row h2.pretty-header").forEach((el, i) => {
     const graphKeys = ["graphBatteryStorage", "graphHydrogenStorage"];
     if (graphKeys[i]) el.textContent = translations[lang][graphKeys[i]];
   });
-  // Analysis note
   if (document.querySelector(".data-limitation small"))
     document.querySelector(".data-limitation small").textContent =
       translations[lang].analysisNote;
-  // Power generation selection
   if (document.querySelector("#graph-selector2 h3"))
     document.querySelector("#graph-selector2 h3").textContent =
       translations[lang].selectPowerGen;
-  // Power generation options (checkboxes and dropdown)
   const powerGenLabels = translations[lang].powerGenOptions;
   document.querySelectorAll(".checkbox-group input").forEach((input, i) => {
     if (input.nextSibling && powerGenLabels[i])
@@ -740,7 +696,6 @@ function setLanguage(lang) {
       if (powerGenLabels[i]) opt.textContent = powerGenLabels[i];
     });
   }
-  // Use case bullet points
   if (
     document.getElementById("use-case") &&
     document.getElementById("bullet-points-container")
@@ -761,26 +716,22 @@ function setLanguage(lang) {
     };
   }
   currentLanguage = lang;
-  // Trade panel buttons and labels
   document.getElementById("buy-button").textContent =
     translations[lang].buyElectricity;
   document.getElementById("sell-button").textContent =
     translations[lang].sellElectricity;
   document.getElementById("sell-hydrogen-button").textContent =
     translations[lang].sellHydrogen;
-  // Account balance and market price
   document.querySelector(".money-row span").textContent =
     translations[lang].accountBalance;
   document.getElementById("battery-level-top").previousSibling.textContent =
     translations[lang].electricityStored;
   document.querySelector(".trade-market-price").childNodes[0].textContent =
     translations[lang].currentMarketPrice;
-  // Hydrogen stored label
   if (document.getElementById("hydrogen-level-top")) {
     document.getElementById("hydrogen-level-top").previousSibling.textContent =
       translations[lang].hydrogenStored + " ";
   }
-  // Update hydrogen storage value in topmost panel
   window.setHydrogenTopPanel = function (val) {
     const el = document.getElementById("hydrogen-level-top");
     const hydrogenPanel = document.getElementById("hydrogen-level");
@@ -790,7 +741,6 @@ function setLanguage(lang) {
       el.textContent = `${val} g`;
     }
   };
-  // Feedback, changelogs, documentation
   if (document.getElementById("feedback-btn"))
     document.getElementById("feedback-btn").textContent =
       translations[lang].feedback;
@@ -800,21 +750,18 @@ function setLanguage(lang) {
   if (document.getElementById("documentation-btn"))
     document.getElementById("documentation-btn").textContent =
       translations[lang].documentation;
-  // Realism label/info (if present)
   if (document.getElementById("realism-label"))
     document.getElementById("realism-label").textContent =
       translations[lang].realism;
   if (document.getElementById("realism-info"))
     document.getElementById("realism-info").textContent =
       translations[lang].realismInfo;
-  // Header fields
   if (document.getElementById("header-battery"))
     document.getElementById("header-battery").textContent =
       translations[lang].batteryStorage;
   if (document.getElementById("header-hydrogen"))
     document.getElementById("header-hydrogen").textContent =
       translations[lang].hydrogenStorage;
-  // Major panels and static fields
   if (document.getElementById("wholesale-title"))
     document.getElementById("wholesale-title").textContent =
       translations[lang].wholesaleTitle;
@@ -830,12 +777,10 @@ function setLanguage(lang) {
   if (document.getElementById("how-it-works-title"))
     document.getElementById("how-it-works-title").textContent =
       translations[lang].howItWorksTitle;
-  // How it works text
   if (document.getElementById("how-it-works-panel"))
     document.getElementById(
       "how-it-works-panel"
     ).innerHTML = `<strong id="how-it-works-title" style="font-size: 1.1em; color: #1976d2;">${translations[lang].howItWorksTitle}</strong><br>${translations[lang].howItWorksText}`;
-  // Use case dropdown
   if (document.getElementById("use-case")) {
     const useCaseSelect = document.getElementById("use-case");
     useCaseSelect.options[0].text = translations[lang].useCases.offgrid;
@@ -864,13 +809,11 @@ function setLanguage(lang) {
       translations[lang].resetSimulation;
 }
 
-// Position the flowchart panel above and aligned with the widget
 function positionFlowchartPanel() {
   const panel = document.getElementById("flowchart-panel");
   const widget = document.getElementById("corner-widget");
   if (!panel || !widget) return;
 
-  // Temporarily ensure panel is measurable
   const prevVisibility = panel.style.visibility;
   const prevDisplay = panel.style.display;
   panel.style.visibility = "hidden";
@@ -879,7 +822,6 @@ function positionFlowchartPanel() {
   const widgetRect = widget.getBoundingClientRect();
   const spacing = 8; // gap around panel
 
-  // Vertical: squeeze between window top and top of widget
   const top = spacing;
   const availableHeight = Math.max(0, widgetRect.top - spacing * 2);
 
@@ -889,14 +831,11 @@ function positionFlowchartPanel() {
     panel.style.height = availableHeight + "px";
   }
 
-  // Horizontal: align to the widget's right edge
   const rightOffset = Math.max(spacing, window.innerWidth - widgetRect.right);
   panel.style.right = rightOffset + "px";
   panel.style.left = "auto";
-  // Width: match maximized widget width
   panel.style.width = widgetRect.width + "px";
 
-  // Restore previous visibility
   panel.style.visibility = prevVisibility || "visible";
   panel.style.display = prevDisplay || "block";
 }
@@ -909,15 +848,12 @@ document.getElementById("lang-en").addEventListener("click", function () {
 });
 
 window.addEventListener("DOMContentLoaded", function () {
-  // Hydrogen price logic
   async function updateLatestHydrogenPrice() {
     try {
       const response = await fetch("hydrogen_price.json");
       const data = await response.json();
       if (Array.isArray(data) && data.length > 0) {
-        // Get the latest entry
         const latest = data[data.length - 1];
-        // Convert €/MWh to €/kg using formula: €/kg = MWh€ × 0.0394, then €/g
         const eurPerKg = latest.price_eur_per_mwh * 0.0394;
         const eurPerG = eurPerKg / 1000;
         document.getElementById("latest-hydrogen-price").textContent =
@@ -930,14 +866,12 @@ window.addEventListener("DOMContentLoaded", function () {
 
   updateLatestHydrogenPrice();
 
-  // Hydrogen price history chart logic
   let hydrogenPriceChartInstance = null;
   async function showHydrogenPriceHistory() {
     try {
       const response = await fetch("hydrogen_price.json");
       const data = await response.json();
       if (Array.isArray(data) && data.length > 0) {
-        // Prepare chart data
         const labels = data.map((entry) => entry.date);
         const values = data.map((entry) =>
           ((entry.price_eur_per_mwh * 0.0394) / 1000).toFixed(3)
@@ -990,11 +924,9 @@ window.addEventListener("DOMContentLoaded", function () {
         });
       }
     } catch (err) {
-      // Optionally show error
     }
   }
 
-  // Show More button logic
   const showMoreBtn = document.getElementById("show-hydrogen-price-history");
   const historyContainer = document.getElementById(
     "hydrogen-price-history-container"
@@ -1029,7 +961,6 @@ let hydrogenData = [];
 let hydrogenChartInstance = null;
 let movingAverageWindow = 4; // Default moving average window size (optimized for 1 week of data)
 
-// Indicator visibility states
 let showEMA = false;
 let showBollinger = false;
 let showOscillator = false;
@@ -1162,7 +1093,6 @@ const fetchData = debounce(async function () {
         "[ERROR] Data structure is incorrect. Full response:",
         data
       );
-      // Optionally show a user-friendly message in the UI
       const chartErrorElem = document.getElementById("chart-error");
       if (chartErrorElem) {
         chartErrorElem.textContent =
@@ -1215,14 +1145,12 @@ function calculateEMA(values, period = 5) {
   const ema = [];
   const multiplier = 2 / (period + 1);
 
-  // First EMA value is the same as SMA
   let sum = 0;
   for (let i = 0; i < Math.min(period, values.length); i++) {
     sum += values[i] || 0;
   }
   ema.push(sum / Math.min(period, values.length));
 
-  // Calculate EMA for remaining values
   for (let i = 1; i < values.length; i++) {
     const currentEMA = values[i] * multiplier + ema[i - 1] * (1 - multiplier);
     ema.push(currentEMA);
@@ -1242,11 +1170,9 @@ function calculateBollingerBands(values, period = 20, stdDev = 2) {
     const start = Math.max(0, i - period + 1);
     const window = values.slice(start, i + 1);
 
-    // Calculate SMA (middle band)
     const sma =
       window.reduce((sum, val) => sum + (val || 0), 0) / window.length;
 
-    // Calculate standard deviation
     const variance =
       window.reduce((sum, val) => {
         return sum + Math.pow((val || 0) - sma, 2);
@@ -1284,7 +1210,6 @@ function createChart(canvasId, labels, values, labelName, borderColor) {
     typeof label === "string" ? new Date(label) : label
   );
 
-  // Calculate moving average for wholesale price
   let datasets = [
     {
       label: labelName,
@@ -1306,9 +1231,7 @@ function createChart(canvasId, labels, values, labelName, borderColor) {
     },
   ];
 
-  // Add indicators for wholesale price
   if (labelName === "Wholesale Price" && values.length > 0) {
-    // Add EMA
     if (showEMA) {
       const emaValues = calculateEMA(values, movingAverageWindow);
       const getPeriodDescription = (period) => {
@@ -1338,7 +1261,6 @@ function createChart(canvasId, labels, values, labelName, borderColor) {
       });
     }
 
-    // Add Bollinger Bands
     if (showBollinger) {
       const bollingerBands = calculateBollingerBands(
         values,
@@ -1383,7 +1305,6 @@ function createChart(canvasId, labels, values, labelName, borderColor) {
       });
     }
 
-    // Add Price Oscillator (secondary axis)
     if (showOscillator) {
       const oscillatorValues = calculatePriceOscillator(values);
       datasets.push({
@@ -1631,13 +1552,11 @@ function updateSecondChart(graphDataArray) {
     pointHoverBorderColor: "#fff",
   }));
 
-  // Exclude 'actualelectricityconsumption' from the sum
   const sumSourceData = graphDataArray.filter(
     (g, idx) => !g.label.toLowerCase().includes("actual")
   );
 
   if (sumSourceData.length > 1) {
-    // Use the first non-actual dataset's labels as reference
     const sumLabels = sumSourceData[0].labels;
     const sumValues = sumLabels.map((_, idx) => {
       let sum = 0;
@@ -1954,7 +1873,6 @@ function startMonitoring() {
     );
     if (!isNaN(batteryLevel)) {
       updateBatteryChart(batteryLevel);
-      // Arrow logic for electrolyzer
       const staticArrow = document.getElementById("electrolyzer-static-arrow");
       const animatedArrow = document.getElementById(
         "electrolyzer-animated-arrow"
@@ -1981,14 +1899,12 @@ window.onload = async () => {
 
 //init values
 document.addEventListener("DOMContentLoaded", function () {
-  // Documentation modal logic
   const documentationBtn = document.getElementById("documentation-btn");
   const documentationModal = document.getElementById("documentation-modal");
   if (documentationBtn && documentationModal) {
     documentationBtn.addEventListener("click", function () {
       documentationModal.style.display = "block";
     });
-    // Close documentation modal when clicking outside
     window.addEventListener("mousedown", function (event) {
       if (
         documentationModal.style.display === "block" &&
@@ -1999,7 +1915,6 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   }
-  // Language toggle logic
   const langDeBtn = document.getElementById("lang-de");
   const langEnBtn = document.getElementById("lang-en");
   let currentLang = "EN";
@@ -2011,13 +1926,11 @@ document.addEventListener("DOMContentLoaded", function () {
       langDeBtn.classList.remove("lang-off");
       langEnBtn.classList.add("lang-off");
       langEnBtn.classList.remove("lang-on");
-      // TODO: Add logic to switch dashboard text to German
     } else {
       langEnBtn.classList.add("lang-on");
       langEnBtn.classList.remove("lang-off");
       langDeBtn.classList.add("lang-off");
       langDeBtn.classList.remove("lang-on");
-      // TODO: Add logic to switch dashboard text to English
     }
   }
 
@@ -2028,10 +1941,8 @@ document.addEventListener("DOMContentLoaded", function () {
     langEnBtn.addEventListener("click", function () {
       if (currentLang !== "EN") setLanguage("EN");
     });
-    // Set initial state
     setLanguage("EN");
   }
-  // Modal logic for changelogs and feedback
   const changelogsBtn = document.getElementById("changelogs-btn");
   const changelogsModal = document.getElementById("changelogs-modal");
   const feedbackBtn = document.getElementById("feedback-btn");
@@ -2043,7 +1954,6 @@ document.addEventListener("DOMContentLoaded", function () {
     changelogsBtn.addEventListener("click", function () {
       changelogsModal.style.display = "block";
     });
-    // Close changelogs modal when clicking outside
     window.addEventListener("mousedown", function (event) {
       if (
         changelogsModal.style.display === "block" &&
@@ -2058,7 +1968,6 @@ document.addEventListener("DOMContentLoaded", function () {
     feedbackBtn.addEventListener("click", function () {
       feedbackModal.style.display = "block";
     });
-    // Close feedback modal when clicking outside
     window.addEventListener("mousedown", function (event) {
       if (
         feedbackModal.style.display === "block" &&
@@ -2109,7 +2018,6 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
 
-    // Function to show a styled popup message
     function showFeedbackPopup(message) {
       let popup = document.createElement("div");
       popup.textContent = message;
@@ -2139,7 +2047,6 @@ document.addEventListener("DOMContentLoaded", function () {
     "toggle-widget-expanded"
   );
 
-  // Moving average configuration
   const movingAverageWindowSlider = document.getElementById(
     "moving-average-window"
   );
@@ -2147,7 +2054,6 @@ document.addEventListener("DOMContentLoaded", function () {
     "moving-average-window-value"
   );
 
-  // Indicator visibility controls
   const showEMACheckbox = document.getElementById("show-ema");
   const showBollingerCheckbox = document.getElementById("show-bollinger");
   const showOscillatorCheckbox = document.getElementById("show-oscillator");
@@ -2156,19 +2062,16 @@ document.addEventListener("DOMContentLoaded", function () {
     movingAverageWindowSlider.addEventListener("input", function () {
       movingAverageWindow = parseInt(this.value);
       movingAverageWindowValue.textContent = movingAverageWindow;
-      // Auto-update the chart when slider changes
       if (graphType === "wholesalePrice") {
         fetchData();
       }
     });
   }
 
-  // Add event listeners for indicator checkboxes
   if (showEMACheckbox) {
     showEMACheckbox.addEventListener("change", function () {
       showEMA = this.checked;
 
-      // Show/hide EMA configuration
       const emaConfig = document.getElementById("ema-config");
       if (emaConfig) {
         emaConfig.style.display = showEMA ? "flex" : "none";
@@ -2198,7 +2101,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Add event listeners for info buttons
   const emaInfoBtn = document.getElementById("ema-info-btn");
   const bollingerInfoBtn = document.getElementById("bollinger-info-btn");
   const oscillatorInfoBtn = document.getElementById("oscillator-info-btn");
@@ -2274,7 +2176,6 @@ document.addEventListener("DOMContentLoaded", function () {
   if (toggleButtonExpanded)
     toggleButtonExpanded.addEventListener("click", handleToggleWidget);
 
-  // Quick Manual button interactivity
   const quickManualBtn = document.getElementById("quick-manual-btn");
   const quickManualInfo = document.getElementById("quick-manual-info");
   if (quickManualBtn && quickManualInfo) {
