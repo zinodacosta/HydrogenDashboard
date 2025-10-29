@@ -107,7 +107,7 @@
   box-shadow: 0 6px 18px rgba(25,118,210,0.18);
   box-sizing: border-box;
   display: flex;
-  flex-wrap: nowrap; /* keep flowchart items on a single horizontal row; expanded subrow is absolutely positioned */
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
   width: 100%; 
@@ -115,7 +115,6 @@
   max-width: 1200px;
 }
 
-/* Flowchart expand toggle button styling (secondary rules - override inline where needed) */
 #flowchart-toggle {
   display: inline-flex;
   align-items: center;
@@ -138,7 +137,7 @@
   z-index: 100001 !important;
 }
 
-/* Show the subrow when flowchart is expanded */
+
 .flowchart.expanded .flow-subrow {
   display: block !important;
 }
@@ -147,52 +146,51 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 140px; /* default desktop offset; tuned to match .flowchart.expanded padding */
+  bottom: 140px; 
   width: 100%;
   display: none;
-  pointer-events: none; /* allow clicks to pass through unless needed */
+  pointer-events: none; 
 }
 .flow-subitem {
   position: absolute;
   transform: translateX(-80%);
-  pointer-events: auto; /* enable interaction on icons */
+  pointer-events: auto; 
 }
 .flow-subitem img { display:block; }
 
-/* Make EV/H2 icons in the expanded subrow match the main flow-item icon size */
+
 #flow-ev-block img, #flow-h2-block img, #ev-charge-icon, #h2-charge-icon {
   width: 54px !important;
   height: auto !important;
 }
 
-/* Left-side icons added to expanded subrow (battery and hydrogen storage) */
+
 #ev-left-battery-icon, #h2-left-storage-icon {
   width: 54px !important;
   height: auto !important;
 }
 
-/* Ensure arrow graphics in the subrow keep the same sizing as the top flowchart arrows */
-/* On desktop the main/top static arrows are sized at ~60% of their container; animated arrows use height:100px. */
+
 #electrolyzer-to-ev-static-arrow img,
 #fuelcell-to-h2-static-arrow img {
-  width: 60% !important; /* match top static arrows */
+  width: 60% !important; 
   height: auto !important;
 }
 
-/* Animated arrows in the expanded subrow: keep size and rotate -90deg (other side) */
+
 #electrolyzer-to-ev-animated-arrow,
 #fuelcell-to-h2-animated-arrow {
   width: auto !important;
-  height: 100px !important; /* match top animated arrows */
+  height: 100px !important; 
   max-height: 100px !important;
   object-fit: contain !important;
   transform: rotate(-90deg) !important;
   transform-origin: center center !important;
 }
 
-/* Make the textual label under expanded icons match the top flow-item labels */
+
 .flow-subitem div > div {
-  font-size: 18px !important; /* match body / top labels */
+  font-size: 18px !important; 
   margin-top: 4px !important;
   text-align: center !important;
 }
@@ -207,7 +205,7 @@ html.embed-mode, body.embed-mode {
 }
 
 
-/* Ensure the wrapper panel sits above other widgets */
+
 #flowchart-panel {
   z-index: 100000 !important;
   position: fixed;
@@ -596,14 +594,14 @@ footer {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    background-color: green; /* Default color */
+    background-color: green;
     color: white;
     padding: 15px 20px;
     border-radius: 5px;
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
     font-size: 16px;
-    display: none; /* Initially hidden */
-    opacity: 0; /* Start fully transparent */
+    display: none; 
+    opacity: 0; 
     transition: opacity 0.5s ease-in-out;
     z-index: 1000;
 }
@@ -773,7 +771,7 @@ label {
     margin-top: 50px;
 }
 
-/* Removed conflicting arrow size rules. Only fixed size with !important is applied above. */
+
 
 #corner-widget {
     position: fixed;
@@ -787,7 +785,7 @@ label {
     max-height: 90vh;
 }
 
-/* Toggle button in the corner */
+
 #toggle-widget, #toggle-widget-expanded.toggle-widget {
     width: 30px;
     height: 30px;
@@ -807,8 +805,7 @@ label {
 
 }
 
-/* Content area of the widget */
-/* Make #corner-content fill the full height of #code-expanded */
+
 #corner-content {
   display: flex;
   flex-direction: column;
@@ -821,7 +818,7 @@ label {
   box-sizing: border-box;
 }
 
-/* Styles for minimized and expanded states */
+
 #code-minimized {
     background-color: #f8f9fa;
     padding: 10px;
@@ -1098,7 +1095,7 @@ label {
         margin-bottom: -10px;
       }
 
-/* --- Custom styles moved from index.html --- */
+
 .trade-row {
   display: flex;
   align-items: center;
@@ -1425,7 +1422,7 @@ label {
   }
 }
 
-/* Highlight for PV status when sun is shining */
+
 .pv-sun-highlight {
   background: #eaffea;
   color: #333;
@@ -1498,7 +1495,7 @@ label {
   }
 }
 
-/* Ensure .flowchart is only vertically scrollable on mobile */
+
 @media (max-width: 700px) {
   .flowchart {
     overflow-x: hidden !important;
@@ -1577,8 +1574,7 @@ label {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  /* remains hidden by default, shown by JS */
-  /* display: none; */
+
 }
 
 
@@ -1710,9 +1706,9 @@ label {
 
         min-width: 0;
     overflow-x: auto;
-        padding-bottom: 1250px; /* Ensure padding remains consistent */
+        padding-bottom: 1250px;
   }
-        /* On narrow screens the expanded area is very tall; ensure the subrow is positioned higher so it remains visible */
+
 
   .flowchart{
     min-width: 0;
@@ -1750,7 +1746,6 @@ label {
   }
 }
 @media (max-width: 700px) {
-  /* Include thermal gauge so it matches battery/hydrogen sizing on small screens */
   #sticky-battery-gauge,
   #sticky-hydrogen-gauge,
   #sticky-thermal-gauge {
@@ -1825,13 +1820,13 @@ label {
         justify-content: flex-start;
     }
 }
-/* Consumers panel two-column layout */
+
 .consumer-columns {
   display: flex;
   gap: 12px;
   align-items: flex-start;
 }
-/* Unified consumer level badges: prevent wrapping and ensure identical sizing behavior */
+
 .consumer-level {
   font-size: 1.25em;
   font-weight: 700;
@@ -1841,10 +1836,10 @@ label {
   display: inline-block;
   margin-left: 6px;
   vertical-align: middle;
-  max-width: 160px; /* avoid line breaks for long labels */
-  white-space: nowrap; /* keep text on a single line */
-  overflow: hidden; /* clip overflow */
-  text-overflow: ellipsis; /* show ellipsis when truncated */
+  max-width: 160px; 
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
 }
 
 #consumer-ev-level{
@@ -2026,19 +2021,19 @@ label {
     margin-top: 10px;
     border-radius: 30px !important;
 }
-/* media end */
+
 .notification {
     position: fixed;
     bottom: 20px !important;
     right: 22px !important;
-    background-color: green; /* Default color */
+    background-color: green; 
     color: white;
     padding: 15px 110px !important;
     border-radius: 10px !important;
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
     font-size: 16px;
-    display: none; /* Initially hidden */
-    opacity: 0; /* Start fully transparent */
+    display: none; 
+    opacity: 0; 
     transition: opacity 1s ease-in-out;
     z-index: 1000;
 }

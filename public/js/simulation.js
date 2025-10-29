@@ -666,11 +666,10 @@ export class fuelcell {
     if (hydro.storage > 0) {
       let powerProduced =
         (hydro.storage *
-          33.3 *
           (this.efficiency / 100) *
           (this.power / 1000) *
           speedfactor) /
-        100;
+        33.3;
 
       let availableCapacity = charge.capacity - charge.storage;
       if (availableCapacity <= 0) {
@@ -767,11 +766,10 @@ export class electrolyzer {
       //units/scale per the project's historical constants
       const possibleHydrogenProduced =
         (charge.storage *
-          55.5 *
           (this.efficiency / 100) *
           (this.power / 1000) *
-          sf) /
-        10000;
+          speedfactor) /
+        55.5;
 
       const actualHydrogenProduced = Math.min(
         possibleHydrogenProduced,
@@ -793,13 +791,6 @@ export class electrolyzer {
           ).toFixed(6)
         );
       } else {
-        console.log(
-          "[DEBUG] produceHydrogen() not enough battery for candidate production",
-          {
-            charge_storage_kWh: Number(charge.storage || 0),
-            required_kWh: actualBatteryConsumption,
-          }
-        );
         return;
       }
 
@@ -2473,7 +2464,6 @@ async function updateSimulation() {
     try {
       hydro.produceHydrogen();
     } catch (err) {
-      console.error("[DEBUG] hydro.produceHydrogen() threw:", err);
     }
   }
 
