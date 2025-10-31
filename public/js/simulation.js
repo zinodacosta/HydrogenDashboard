@@ -1199,17 +1199,6 @@ window.consumerState = {
   },
 };
 
-/**
- * Apply a named use case which adjusts the primary room's name, area (m^2)
- * and thermalMass (kWh required to raise room by 1°C) so room size influences
- * how fast it heats up. Call updateHeatConsumersUI() after applying.
- *
- * Mapping (per product manager):
- * - offgrid -> Living room, 20 m²
- * - microgrid -> Storage room, 100 m²
- * - evcharge -> Storage hall, 1000 m²
- * - industrial -> Storage hall (Large), 5000 m²
- */
 function applyUseCase(usecaseKey) {
   const mapping = {
     offgrid: { name: "Living room", area: 20 },
