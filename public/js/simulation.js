@@ -45,8 +45,7 @@ document.addEventListener("DOMContentLoaded", function () {
         document.querySelectorAll(toHide.join(",")).forEach(function (el) {
           try {
             el.style.display = "none";
-          } catch (e) {
-          }
+          } catch (e) {}
         });
       }
       try {
@@ -122,8 +121,7 @@ window.addEventListener(
           } catch (e) {}
         }
       } catch (e) {}
-    } catch (e) {
-    }
+    } catch (e) {}
   },
   false
 );
@@ -766,10 +764,11 @@ export class electrolyzer {
       //units/scale per the project's historical constants
       const possibleHydrogenProduced =
         (charge.storage *
+          55.5 *
           (this.efficiency / 100) *
           (this.power / 1000) *
           speedfactor) /
-        55.5;
+        10000;
 
       const actualHydrogenProduced = Math.min(
         possibleHydrogenProduced,
@@ -1836,12 +1835,12 @@ function updateHeatConsumersUI() {
       btn.style.minWidth = "88px";
       btn.style.fontWeight = "600";
       if (s.enabled) {
-        btn.className = "start-btn"; 
+        btn.className = "start-btn";
         btn.textContent = window.getTranslation
           ? window.getTranslation("onText")
           : "On";
       } else {
-        btn.className = "stop-btn"; 
+        btn.className = "stop-btn";
         btn.textContent = window.getTranslation
           ? window.getTranslation("offText")
           : "Off";
@@ -2463,8 +2462,7 @@ async function updateSimulation() {
   ) {
     try {
       hydro.produceHydrogen();
-    } catch (err) {
-    }
+    } catch (err) {}
   }
 
   try {
@@ -2891,9 +2889,9 @@ document.addEventListener("DOMContentLoaded", function () {
       batteryCapacityValueDisplay.textContent = 1000 + "kWh";
       batteryCapacitySlider.value = 1000;
 
-      hydro.updateElectrolyzerPower(200000);
+      hydro.updateElectrolyzerPower(100000);
       electrolyzerPowerValueDisplay.textContent = 200 + "kW";
-      electrolyzerPowerSlider.value = 200000;
+      electrolyzerPowerSlider.value = 100000;
       hydro.updateElectrolyzerEfficiency(70);
       electrolyzerEfficiencyValueDisplay.textContent = 70 + "%";
       electrolyzerEfficiencySlider.value = 70;
@@ -3354,7 +3352,6 @@ document.addEventListener("DOMContentLoaded", function () {
         console.warn("positionFlowSubItems failed", e);
       }
     }
-
 
     toggle.addEventListener("click", function () {
       const expanded = toggle.getAttribute("aria-expanded") === "true";
