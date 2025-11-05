@@ -1389,6 +1389,9 @@ label {
   max-width: 1050px !important;
   
 }
+.flowchart{
+  width: 98% !important;
+}
 }
 @media (max-width: 700px) {
   .notification-buy, .notification-sell {
