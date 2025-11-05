@@ -1382,12 +1382,22 @@ label {
   100% { opacity: 0; transform: translateY(30px) scale(0.97); }
 }
 
+
+@media (max-width: 1080px) {
+#code-expanded{
+  min-height: 1600px !important;
+  max-width: 1050px !important;
+  
+}
+}
 @media (max-width: 700px) {
   .notification-buy, .notification-sell {
     font-size: 0.95em !important;
     padding: 10px 12px !important;
   }
 }
+
+
 
 #battery-level.level-highlight {
   font-size: 1.25em;
