@@ -324,7 +324,7 @@ const translations = {
     euro: "€",
     wholesaleTitle: "Großhandelspreis",
     chart2Title: "Stromverbrauch",
-    ecoTitle: "Wasserstoff-Öko-System",
+    ecoTitle: "Wasserstoff-Öko-System-Simulator",
     usecaseTitle: "Anwendungsfall wählen:",
     howItWorksTitle: "So funktioniert es:",
     pvEfficiencyLabel: "PV-Wirkungsgrad:",
@@ -335,7 +335,7 @@ const translations = {
     resetSimulation: "Simulation zurücksetzen",
     howItWorksText: `<ul style="margin-top: 6px; margin-bottom: 0;">
 <li>
-  Die <b>Wasserstoff-Öko-System</b> zielt auf wirtschaftlichen Gewinn ab, indem Strom aus Photovoltaik genutzt,<br> Strom zu niedrigen Preisen gekauft, 
+  Die <b>Wasserstoff-Öko-System-Simulator</b> zielt auf wirtschaftlichen Gewinn ab, indem Strom aus Photovoltaik genutzt,<br> Strom zu niedrigen Preisen gekauft, 
   überschüssiger Strom mittels Elektrolyseur in Wasserstoff (<b>Strom zu Wasserstoff</b>) umgewandelt 
   und <br>Wasserstoff bei hohen Preisen mittels Brennstoffzelle wieder in Strom (<b>Wasserstoff zu Strom</b>) zurückverwandelt wird.
 </li>
@@ -348,7 +348,7 @@ const translations = {
                 <div style="margin-top:8px;"><em>Die Simulation verwendet UTC-Zeit.</em></div>`,
     useCases: {
       offgrid: "Netzunabhängiges nachhaltiges Zuhause",
-      microgrid: "Mikronetz für ein abgelegenes Dorf",
+      microgrid: "Mikronetz für ein dezentrales Dorf",
       evcharge: "EV-Ladestation mit erneuerbarer Energie",
       industrial: "Industrielle Wasserstoffproduktionsanlage",
     },
