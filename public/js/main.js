@@ -154,7 +154,7 @@ const translations = {
     g: "g",
     euro: "€",
     wholesaleTitle: "Wholesale Price",
-    chart2Title: "Electricity Consumption",
+    chart2Title: "Electricity Germany Origin ",
     ecoTitle: "Hydrogen Eco System",
     usecaseTitle: "Select Use Case:",
     howItWorksTitle: "How it works:",
@@ -315,7 +315,7 @@ const translations = {
     batteryEfficiency: "Batteriewirkungsgrad:",
     batteryCapacity: "Batteriekapazität:",
     batteryStorage: "Batteriespeicher",
-    accountBalance: "Kontostand:<br>",
+    accountBalance: "Kontostand:",
     electricityStored: "Gespeicherter Strom:",
     hydrogenStored: "Gespeicherter Wasserstoff:",
     currentMarketPrice: "Aktueller Marktpreis:",
@@ -323,8 +323,8 @@ const translations = {
     g: "g",
     euro: "€",
     wholesaleTitle: "Großhandelspreis",
-    chart2Title: "Stromverbrauch",
-    ecoTitle: "Wasserstoff-Öko-System-Simulator",
+    chart2Title: "Strommix Deutschland Aktuell",
+    ecoTitle: "Wasserstoff Ökosystem Simulator",
     usecaseTitle: "Anwendungsfall wählen:",
     howItWorksTitle: "So funktioniert es:",
     pvEfficiencyLabel: "PV-Wirkungsgrad:",
@@ -335,7 +335,7 @@ const translations = {
     resetSimulation: "Simulation zurücksetzen",
     howItWorksText: `<ul style="margin-top: 6px; margin-bottom: 0;">
 <li>
-  Die <b>Wasserstoff-Öko-System-Simulator</b> zielt auf wirtschaftlichen Gewinn ab, indem Strom aus Photovoltaik genutzt,<br> Strom zu niedrigen Preisen gekauft, 
+  Der <b>Wasserstoff Ökosystem Simulator</b> zielt auf wirtschaftlichen Gewinn ab, indem Strom aus Photovoltaik genutzt,<br> Strom zu niedrigen Preisen gekauft, 
   überschüssiger Strom mittels Elektrolyseur in Wasserstoff (<b>Strom zu Wasserstoff</b>) umgewandelt 
   und <br>Wasserstoff bei hohen Preisen mittels Brennstoffzelle wieder in Strom (<b>Wasserstoff zu Strom</b>) zurückverwandelt wird.
 </li>
@@ -343,7 +343,7 @@ const translations = {
 <li>Die Anwendung verwendet Geolokalisierung, um festzustellen, ob der gewählte Standort sonnig ist und lädt die Photovoltaik entsprechend.</li>
 <li>Der Elektrolyseur arbeitet <b>automatisch</b>, wenn der Batteriespeicher über 80% liegt.</li>
 <li>Alle Parameter können auch <b>manuell</b> angepasst werden.</li>
-<li>Strom kann <b>manuell</b> zum Marktpreis im obersten Panel gekauft und verkauft werden.</li>
+<li>Strom kann <b>manuell</b> zum Marktpreis im Panel unten gekauft und verkauft werden.</li>
                 </ul>
                 <div style="margin-top:8px;"><em>Die Simulation verwendet UTC-Zeit.</em></div>`,
     useCases: {
