@@ -236,15 +236,27 @@ body {
     font-family: 'Roboto', sans-serif;
     font-size: 18px;
     background-color: #2232b9;
-    background-image: url("https://protonik-gmbh.com/wp-content/uploads/2024/02/Protonik_Logo_weiss-hoch-web1000.png");
-    background-repeat: no-repeat; 
-    background-position: center;   
-    background-attachment: fixed;
-    background-size: 40%; 
+    background-image: url("/icons/Wasserstoff-Koordinierungsstelle-RLP_RGB_negativ_Wortmarke_mit_Schutzraum_rechtsbündig.webp"), url("https://protonik-gmbh.com/wp-content/uploads/2024/02/Protonik_Logo_weiss-hoch-web1000.png");
+    background-repeat: no-repeat, no-repeat;
+    background-position: top right, bottom left;
+    background-attachment: scroll, fixed;
+  background-size: auto 160px, 15%; 
     margin: 0;
     padding: 0;
     overflow-x: hidden;
     color: #212427;
+}
+
+@media (max-width: 900px) {
+  body {
+    background-size: auto 120px, 29.7%;
+  }
+}
+@media (max-width: 480px) {
+  body {
+    background-size: auto 96px, 23.1%;
+    background-position: top 8px right 8px, bottom 8px left 8px;
+  }
 }
 
 #graph-selector2 {
