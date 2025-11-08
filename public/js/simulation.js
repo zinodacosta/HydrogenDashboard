@@ -238,7 +238,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   function updateSpeedIndicator() {
     if (speedSlider.value === "2") {
-      speedIndicator.textContent = "Fastest";
+      speedIndicator.textContent = "x3600 [1h/s]";
       realism = 1;
     } else {
       speedIndicator.textContent = "Real-Time";
@@ -266,7 +266,7 @@ document.addEventListener("DOMContentLoaded", function () {
         storageSpan = document.createElement("span");
         storageSpan.id = "hydrogen-storage-inline";
         storageSpan.style.marginLeft = "16px";
-        storageSpan.style.color = "#1976d2";
+        storageSpan.style.color = "#2232b9";
         marketPriceLabel.appendChild(storageSpan);
       }
       storageSpan.textContent = `Hydrogen stored: ${(
@@ -2662,6 +2662,36 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const PVPowerSlider = document.getElementById("PV-power");
   const PVPowerValueDisplay = document.getElementById("PV-power-value");
+  // helpers to format units for slider displays
+  function formatPower(watts) {
+    if (isNaN(watts)) return "-";
+    const v = Number(watts);
+    if (Math.abs(v) >= 1e6) {
+      return (v / 1e6).toFixed(2) + " MW";
+    }
+    if (Math.abs(v) >= 1e3) {
+      return (v / 1e3).toFixed(2) + " kW";
+    }
+    return Math.round(v) + " W";
+  }
+
+  function formatEnergy(kwh) {
+    if (isNaN(kwh)) return "-";
+    const v = Number(kwh);
+    if (Math.abs(v) >= 1000) {
+      return (v / 1000).toFixed(2) + " MWh";
+    }
+    return Number(v).toFixed(2) + " kWh";
+  }
+
+  function formatMassGrams(g) {
+    if (isNaN(g)) return "-";
+    const v = Number(g);
+    if (Math.abs(v) >= 1000) {
+      return (v / 1000).toFixed(2) + " kg";
+    }
+    return Math.round(v) + " g";
+  }
 
   const realismCheckbox = document.getElementById("realism-checkbox");
   if (realismCheckbox) {
@@ -2684,7 +2714,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   batteryCapacitySlider.addEventListener("input", function () {
     const capacity = parseFloat(batteryCapacitySlider.value);
-    batteryCapacityValueDisplay.textContent = capacity + "kWh";
+    batteryCapacityValueDisplay.textContent = formatEnergy(capacity);
     charge.updateBatteryCapacity(capacity);
   });
 
@@ -2696,19 +2726,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
   electrolyzerPowerSlider.addEventListener("input", function () {
     const power = parseFloat(electrolyzerPowerSlider.value);
-    electrolyzerPowerValueDisplay.textContent = power + " Watt";
+    electrolyzerPowerValueDisplay.textContent = formatPower(power);
     hydro.updateElectrolyzerPower(power);
   });
 
   electrolyzerCapacitySlider.addEventListener("input", function () {
     const capacity = parseFloat(electrolyzerCapacitySlider.value);
-    electrolyzerCapacityValueDisplay.textContent = capacity + " g";
+    electrolyzerCapacityValueDisplay.textContent = formatMassGrams(capacity);
     hydro.updateElectrolyzerCapacity(capacity);
   });
 
   fuelcellPowerSlider.addEventListener("input", function () {
     const power = parseFloat(fuelcellPowerSlider.value);
-    fuelcellPowerValueDisplay.textContent = power + " Watt";
+    fuelcellPowerValueDisplay.textContent = formatPower(power);
     fc.updateFuelCellPower(power);
   });
 
@@ -2726,7 +2756,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   PVPowerSlider.addEventListener("input", function () {
     const power = parseFloat(PVPowerSlider.value);
-    PVPowerValueDisplay.textContent = power + " Watt";
+    PVPowerValueDisplay.textContent = formatPower(power);
     pv.updatePVPower(power);
   });
 
@@ -2864,9 +2894,9 @@ document.addEventListener("DOMContentLoaded", function () {
         "The station dynamically adjusts pricing based on energy availability and grid prices.",
       ];
       resetSimulation();
-      pv.updatePVPower(500000);
-      PVPowerValueDisplay.textContent = 500 + "kW";
-      PVPowerSlider.value = 500000;
+      pv.updatePVPower(75000);
+      PVPowerValueDisplay.textContent = 75 + "kW";
+      PVPowerSlider.value = 75000;
       pv.updatePVEfficiency(22);
       PVEfficiencyValueDisplay.textContent = 22 + "%";
       PVEfficiencySlider.value = 22;
@@ -2874,13 +2904,13 @@ document.addEventListener("DOMContentLoaded", function () {
       charge.updateBatteryEfficiency(95);
       batteryEfficiencyValueDisplay.textContent = 95 + "%";
       batteryEfficiencySlider.value = 95;
-      charge.updateBatteryCapacity(1000);
-      batteryCapacityValueDisplay.textContent = 1000 + "kWh";
-      batteryCapacitySlider.value = 1000;
+      charge.updateBatteryCapacity(150);
+      batteryCapacityValueDisplay.textContent = 150 + "kWh";
+      batteryCapacitySlider.value = 150;
 
-      hydro.updateElectrolyzerPower(100000);
-      electrolyzerPowerValueDisplay.textContent = 200 + "kW";
-      electrolyzerPowerSlider.value = 100000;
+      hydro.updateElectrolyzerPower(50000);
+      electrolyzerPowerValueDisplay.textContent = 50 + "kW";
+      electrolyzerPowerSlider.value = 50000;
       hydro.updateElectrolyzerEfficiency(70);
       electrolyzerEfficiencyValueDisplay.textContent = 70 + "%";
       electrolyzerEfficiencySlider.value = 70;
@@ -3220,7 +3250,7 @@ document.addEventListener("DOMContentLoaded", function () {
         storageSpan = document.createElement("span");
         storageSpan.id = "hydrogen-storage-inline";
         storageSpan.style.marginLeft = "16px";
-        storageSpan.style.color = "#1976d2";
+        storageSpan.style.color = "#2232b9";
         marketPriceLabel.appendChild(storageSpan);
       }
       storageSpan.textContent = `Hydrogen stored: ${parseFloat(storage).toFixed(

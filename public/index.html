@@ -28,8 +28,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-
-
+    
     <script type="module" defer src="/js/simulation.js"></script>
     <script type="module" defer src="/js/main.js"></script>
 
@@ -119,7 +118,7 @@
           </div>
         </div>
         <!-- Expand toggle: bottom centered arrow -->
-        <button id="flowchart-toggle" aria-expanded="false" title="Expand flowchart" style="position:absolute;left:50%;transform:translateX(-50%);bottom:6px;width:36px;height:28px;border-radius:6px;border:none;background:#1976d2;color:#fff;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.12);">▼</button>
+        <button id="flowchart-toggle" aria-expanded="false" title="Expand flowchart" style="position:absolute;left:50%;transform:translateX(-50%);bottom:6px;width:36px;height:28px;border-radius:6px;border:none;background:#2232b9;color:#fff;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.12);">▼</button>
       </div>
     </div>
     <div id="corner-widget" class="widget-card">
@@ -231,7 +230,7 @@
             </div>
             <button id="lang-de" class="lang-toggle lang-off">DE</button>
             <button id="lang-en" class="lang-toggle lang-on">EN</button>
-            <button id="documentation-btn" style="background:#ffa000;color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:1em;font-weight:600;box-shadow:0 2px 8px rgba(255,160,0,0.10);cursor:pointer;transition:background 0.2s;">📖 Documentation</button>
+            <button id="documentation-btn" style="background:#2232b9;color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:1em;font-weight:600;box-shadow:0 2px 8px rgba(255,160,0,0.10);cursor:pointer;transition:background 0.2s;">📖 Documentation</button>
           </div>
         </div>
         <div id="corner-content">
@@ -255,8 +254,8 @@
                 <div id="bullet-points-container"></div>
               </div>
             <div class="quick-manual-panel">
-              <div class="how-it-works-panel" id="how-it-works-panel" style="background: #e3f2fd; border: 2px solid #1976d2; border-radius: 10px; padding: 14px; margin-top: 6px; margin-bottom: 6px; box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);">
-                <strong id="how-it-works-title" style="font-size: 1.1em; color: #1976d2;">How it works:</strong><br>
+              <div class="how-it-works-panel" id="how-it-works-panel" style="background: #e3f2fd; border: 2px solid #2232b9; border-radius: 10px; padding: 14px; margin-top: 6px; margin-bottom: 6px; box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);">
+                <strong id="how-it-works-title" style="font-size: 1.1em; color: #2232b9;">How it works:</strong><br>
                 <ul style="margin-top: 6px; margin-bottom: 0;">
 <li>
   The <b>Hydrogen Eco Simulation</b> aims for economic profit by using power generated from photovoltaics,<br> buying electricity at low prices, 
@@ -290,7 +289,7 @@
                 <input
                   type="range"
                   id="PV-power"
-                  step="1"
+                  step="100"
                   min="100"
                   max="1000000"
                 />
@@ -325,14 +324,14 @@
                 <input
                   type="range"
                   id="battery-capacity"
-                  step="1"
+                  step="10"
                   min="1"
                   max="10000"
                 />
                 <span id="battery-capacity-value">10 kWh</span>
                 <div style="margin-top:8px;">
                   <span style="color:#333; font-size:0.98em; display:block;">Battery Storage</span>
-                  <span id="battery-storage-percentage" class="level-highlight" style="box-shadow: 0 2px 8px rgba(76, 175, 80, 0.08); background: linear-gradient(90deg, #e8f5e9 0%, #c8e6c9 100%); color: #1b5e20; padding: 6px 18px; border-radius: 10px; font-weight: 700; font-size: 1.1em; display:block; margin-top:4px;">0%</span>
+                  <span id="battery-storage-percentage" class="level-highlight" style="box-shadow: 0 2px 8px rgba(76, 175, 80, 0.08); background: linear-gradient(90deg, #0f1547 0%, #2232b9 100%); color: #ffffff; padding: 6px 18px; border-radius: 10px; font-weight: 700; font-size: 1.1em; display:block; margin-top:4px;">0%</span>
 
                 </div>
 
@@ -340,7 +339,7 @@
                 <div id="battery-speed-slider-container" style="margin-top:8px;display:flex;flex-direction:column;align-items:center;">
                   <label for="simulation-speed-slider" style="font-size:0.98em;color:#333;margin-bottom:2px;align-self:flex-start;">Simulation Speed:</label>
                   <input type="range" id="simulation-speed-slider" min="1" max="2" value="2" step="1" style="width:100%;margin-bottom:2px;">
-                  <div id="simulation-speed-indicator" style="width:100%;font-size:0.92em;color:#1976d2;margin-top:0px;text-align:left;"></div>
+                  <div id="simulation-speed-indicator" style="width:100%;font-size:0.92em;color:#000000;margin-top:0px;text-align:left;"></div>
                 </div>
               </div>
               <div class="eco-item" id="electrolyzer">
@@ -361,7 +360,7 @@
                 <input
                   type="range"
                   id="electrolyzer-power"
-                  step="1"
+                  step="100"
                   min="100"
                   max="1000000"
                 />
@@ -372,14 +371,14 @@
                 <input
                   type="range"
                   id="electrolyzer-capacity"
-                  step="1"
+                  step="100"
                   min="100"
                   max="10000"
                 />
                 <span id="electrolyzer-capacity-value">1000</span>
                 <div style="margin-top:8px;">
                   <span style="color:#333; font-size:0.98em; display:block;">Hydrogen Storage</span>
-                  <span id="hydrogen-storage-percentage" class="hydrogen-highlight" style="box-shadow: 0 2px 8px rgba(76, 175, 80, 0.08); background: linear-gradient(90deg, #e3f2fd 0%, #b3e5fc 100%); color: #1565c0; padding: 6px 18px; border-radius: 10px; font-weight: 700; font-size: 1.1em; display:block; margin-top:4px;">0%</span>
+                  <span id="hydrogen-storage-percentage" class="hydrogen-highlight" style="box-shadow: 0 2px 8px rgba(76, 175, 80, 0.08); background: linear-gradient(90deg, #0f1547 0%, #2232b9 100%); color: #ffffff; padding: 6px 18px; border-radius: 10px; font-weight: 700; font-size: 1.1em; display:block; margin-top:4px;">0%</span>
                   <div class="electrolyzer-controls" style="margin-top:10px;">
                     <button id="convert-to-hydrogen" class="start-btn">Start Electrolyzer</button>
                     <button id="convert-to-hydrogen-stop" class="stop-btn">Stop Electrolyzer</button>
@@ -401,7 +400,7 @@
                 <input
                   type="range"
                   id="fuelcell-power"
-                  step="1"
+                  step="100"
                   min="100"
                   max="1000000"
                 />
@@ -428,7 +427,7 @@
               </div>
             </div>
                       <h2 class="pretty-header" id="trading-panel-title" style="margin-bottom:18px;">Trading Panel</h2>
-          <div class="trade-panel" style="margin-bottom: 18px; border: 2px solid #1976d2; border-radius: 10px; padding: 12px; background: #f5faff;">
+          <div class="trade-panel" style="margin-bottom: 18px; border: 2px solid #2232b9; border-radius: 10px; padding: 12px; background: #f5faff;">
             <div class="money-row" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
               <span>Account Balance:</span>
               <span id="money" class="money-highlight"></span>
@@ -452,7 +451,7 @@
               <button id="reset-sell-amount" class="trade-reset" title="Reset to 0">⟲</button>
             </div>
             <div class="trade-row" style="margin-bottom: 8px;">
-              <button id="sell-hydrogen-button" class="button sell" style="background:#1976d2; color:#fff;">Sell Hydrogen</button>
+              <button id="sell-hydrogen-button" class="button sell">Sell Hydrogen</button>
               <input type="number" id="sell-hydrogen-amount" min="0.1" step="0.1" placeholder="g" class="trade-input">
               <button class="trade-increment" data-target="sell-hydrogen-amount" data-inc="1">+1</button>
               <button class="trade-increment" data-target="sell-hydrogen-amount" data-inc="10">+10</button>
@@ -462,7 +461,7 @@
             </div>
             <div style="height:12px;"></div>
             <div class="trade-row" style="margin-bottom: 8px; flex-direction: column; align-items: flex-start;">
-              <button id="show-hydrogen-price-history" class="button" style="background:#ffa000; color:#fff; margin-left:0;">Show More</button>
+              <button id="show-hydrogen-price-history" class="button" style="background:#0f1547; color:#ffffff; margin-left:0;">Show More</button>
               <div id="hydrogen-price-history-container" style="display:none; margin-top:10px; width:100%;">
                 <canvas id="hydrogenPriceChart" width="400" height="240"></canvas>
               </div>
@@ -477,7 +476,7 @@
           </div>
           <!-- Canvas for Chart -->
           <canvas id="myChart" width="400" height="70"></canvas>
-          <div id="chart-error" style="display:none; color: #b00020; font-weight: bold; margin-top: 8px;"></div>
+          <div id="chart-error" style="display:none; color: #e9eaf7; font-weight: bold; margin-top: 8px;"></div>
 
           <div id="graph-selector2">
             <h2 id="chart2-title" class="pretty-header">Electricity Consumption</h2>
@@ -528,17 +527,17 @@
                 </div>
               </div>
             <div style="display:flex;justify-content:center;gap:24px;margin-bottom:32px;">
-              <button id="changelogs-btn" style="background:#1976d2;color:#fff;border:none;border-radius:8px;padding:12px 28px;font-size:1.08em;font-weight:500;box-shadow:0 2px 8px rgba(25,118,210,0.10);cursor:pointer;transition:background 0.2s;">
+              <button id="changelogs-btn" style="background:#2232b9;color:#fff;border:none;border-radius:8px;padding:12px 28px;font-size:1.08em;font-weight:500;box-shadow:0 2px 8px rgba(25,118,210,0.10);cursor:pointer;transition:background 0.2s;">
                 📋 Changelogs
               </button>
-              <button id="feedback-btn" style="background:#43a047;color:#fff;border:none;border-radius:8px;padding:12px 28px;font-size:1.08em;font-weight:500;box-shadow:0 2px 8px rgba(67,160,71,0.10);cursor:pointer;transition:background 0.2s;">
+              <button id="feedback-btn" style="background:#2232b9;color:#fff;border:none;border-radius:8px;padding:12px 28px;font-size:1.08em;font-weight:500;box-shadow:0 2px 8px rgba(67,160,71,0.10);cursor:pointer;transition:background 0.2s;">
                 💬 Report Feedback
               </button>
             </div>
             <!-- Changelogs Modal -->
             <!-- Documentation Modal -->
             <div id="documentation-modal" class="dashboard-modal" style="display:none;">
-              <h3 style="margin-top:0;color:#ffa000;">Documentation</h3>
+              <h3 style="margin-top:0;color:#dcff55;">Documentation</h3>
               <div style="max-height:60vh;overflow-y:auto;">
                 <strong>Hydrogen Dashboard</strong> is designed to retrieve and visualize power generation and consumption data from the SMARD API. The dashboard provides graphical analysis and enables direct comparison with hydrogen as a fuel source.
                 <br><br>
@@ -574,13 +573,13 @@
                 The trading panel allows you to buy or sell electricity based on real-time or simulated market prices. You can manually execute trades, set thresholds for automated trading, and see the effect on your system's storage and finances.<br><br>
                 <strong>Tip:</strong> Adjust parameters and switch use cases to explore how different setups affect your energy system's efficiency and profitability.
               </div>
-              <button onclick="document.getElementById('documentation-modal').style.display='none'" style="background:#ffa000;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:1em;cursor:pointer;">Close</button>
+              <button onclick="document.getElementById('documentation-modal').style.display='none'" style="background:#dcff55;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:1em;cursor:pointer;">Close</button>
             </div>
             <div id="changelogs-modal" class="dashboard-modal" style="display:none;">
-              <h3 style="margin-top:0;color:#1976d2;">Changelogs</h3>
+              <h3 style="margin-top:0;color:#2232b9;">Changelogs</h3>
               <div style="margin-bottom:18px;">Latest updates and changes will be listed here.</div>
               <ul style="margin-bottom:18px;">
-                <
+              
                 <li><b>2025-09-08:</b> Added feedback modal and changelogs.</li>
                 <li><b>2025-09-10:</b> Added documentation.</li>
                 <li><b>2025-09-16:</b> Hydrogen is now sellable.</li>
@@ -589,19 +588,19 @@
                 <li><b>2025-10-04:</b> Visual overhaul of UI, improved gauge visuals, sticky bar/widget consistency, and performance fixes for smoother simulation.</li>
                 <li><b>2025-10-08:</b> Added thermal storage support and consumption</li>
               </ul>
-              <button onclick="document.getElementById('changelogs-modal').style.display='none'" style="background:#1976d2;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:1em;cursor:pointer;">Close</button>
+              <button onclick="document.getElementById('changelogs-modal').style.display='none'" style="background:#a8addf;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:1em;cursor:pointer;">Close</button>
             </div>
             
             <!-- Feedback Modal -->
             <div id="feedback-modal" class="dashboard-modal" style="display:none;">
-              <h3 style="margin-top:0;color:#43a047;">Report Feedback</h3>
+              <h3 style="margin-top:0;color:#2232b9;">Report Feedback</h3>
               <form id="feedback-form" style="display:flex;flex-direction:column;gap:14px;">
                 <input type="text" id="feedback-name" name="name" placeholder="Your Name" style="padding:8px 12px;border-radius:6px;border:1px solid #ccc;font-size:1em;" required />
                 <textarea id="feedback-text" name="feedback" placeholder="Your Feedback" style="padding:8px 12px;border-radius:6px;border:1px solid #ccc;font-size:1em;min-height:80px;resize:vertical;" required></textarea>
-                <button type="submit" style="background:#43a047;color:#fff;border:none;border-radius:6px;padding:10px 22px;font-size:1.08em;font-weight:500;cursor:pointer;">Submit</button>
+                <button type="submit" style="background:#e9eaf7;color:#000000;border:none;border-radius:6px;padding:10px 22px;font-size:1.08em;font-weight:500;cursor:pointer;">Submit</button>
               </form>
-              <button onclick="document.getElementById('feedback-modal').style.display='none'" style="background:#43a047;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:1em;cursor:pointer;margin-top:10px;">Close</button>
-              <div id="feedback-success" style="display:none;color:#43a047;margin-top:12px;font-weight:500;">Thank you for your feedback!</div>
+              <button onclick="document.getElementById('feedback-modal').style.display='none'" style="background:#2232b9;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:1em;cursor:pointer;margin-top:10px;">Close</button>
+              <div id="feedback-success" style="display:none;color:#e9eaf7;margin-top:12px;font-weight:500;">Thank you for your feedback!</div>
             </div>
             </div>
             <div id="notification" class="notification">1kW Electricity bought!</div>

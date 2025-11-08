@@ -154,7 +154,7 @@ const translations = {
     g: "g",
     euro: "€",
     wholesaleTitle: "Wholesale Price",
-    chart2Title: "Electricity Germany Origin ",
+    chart2Title: "Origin of Electricity (Germany) ",
     ecoTitle: "Hydrogen Eco System",
     usecaseTitle: "Select Use Case:",
     howItWorksTitle: "How it works:",
@@ -335,15 +335,15 @@ const translations = {
     resetSimulation: "Simulation zurücksetzen",
     howItWorksText: `<ul style="margin-top: 6px; margin-bottom: 0;">
 <li>
-  Der <b>Wasserstoff Ökosystem Simulator</b> zielt auf wirtschaftlichen Gewinn ab, indem Strom aus Photovoltaik genutzt,<br> Strom zu niedrigen Preisen gekauft, 
-  überschüssiger Strom mittels Elektrolyseur in Wasserstoff (<b>Strom zu Wasserstoff</b>) umgewandelt 
-  und <br>Wasserstoff bei hohen Preisen mittels Brennstoffzelle wieder in Strom (<b>Wasserstoff zu Strom</b>) zurückverwandelt wird.
+  Der <b>Wasserstoff Ökosystem Simulator</b> stellt einen niederschwelligen Einstieg in das Thema H2-Erzeugung, Speicherung, Eigenverbrauch und Verkauf dar. 
 </li>
 <li>Die Auswahl eines Anwendungsfalls ändert die Parameter der Maschinen.</li>
 <li>Die Anwendung verwendet Geolokalisierung, um festzustellen, ob der gewählte Standort sonnig ist und lädt die Photovoltaik entsprechend.</li>
 <li>Der Elektrolyseur arbeitet <b>automatisch</b>, wenn der Batteriespeicher über 80% liegt.</li>
 <li>Alle Parameter können auch <b>manuell</b> angepasst werden.</li>
 <li>Strom kann <b>manuell</b> zum Marktpreis im Panel unten gekauft und verkauft werden.</li>
+<li>Der Simulator erhebt keinen Anspruch auf Vollständigkeit, sondern dient einer Erstorientierung für interessierte Akteure mit dem Thema Wasserstoff. </li>
+<li>Bei Interesse an tiefergehenden Beratungsangeboten wenden Sie sich bitte an die Wasserstoff Koordinierungsstelle RLP</li>
                 </ul>
                 <div style="margin-top:8px;"><em>Die Simulation verwendet UTC-Zeit.</em></div>`,
     useCases: {
@@ -780,7 +780,7 @@ function setLanguage(lang) {
   if (document.getElementById("how-it-works-panel"))
     document.getElementById(
       "how-it-works-panel"
-    ).innerHTML = `<strong id="how-it-works-title" style="font-size: 1.1em; color: #1976d2;">${translations[lang].howItWorksTitle}</strong><br>${translations[lang].howItWorksText}`;
+    ).innerHTML = `<strong id="how-it-works-title" style="font-size: 1.1em; color: #2232b9;">${translations[lang].howItWorksTitle}</strong><br>${translations[lang].howItWorksText}`;
   if (document.getElementById("use-case")) {
     const useCaseSelect = document.getElementById("use-case");
     useCaseSelect.options[0].text = translations[lang].useCases.offgrid;
@@ -888,16 +888,16 @@ window.addEventListener("DOMContentLoaded", function () {
               {
                 label: "Hydrogen Price (€/g)",
                 data: values,
-                borderColor: "#1976d2",
+                borderColor: "#2232b9",
                 backgroundColor: "rgba(25,118,210,0.10)",
                 tension: 0.1,
                 fill: true,
                 pointRadius: 2,
                 borderWidth: 2.5,
                 pointHoverRadius: 6,
-                pointBackgroundColor: "#1976d2",
+                pointBackgroundColor: "#2232b9",
                 pointHoverBorderWidth: 3.5,
-                pointHoverBackgroundColor: "#1976d2",
+                pointHoverBackgroundColor: "#2232b9",
                 pointHoverBorderColor: "#fff",
               },
             ],
