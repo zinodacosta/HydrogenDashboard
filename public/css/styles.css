@@ -195,9 +195,7 @@
   text-align: center !important;
 }
 
-/* Embed-mode: when the app runs inside a transparent iframe, remove page background
-   so only the app chrome renders inside the host page. Use the .embed-mode class on
-   html/body to opt into this behavior. */
+
 html.embed-mode, body.embed-mode {
   background-image: none !important;
   background-color: transparent !important;
@@ -236,11 +234,11 @@ body {
     font-family: 'Roboto', sans-serif;
     font-size: 18px;
     background-color: #2232b9;
-    background-image: url("/icons/Wasserstoff-Koordinierungsstelle-RLP_RGB_negativ_Wortmarke_mit_Schutzraum_rechtsbündig.webp"), url("https://protonik-gmbh.com/wp-content/uploads/2024/02/Protonik_Logo_weiss-hoch-web1000.png");
-    background-repeat: no-repeat, no-repeat;
-    background-position: top right, bottom left;
-    background-attachment: scroll, fixed;
-  background-size: auto 160px, 15%; 
+    background-image:url("https://protonik-gmbh.com/wp-content/uploads/2024/02/Protonik_Logo_weiss-hoch-web1000.png");
+    background-repeat: no-repeat;
+    background-position:top left;
+    background-attachment:fixed;
+    background-size:15%; 
     margin: 0;
     padding: 0;
     overflow-x: hidden;
