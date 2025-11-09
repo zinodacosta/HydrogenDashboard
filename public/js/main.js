@@ -923,8 +923,7 @@ window.addEventListener("DOMContentLoaded", function () {
           },
         });
       }
-    } catch (err) {
-    }
+    } catch (err) {}
   }
 
   const showMoreBtn = document.getElementById("show-hydrogen-price-history");
