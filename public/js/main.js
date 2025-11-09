@@ -1533,56 +1533,35 @@ function updateSecondChart(graphDataArray) {
     myChartInstance2.destroy();
   }
 
-  let datasets = graphDataArray.map((graphData) => ({
-    label: graphData.label,
-    data: graphData.values,
-    borderColor: graphData.borderColor,
-    backgroundColor: graphData.borderColor.startsWith("rgb")
-      ? graphData.borderColor.replace(/rgb\(([^)]+)\)/, "rgba($1, 0.8)") //Ensure transparency for background
-      : "rgba(0, 0, 0, 0.8)", //Fallback to black
-    tension: 0.1,
-    fill: false,
-    pointRadius: 0,
-    pointHoverRadius: 8,
-    pointHitRadius: 20,
-    borderWidth: 2.5,
-    pointBackgroundColor: graphData.borderColor,
-    pointHoverBorderWidth: 3.5,
-    pointHoverBackgroundColor: graphData.borderColor,
-    pointHoverBorderColor: "#fff",
-  }));
+  // Build datasets; exclude the 'actual electricity consumption' series from stacking/fill
+  let datasets = graphDataArray.map((graphData) => {
+    const labelLower = (graphData.label || "").toLowerCase();
+    const isActualSeries =
+      labelLower.includes("actualelectricityconsumption") ||
+      labelLower.includes("actual electricity") ||
+      labelLower === "actual";
 
-  const sumSourceData = graphDataArray.filter(
-    (g, idx) => !g.label.toLowerCase().includes("actual")
-  );
-
-  if (sumSourceData.length > 1) {
-    const sumLabels = sumSourceData[0].labels;
-    const sumValues = sumLabels.map((_, idx) => {
-      let sum = 0;
-      for (let i = 0; i < sumSourceData.length; i++) {
-        sum += Number(sumSourceData[i].values[idx]) || 0;
-      }
-      return sum;
-    });
-    datasets.push({
-      label: "Sum",
-      data: sumValues,
-      borderColor: "#43a047",
-      backgroundColor: "rgba(67,160,71,0.15)",
+    return {
+      label: graphData.label,
+      data: graphData.values,
+      borderColor: graphData.borderColor,
+      backgroundColor: graphData.borderColor.startsWith("rgb")
+        ? graphData.borderColor.replace(/rgb\(([^)]+)\)/, "rgba($1, 0.8)") // Ensure transparency for background
+        : "rgba(0, 0, 0, 0.8)", // Fallback to black
       tension: 0.1,
-      fill: false,
+      // Only fill and stack non-actual series so they accumulate; actual consumption is shown as a regular line
+      fill: !isActualSeries,
+      stack: isActualSeries ? undefined : "stack1",
       pointRadius: 0,
       pointHoverRadius: 8,
       pointHitRadius: 20,
-      borderWidth: 3.5,
-      pointBackgroundColor: "#43a047",
+      borderWidth: 2.5,
+      pointBackgroundColor: graphData.borderColor,
       pointHoverBorderWidth: 3.5,
-      pointHoverBackgroundColor: "#43a047",
+      pointHoverBackgroundColor: graphData.borderColor,
       pointHoverBorderColor: "#fff",
-      borderDash: [6, 4],
-    });
-  }
+    };
+  });
 
   myChartInstance2 = new Chart(ctx, {
     type: "line",
@@ -1654,6 +1633,7 @@ function updateSecondChart(graphDataArray) {
             },
           },
           beginAtZero: true,
+          stacked: true,
         },
       },
     },
