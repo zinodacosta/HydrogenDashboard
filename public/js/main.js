@@ -343,7 +343,7 @@ const translations = {
 <li>Alle Parameter können auch <b>manuell</b> angepasst werden.</li>
 <li>Strom kann <b>manuell</b> zum Marktpreis im Panel unten gekauft und verkauft werden.</li>
 <li>Der Simulator erhebt keinen Anspruch auf Vollständigkeit, sondern dient einer Erstorientierung für interessierte Akteure mit dem Thema Wasserstoff. </li>
-<li>Bei Interesse an tiefergehenden Beratungsangeboten wenden Sie sich bitte an die Wasserstoff Koordinierungsstelle RLP</li>
+
                 </ul>
                 <div style="margin-top:8px;"><em>Die Simulation verwendet UTC-Zeit.</em></div>`,
     useCases: {
