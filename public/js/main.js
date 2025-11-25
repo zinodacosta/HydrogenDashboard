@@ -1206,12 +1206,12 @@ function createChart(canvasId, labels, values, labelName, borderColor) {
   const ctx = document.getElementById(canvasId).getContext("2d");
 
   // Store original data for filtering
-  if (canvasId === 'myChart') {
+  if (canvasId === "myChart") {
     originalChartData.myChart = {
       labels: [...labels],
       values: [...values],
       labelName: labelName,
-      borderColor: borderColor
+      borderColor: borderColor,
     };
   }
 
@@ -1541,12 +1541,12 @@ function updateSecondChart(graphDataArray) {
   if (graphDataArray && graphDataArray.length > 0) {
     originalChartData.myChart2 = {
       labels: [...(graphDataArray[0].labels || [])],
-      datasets: graphDataArray.map(graphData => ({
+      datasets: graphDataArray.map((graphData) => ({
         label: graphData.label,
         data: [...(graphData.values || [])],
         borderColor: graphData.borderColor,
-        backgroundColor: graphData.borderColor
-      }))
+        backgroundColor: graphData.borderColor,
+      })),
     };
   }
 
@@ -2198,28 +2198,28 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // Store original chart data for filtering
 let originalChartData = {
-  myChart: { labels: [], values: [], labelName: '', borderColor: '' },
-  myChart2: { labels: [], datasets: [] }
+  myChart: { labels: [], values: [], labelName: "", borderColor: "" },
+  myChart2: { labels: [], datasets: [] },
 };
 
 // Time range filter functionality
-document.addEventListener("DOMContentLoaded", function() {
-  const filterButtons = document.querySelectorAll('.time-filter-btn');
-  
-  filterButtons.forEach(button => {
-    button.addEventListener('click', function() {
-      const chartId = this.getAttribute('data-chart');
-      const range = this.getAttribute('data-range');
-      
+document.addEventListener("DOMContentLoaded", function () {
+  const filterButtons = document.querySelectorAll(".time-filter-btn");
+
+  filterButtons.forEach((button) => {
+    button.addEventListener("click", function () {
+      const chartId = this.getAttribute("data-chart");
+      const range = this.getAttribute("data-range");
+
       // Remove active class from all buttons in the same container
-      const container = this.closest('.time-filter-container');
-      container.querySelectorAll('.time-filter-btn').forEach(btn => {
-        btn.classList.remove('time-filter-active');
+      const container = this.closest(".time-filter-container");
+      container.querySelectorAll(".time-filter-btn").forEach((btn) => {
+        btn.classList.remove("time-filter-active");
       });
-      
+
       // Add active class to clicked button
-      this.classList.add('time-filter-active');
-      
+      this.classList.add("time-filter-active");
+
       // Apply the filter
       filterChartData(chartId, range);
     });
@@ -2229,33 +2229,33 @@ document.addEventListener("DOMContentLoaded", function() {
 function filterChartData(chartId, range) {
   const now = Date.now();
   let cutoffTime;
-  
+
   // Calculate cutoff timestamp based on range
-  switch(range) {
-    case 'day':
-      cutoffTime = now - (24 * 60 * 60 * 1000);
+  switch (range) {
+    case "day":
+      cutoffTime = now - 24 * 60 * 60 * 1000;
       break;
-    case 'week':
-      cutoffTime = now - (7 * 24 * 60 * 60 * 1000);
+    case "week":
+      cutoffTime = now - 7 * 24 * 60 * 60 * 1000;
       break;
-    case 'month':
-      cutoffTime = now - (30 * 24 * 60 * 60 * 1000);
+    case "month":
+      cutoffTime = now - 30 * 24 * 60 * 60 * 1000;
       break;
-    case 'year':
-      cutoffTime = now - (365 * 24 * 60 * 60 * 1000);
+    case "year":
+      cutoffTime = now - 365 * 24 * 60 * 60 * 1000;
       break;
     default:
       cutoffTime = 0; // Show all data
   }
-  
-  if (chartId === 'myChart' && myChartInstance) {
+
+  if (chartId === "myChart" && myChartInstance) {
     // Filter data for wholesale price chart
     const originalData = originalChartData.myChart;
     if (originalData.labels.length === 0) {
-      console.warn('No original data stored for myChart');
+      console.warn("No original data stored for myChart");
       return;
     }
-    
+
     const filteredIndices = [];
     originalData.labels.forEach((label, index) => {
       const labelTime = new Date(label).getTime();
@@ -2263,57 +2263,56 @@ function filterChartData(chartId, range) {
         filteredIndices.push(index);
       }
     });
-    
-    const filteredLabels = filteredIndices.map(i => originalData.labels[i]);
-    const filteredValues = filteredIndices.map(i => originalData.values[i]);
-    
+
+    const filteredLabels = filteredIndices.map((i) => originalData.labels[i]);
+    const filteredValues = filteredIndices.map((i) => originalData.values[i]);
+
     // Update chart data
-    myChartInstance.data.labels = filteredLabels.map(label => 
+    myChartInstance.data.labels = filteredLabels.map((label) =>
       typeof label === "string" ? new Date(label) : label
     );
-    
+
     // Update main dataset
     myChartInstance.data.datasets[0].data = filteredValues;
-    
+
     // Update EMA/Bollinger/Oscillator if they exist
     if (myChartInstance.data.datasets.length > 1) {
       // Recalculate indicators with filtered data
       const datasets = myChartInstance.data.datasets;
-      
+
       for (let i = 1; i < datasets.length; i++) {
         const dataset = datasets[i];
-        
-        if (dataset.label && dataset.label.includes('EMA')) {
+
+        if (dataset.label && dataset.label.includes("EMA")) {
           const emaValues = calculateEMA(filteredValues, movingAverageWindow);
           dataset.data = emaValues;
-        } else if (dataset.label && dataset.label.includes('Bollinger')) {
+        } else if (dataset.label && dataset.label.includes("Bollinger")) {
           const bollingerBands = calculateBollingerBands(
             filteredValues,
             Math.min(20, filteredValues.length),
             2
           );
-          if (dataset.label.includes('Upper')) {
+          if (dataset.label.includes("Upper")) {
             dataset.data = bollingerBands.upper;
           } else {
             dataset.data = bollingerBands.lower;
           }
-        } else if (dataset.label && dataset.label.includes('Oscillator')) {
+        } else if (dataset.label && dataset.label.includes("Oscillator")) {
           const oscillatorValues = calculatePriceOscillator(filteredValues);
           dataset.data = oscillatorValues;
         }
       }
     }
-    
-    myChartInstance.update('none'); // Update without animation to avoid violations
-    
-  } else if (chartId === 'myChart2' && myChartInstance2) {
+
+    myChartInstance.update("none"); // Update without animation to avoid violations
+  } else if (chartId === "myChart2" && myChartInstance2) {
     // Filter data for electricity consumption chart
     const originalData = originalChartData.myChart2;
     if (originalData.labels.length === 0) {
-      console.warn('No original data stored for myChart2');
+      console.warn("No original data stored for myChart2");
       return;
     }
-    
+
     const filteredIndices = [];
     originalData.labels.forEach((label, index) => {
       const labelTime = new Date(label).getTime();
@@ -2321,20 +2320,19 @@ function filterChartData(chartId, range) {
         filteredIndices.push(index);
       }
     });
-    
+
     // Filter labels
-    const filteredLabels = filteredIndices.map(i => originalData.labels[i]);
+    const filteredLabels = filteredIndices.map((i) => originalData.labels[i]);
     myChartInstance2.data.labels = filteredLabels;
-    
+
     // Filter each dataset
     myChartInstance2.data.datasets.forEach((dataset, datasetIndex) => {
       const originalDataset = originalData.datasets[datasetIndex];
       if (originalDataset && originalDataset.data) {
-        dataset.data = filteredIndices.map(i => originalDataset.data[i]);
+        dataset.data = filteredIndices.map((i) => originalDataset.data[i]);
       }
     });
-    
-    myChartInstance2.update('none'); // Update without animation to avoid violations
+
+    myChartInstance2.update("none"); // Update without animation to avoid violations
   }
 }
-
