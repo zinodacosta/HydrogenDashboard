@@ -476,12 +476,26 @@
           <div class="data-limitation">
           
           </div>
+          <!-- Time range filter buttons for wholesale chart -->
+          <div class="time-filter-container" style="display:flex;justify-content:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+            <button class="time-filter-btn" data-chart="myChart" data-range="day">Past Day</button>
+            <button class="time-filter-btn" data-chart="myChart" data-range="week">Past Week</button>
+            <button class="time-filter-btn" data-chart="myChart" data-range="month">Past Month</button>
+            <button class="time-filter-btn time-filter-active" data-chart="myChart" data-range="year">Past Year</button>
+          </div>
           <!-- Canvas for Chart -->
           <canvas id="myChart" width="400" height="70"></canvas>
           <div id="chart-error" style="display:none; color: #e9eaf7; font-weight: bold; margin-top: 8px;"></div>
 
           <div id="graph-selector2">
             <h2 id="chart2-title" class="pretty-header">Electricity Consumption</h2>
+            <!-- Time range filter buttons for electricity origin chart -->
+            <div class="time-filter-container" style="display:flex;justify-content:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+              <button class="time-filter-btn" data-chart="myChart2" data-range="day">Past Day</button>
+              <button class="time-filter-btn" data-chart="myChart2" data-range="week">Past Week</button>
+              <button class="time-filter-btn" data-chart="myChart2" data-range="month">Past Month</button>
+              <button class="time-filter-btn time-filter-active" data-chart="myChart2" data-range="year">Past Year</button>
+            </div>
             <h3>Select Power Generation:</h3>
           
             <div class="checkbox-container">
