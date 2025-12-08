@@ -2165,9 +2165,7 @@ async function getLastWholeSalePrice() {
       "Fetching wholesale price at:",
       new Date().toLocaleTimeString()
     );
-    const response = await fetch(
-      "https://api.kitechnik.com/get-wholesale-price"
-    );
+    const response = await fetch(`${API_BASE_URL}/get-wholesale-price`);
     const data = await response.json();
     console.log("Received price data:", data);
     return data.value;
@@ -2193,7 +2191,7 @@ async function getCarbonIntensity() {
 //db fetch for battery level
 async function fetchBatteryLevel() {
   try {
-    const response = await fetch("https://api.kitechnik.com/getBatteryStatus");
+    const response = await fetch(`${API_BASE_URL}/getBatteryStatus`);
     const data = await response.json();
 
     if (data.level !== undefined) {
