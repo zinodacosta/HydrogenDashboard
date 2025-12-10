@@ -3,6 +3,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="description" content="Protonik Hydrogen Dashboard" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Protonik Hydrogen Dashboard</title>
     
@@ -38,7 +39,7 @@
       <div class="flowchart">
         <div class="flowchart-title"><span class="live-dot"></span>Live Simulation</div>
         <div class="flow-item">
-          <img src="/icons/photovoltaik.webp" alt="Photovoltaik" />
+          <img src="/icons/photovoltaik.webp" alt="Photovoltaik" loading="lazy" />
           <p>Photovoltaik</p>
         </div>
         <div id="pv-charging-arrow">
@@ -46,7 +47,7 @@
           <img id="pv-animated-arrow" src="/icons/arrowanim.gif" alt="Charging Animation" />
         </div>
         <div class="flow-item">
-          <img src="/icons/battery.webp" alt="Battery" />
+          <img src="/icons/battery.webp" alt="Battery" loading="lazy" />
           <p>Battery</p>
         </div>
         <div id="electrolyzer-charging-arrow">
@@ -54,7 +55,7 @@
           <img id="electrolyzer-animated-arrow" src="/icons/arrowanim.gif" alt="Charging Animation" />
         </div>
         <div class="flow-item">
-          <img src="/icons/electrolyzer.webp" alt="Electrolyzer" />
+          <img src="/icons/electrolyzer.webp" alt="Electrolyzer"  loading="lazy"/>
           <p>Electrolyzer</p>
         </div>
         <div id="electrolyzer-output-charging-arrow">
@@ -62,7 +63,7 @@
           <img id="electrolyzer-output-animated-arrow" src="/icons/arrowanim.gif" alt="Charging Animation" />
         </div>
         <div class="flow-item">
-          <img src="/icons/hydrogenstorage.webp" alt="Hydrogen Storage" />
+          <img src="/icons/hydrogenstorage.webp" alt="Hydrogen Storage"  loading="lazy"/>
           <p>Hydrogen Storage</p>
         </div>
         <div id="fuelcell-charging-arrow">
@@ -70,7 +71,7 @@
           <img id="fuelcell-animated-arrow" src="/icons/arrowanim.gif" alt="Charging Animation" />
         </div>
         <div class="flow-item">
-          <img src="/icons/fuelcell.webp" alt="Fuel Cell" />
+          <img src="/icons/fuelcell.webp" alt="Fuel Cell"  loading="lazy"/>
           <p>Fuel Cell</p>
         </div>
         <div id="fuelcell-to-charging-charging-arrow">
@@ -78,7 +79,7 @@
           <img id="fuelcell-to-charging-animated-arrow" src="/icons/arrowanim.gif" alt="Charging Animation" />
         </div>
         <div class="flow-item">
-          <img src="/icons/charging-station.webp" alt="Charging Station" />
+          <img src="/icons/charging-station.webp" alt="Charging Station"  loading="lazy"/>
           <p>Charging Station</p>
         </div>
         <!-- Subrow for expanded flowchart content (hidden until expanded) -->
@@ -124,6 +125,7 @@
     <div id="corner-widget" class="widget-card">
       <button id="toggle-widget">▲</button>
       <div id="code-minimized">
+        
         <div id="corner-content">
           <div class="gauge-container">
 
@@ -175,9 +177,9 @@
           <div style="display: flex; align-items: center;">
             <button id="toggle-widget-expanded" class="toggle-widget">▲</button>
           </div>
-          <div class="sticky-bar-inner" style="display: flex; align-items: center; gap: 18px;">
+          <div class="sticky-bar-inner">
             <!-- Protonik logo left of the battery gauge -->
-            <img id="sticky-protonik-logo" src="/icons/protoniklogo.webp" alt="Protonik Logo" style="width:48px;height:48px;object-fit:contain;margin-right:8px;" />
+            
             <!-- Sticky Bar Battery Gauge -->
             <div id="sticky-battery-gauge" style="display: flex; flex-direction: column; align-items: center; margin-right: 2px;">
               <svg id="sticky-battery-gauge-svg" width="126" height="72" viewBox="0 0 140 80" style="display: block;">
@@ -185,7 +187,7 @@
                 <path id="sticky-battery-gauge-fill" d="M 20 70 A 50 50 0 0 1 120 70" fill="none" stroke="#2ecc40" stroke-width="12" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="157" />
               </svg>
               <div style="display: flex; flex-direction: column; align-items: center; margin-top: -40px;">
-                <img src="/icons/newbattery.webp" alt="Battery Icon" style="width:34px;height:34px;object-fit:contain;" />
+                <img src="/icons/newbattery.webp" alt="Battery Icon" style="width:34px;height:34px;object-fit:contain;" loading="lazy" />
                 <div id="sticky-battery-gauge-percentage" style="font-size: 16px; color: #222; font-weight: bold; text-align:center;">0 %</div>
               </div>
               <div style="margin-top: 2px; font-size: 15px; color: #222; font-weight: 500;">Battery</div>
@@ -197,7 +199,7 @@
                 <path id="sticky-hydrogen-gauge-fill" d="M 20 70 A 50 50 0 0 1 120 70" fill="none" stroke="#00bcd4" stroke-width="12" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="157" />
               </svg>
               <div style="display: flex; flex-direction: column; align-items: center; margin-top: -40px;">
-                <img src="/icons/newhydro.webp" alt="Hydrogen Icon" style="width:34px;height:34px;object-fit:contain;" />
+                <img src="/icons/newhydro.webp" alt="Hydrogen Icon" style="width:34px;height:34px;object-fit:contain;"  loading="lazy"/>
                 <div id="sticky-hydrogen-gauge-percentage" style="font-size: 16px; color: #222; font-weight: bold; text-align:center;">0 %</div>
               </div>
               <div style="margin-top: 2px; font-size: 15px; color: #222; font-weight: 500;">Hydrogen</div>
@@ -209,33 +211,21 @@
                 <path id="sticky-thermal-gauge-fill" d="M 20 70 A 50 50 0 0 1 120 70" fill="none" stroke="#ff7f50" stroke-width="12" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="157" />
               </svg>
               <div style="display: flex; flex-direction: column; align-items: center; margin-top: -40px;">
-                <img src="/icons/thermometer.webp" alt="Thermal Icon" style="width:34px;height:34px;object-fit:contain;" />
+                <img src="/icons/thermometer.webp" alt="Thermal Icon" style="width:34px;height:34px;object-fit:contain;"  loading="lazy"/>
                 <div id="sticky-thermal-gauge-percentage" style="font-size: 16px; color: #222; font-weight: bold; text-align:center;">0 kWh</div>
               </div>
               <div style="margin-top: 2px; font-size: 15px; color: #222;">Thermal</div>
             </div>
-            <!-- Sticky Bar Charging Station: Electric -->
-            <div id="sticky-charging-electric" style="display: flex; flex-direction: column; align-items: center; margin-right: 2px;">
-              <div style="display:flex;flex-direction:column;align-items:center;">
-                <img src="/icons/charging-station.webp" alt="Charging Station Electric" style="width:34px;height:34px;object-fit:contain;" />
-                <div id="charging-electric-level" style="font-size: 14px;font-weight:bold; color: #222; text-align:center;">0 kWh</div>
-              </div>
-              <div style="margin-top: 2px; font-size: 13px; color: #222;">EV Station</div>
-            </div>
-            <!-- Sticky Bar Charging Station: Hydrogen -->
-            <div id="sticky-charging-hydrogen" style="display: flex; flex-direction: column; align-items: center; margin-right: 2px;">
-              <div style="display:flex;flex-direction:column;align-items:center;">
-                <img src="/icons/hydrogenstorage.webp" alt="Charging Station Hydrogen" style="width:34px;height:34px;object-fit:contain;" />
-                <div id="charging-hydrogen-level" style="font-size: 14px; font-weight:bold; color: #222; text-align:center;">0 g</div>
-              </div>
-              <div style="margin-top: 2px; font-size: 13px; color: #222;">H2 Station</div>
-            </div>
+            <div class="toggle-group">
+
             <button id="lang-de" class="lang-toggle lang-off">DE</button>
             <button id="lang-en" class="lang-toggle lang-on">EN</button>
             <button id="documentation-btn" style="background:#2232b9;color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:1em;font-weight:600;box-shadow:0 2px 8px rgba(255,160,0,0.10);cursor:pointer;transition:background 0.2s;">📖 Documentation</button>
-          </div>
+          
+            </div>
+           </div>
         </div>
-        <div id="corner-content">
+        <div id="corner-content1">
 
 
 
@@ -480,8 +470,8 @@
           <div class="time-filter-container" style="display:flex;justify-content:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
             <button class="time-filter-btn" data-chart="myChart" data-range="day">Past Day</button>
             <button class="time-filter-btn" data-chart="myChart" data-range="week">Past Week</button>
-            <button class="time-filter-btn" data-chart="myChart" data-range="month">Past Month</button>
-            <button class="time-filter-btn  time-filter-active" data-chart="myChart" data-range="year">Past Year</button>
+            <button class="time-filter-btn  time-filter-active" data-chart="myChart" data-range="month">Past Month</button>
+            <button class="time-filter-btn" data-chart="myChart" data-range="year">Past Year</button>
           </div>
           <!-- Canvas for Chart -->
           <canvas id="myChart" width="400" height="70"></canvas>

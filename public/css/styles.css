@@ -1,3 +1,16 @@
+.sticky-bar-inner{
+display: flex; 
+margin-right: 15%;
+align-items: center; 
+gap: 18px;
+}
+
+.toggle-group{
+  display: flex;
+  gap: 8px;
+  padding-top: 5px;
+  margin-left: 10%;
+}
 
 .sticky-bar {
   position: sticky;
@@ -287,15 +300,16 @@ html.embed-mode, body.embed-mode {
   margin-bottom: 5px;
 }
 
-body {
+html, body {
     font-family: 'Roboto', sans-serif;
     font-size: 18px;
     background-color: #2232b9;
     background-image: url("https://protonik-gmbh.com/wp-content/uploads/2024/02/Protonik_Logo_weiss-hoch-web1000.png");
     background-repeat:  no-repeat;
-    background-position:  top left;
+    background-position:  center;
     background-attachment:  fixed;
    background-size: auto 40%; 
+   height: 100%;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
@@ -310,8 +324,8 @@ body {
 }
 @media (max-width: 480px) {
   body {
-    background-size: auto 96px, 21%;
-    background-position: top 8px right 8px, bottom 8px left 8px;
+    background-size: auto 250px, 21%;
+    background-position: center 50px;
   }
 }
 
@@ -1452,16 +1466,11 @@ label {
 }
 
 
-@media (max-width: 1080px) {
-#code-expanded{
-  min-height: 1600px !important;
-  max-width: 1050px !important;
-  
-}
+
 .flowchart{
   width: 98% !important;
 }
-}
+
 @media (max-width: 700px) {
   .notification-buy, .notification-sell {
     font-size: 0.95em !important;
@@ -1781,6 +1790,7 @@ label {
   }
   #corner-content{
     min-width: 0;
+    height: 280px !important;
     max-width: 100%;
     overflow-x: auto;
   }
@@ -1800,9 +1810,8 @@ label {
     padding-bottom: 1250px;
 
   }
-}
-@media (max-width: 700px) {
-  .sticky-bar .sticky-bar-buttons {
+
+    .sticky-bar .sticky-bar-buttons {
     display: flex !important;
     flex-direction: column !important;
     align-items: flex-end !important;
@@ -1828,9 +1837,8 @@ label {
   .sticky-bar-buttons #documentation-btn {
     margin-bottom: 0 !important;
   }
-}
-@media (max-width: 700px) {
-  #sticky-battery-gauge,
+
+    #sticky-battery-gauge,
   #sticky-hydrogen-gauge,
   #sticky-thermal-gauge {
     margin-right: 0 !important;
@@ -1870,6 +1878,7 @@ label {
     font-size: 13px !important;
   }
 }
+
 @media (max-width: 768px) {
 
   .sticky-bar-inner {
@@ -2005,7 +2014,6 @@ label {
         max-height: 30vh !important;
     }
     #corner-content {
-      
         padding: 5px; 
 }
 
