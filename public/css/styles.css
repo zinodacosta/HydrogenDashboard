@@ -304,11 +304,11 @@ html, body {
     font-family: 'Roboto', sans-serif;
     font-size: 18px;
     background-color: #2232b9;
-    background-image: url("https://protonik-gmbh.com/wp-content/uploads/2024/02/Protonik_Logo_weiss-hoch-web1000.png");
+    background-image: url("../icons/Wasserstoff-Koordinierungsstelle-RLP_RGB_negativ_Wortmarke_mit_Schutzraum_linksbündig.webp");
     background-repeat:  no-repeat;
-    background-position:  center;
+    background-position:  top left;
     background-attachment:  fixed;
-   background-size: auto 40%; 
+   background-size: auto 20%; 
    height: 100%;
     margin: 0;
     padding: 0;
